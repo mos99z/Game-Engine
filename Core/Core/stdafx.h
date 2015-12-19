@@ -18,7 +18,6 @@
 #include <tchar.h>
 #include <time.h>
 
-
 // TODO: reference additional headers your program requires here
 
 #define BUFFER_WIDTH 1600

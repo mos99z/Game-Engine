@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj", "{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDKManager", "SDKManager\SDKManager.vcxproj", "{639F498A-3057-41C5-83F4-51CC91304518}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}.Release|x64.Build.0 = Release|x64
 		{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}.Release|x86.ActiveCfg = Release|Win32
 		{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}.Release|x86.Build.0 = Release|Win32
+		{639F498A-3057-41C5-83F4-51CC91304518}.Debug|x64.ActiveCfg = Debug|x64
+		{639F498A-3057-41C5-83F4-51CC91304518}.Debug|x64.Build.0 = Debug|x64
+		{639F498A-3057-41C5-83F4-51CC91304518}.Debug|x86.ActiveCfg = Debug|Win32
+		{639F498A-3057-41C5-83F4-51CC91304518}.Debug|x86.Build.0 = Debug|Win32
+		{639F498A-3057-41C5-83F4-51CC91304518}.Release|x64.ActiveCfg = Release|x64
+		{639F498A-3057-41C5-83F4-51CC91304518}.Release|x64.Build.0 = Release|x64
+		{639F498A-3057-41C5-83F4-51CC91304518}.Release|x86.ActiveCfg = Release|Win32
+		{639F498A-3057-41C5-83F4-51CC91304518}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
