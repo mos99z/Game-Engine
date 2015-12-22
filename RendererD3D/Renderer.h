@@ -1,13 +1,14 @@
 #pragma once
-//#include "SharedDefines.h"
-
+#include "SharedDefines.h"
+#include "RenderNode.h"
 
 namespace RendererD3D
 {
-#define ReleaseCOM(x) { if(x){ x->Release(); x = 0; } }
+#define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
+	class RenderSet;
 	class Renderer
 	{
-		
+
 	public:
 		static ID3D11Device * theDevicePtr;
 		static ID3D11DeviceContext* theContextPtr;
@@ -20,10 +21,10 @@ namespace RendererD3D
 
 		Renderer(void) {}
 		~Renderer(void) {}
-		
-		
 
-		
+
+
+
 		inline static UINT GetRenderNumber(void) { return theRenderCounter; }
 		inline static void IncrementRenderCounter(void) { ++theRenderCounter; }
 		inline static void ClearRenderTarget(const FLOAT clearColor[4])
@@ -43,11 +44,12 @@ namespace RendererD3D
 		inline static UINT GetResolutionWidth() { return resolutionWidth; }
 		inline static UINT GetResolutionHeight() { return resolutionHeight; }
 
-		
+
 		static void Initialize(HWND hWnd, UINT resWidth, UINT resHeight);
 		static void SetResolution(UINT _width, UINT _height);
 		static void Shutdown();
-		static void Render();
+		static void Render(RenderSet &set);
+		static void Render(RenderSet &set, RenderFunc renderFuncOverride);
 		static void ResizeBuffers();
 		static ID3D11ShaderResourceView *GetDepthSRV();
 

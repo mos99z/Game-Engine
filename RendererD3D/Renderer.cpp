@@ -1,6 +1,11 @@
 #include "stdafx.h"
 #include "Renderer.h"
 
+#ifdef RENDERERDLL_EXPORTS
+#define RENDERERDLL_API __declspec(dllexport) 
+#else
+#define RENDERERDLL_API __declspec(dllimport) 
+#endif
 
 namespace RendererD3D
 {
@@ -28,6 +33,8 @@ namespace RendererD3D
 		swapchain_DESC.BufferCount = 1;
 		swapchain_DESC.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		swapchain_DESC.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		swapchain_DESC.BufferDesc.Height = resolutionHeight;
+		swapchain_DESC.BufferDesc.Width = resolutionWidth;
 		swapchain_DESC.OutputWindow = hWnd;
 		swapchain_DESC.SampleDesc.Count = 1;
 		swapchain_DESC.Windowed = true;
@@ -61,6 +68,7 @@ namespace RendererD3D
 		ZBufferdesc.Height = resolutionHeight;
 		ZBufferdesc.MipLevels = 1;
 		ZBufferdesc.ArraySize = 1;
+		ZBufferdesc.SampleDesc.Count = 1;
 		ZBufferdesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 		ZBufferdesc.Usage = D3D11_USAGE_DEFAULT;
 		ZBufferdesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
@@ -88,7 +96,14 @@ namespace RendererD3D
 	void  Renderer::SetResolution(UINT _width, UINT _height)
 	{
 
+		ReleaseCOM(theRenderTargetViewPtr);
+		ReleaseCOM(theDepthStencilBufferPtr);
+		ReleaseCOM(theDepthStencilViewPtr);
+		ReleaseCOM(theBackBufferPtr);
 
+		resolutionWidth = _width;
+		resolutionHeight = _height;
+		ResizeBuffers();
 	}
 
 	void  Renderer::Shutdown()
@@ -100,14 +115,52 @@ namespace RendererD3D
 		ReleaseCOM(theContextPtr);
 		ReleaseCOM(theDevicePtr);
 	}
-	void  Renderer::Render()
+	void  Renderer::Render(RenderSet &set)
 	{
-		float cle[4] { 1.0f, 0.2f, 0.4f, 1.0f };
-		theContextPtr->ClearRenderTargetView(theRenderTargetViewPtr, cle);
-		theSwapChainPtr->Present(0, 0);
+		
 	}
+
+	void Renderer::Render(RenderSet &set, RenderFunc renderFuncOverride)
+	{
+	}
+
 	void  Renderer::ResizeBuffers()
 	{
+		theSwapChainPtr->ResizeBuffers(NULL, resolutionWidth, resolutionHeight, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+		theSwapChainPtr->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&theBackBufferPtr));
+		theDevicePtr->CreateRenderTargetView(theBackBufferPtr, 0, &theRenderTargetViewPtr);
+		ReleaseCOM(theBackBufferPtr);
+
+		DXGI_SWAP_CHAIN_DESC swapchain_DESC;
+		theSwapChainPtr->GetDesc(&swapchain_DESC);
+		D3D11_TEXTURE2D_DESC ZBufferdesc;
+		ZBufferdesc.Width = resolutionWidth;
+		ZBufferdesc.Height = resolutionHeight;
+		ZBufferdesc.MipLevels = 1;
+		ZBufferdesc.ArraySize = 1;
+		ZBufferdesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+		ZBufferdesc.SampleDesc.Count = swapchain_DESC.SampleDesc.Count;
+		ZBufferdesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
+		ZBufferdesc.Usage = D3D11_USAGE_DEFAULT;
+		ZBufferdesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+		ZBufferdesc.CPUAccessFlags = 0;
+		ZBufferdesc.MiscFlags = 0;
+		theDevicePtr->CreateTexture2D(&ZBufferdesc, 0, &theDepthStencilBufferPtr);
+
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDESC = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2D, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		theDevicePtr->CreateDepthStencilView(theDepthStencilBufferPtr, &depthStencilViewDESC, &theDepthStencilViewPtr);
+		theContextPtr->OMSetRenderTargets(1, &theRenderTargetViewPtr, theDepthStencilViewPtr);
+
+
+		ZeroMemory(&theScreenViewport, sizeof(theScreenViewport));
+		theScreenViewport.MaxDepth = 1.0f;
+		theScreenViewport.MinDepth = 0.0f;
+		theScreenViewport.TopLeftX = 0.0f;
+		theScreenViewport.TopLeftY = 0.0f;
+		theScreenViewport.Width = (float)resolutionWidth;
+		theScreenViewport.Height = (float)resolutionHeight;
+		theContextPtr->RSSetViewports(1, &theScreenViewport);
 
 	}
 	ID3D11ShaderResourceView * Renderer::GetDepthSRV()

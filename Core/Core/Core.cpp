@@ -50,7 +50,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	RendererD3D::Renderer render;
 	render.Initialize(whd, 800, 600);
-	render.Render();
+	FLOAT clearColor[4]{ 1.0f,0.0f,1.0f,1.0f };
+	render.ClearRenderTarget(clearColor);
+	render.Present();
+	while (true)
+	{
+		if (GetAsyncKeyState(VK_RETURN))
+		{
+			clearColor[1] = 1.0f;
+			render.SetResolution(1024, 800);
+			render.ClearRenderTarget(clearColor);
+			render.Present();
+		}
+		if (GetAsyncKeyState('K'))
+		{
+			break;
+		}
+	}
+	
 	render.Shutdown();
 
 	// Main message loop:
