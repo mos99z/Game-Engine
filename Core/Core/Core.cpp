@@ -3,6 +3,10 @@
 
 #include "stdafx.h"
 #include "Core.h"
+#include <Renderer.h>
+
+
+HWND whd;
 
 #define MAX_LOADSTRING 100
 char bitFlags = 0;
@@ -44,7 +48,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-	
+	RendererD3D::Renderer render;
+	render.Initialize(whd, 800, 600);
+	render.Render();
+	render.Shutdown();
 
 	// Main message loop:
 	while (GetMessage(&msg, nullptr, 0, 0))
@@ -105,7 +112,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	HDC hdc = GetWindowDC(NULL);
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 		((GetDeviceCaps(hdc, HORZRES) - BUFFER_WIDTH) >> 1), ((GetDeviceCaps(hdc, VERTRES) - BUFFER_HEIGHT) >> 1), BUFFER_WIDTH, BUFFER_HEIGHT, nullptr, nullptr, hInstance, nullptr);
-
+	whd = hWnd;
 	if (!hWnd)
 	{
 		return FALSE;
