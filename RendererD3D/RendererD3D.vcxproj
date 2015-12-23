@@ -149,6 +149,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderMesh.h" />
     <ClInclude Include="RenderNode.h" />
+    <ClInclude Include="RenderSet.h" />
     <ClInclude Include="RenderShape.h" />
     <ClInclude Include="SharedDefines.h" />
     <ClInclude Include="stdafx.h" />
@@ -158,6 +159,7 @@
     <ClCompile Include="RenderContext.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderMesh.cpp" />
+    <ClCompile Include="RenderSet.cpp" />
     <ClCompile Include="RenderShape.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -42,6 +42,9 @@
     <ClInclude Include="RenderMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -57,6 +60,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RenderMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
