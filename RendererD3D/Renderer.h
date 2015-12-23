@@ -5,15 +5,17 @@
 #endif
 
 #pragma once
+#include "stdafx.h"
 #include "SharedDefines.h"
 #include "RenderNode.h"
 
 
 
-
+#define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
 namespace RendererD3D
 {
-#define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
+	RENDERERDLL_API  void CSharpDLLTest(void);
+
 	class RenderSet;
 	class Renderer
 	{
@@ -68,4 +70,6 @@ namespace RendererD3D
 		static UINT resolutionHeight;
 		static ID3D11ShaderResourceView *theDepthStencilSRVPtr;
 	};
+
+	
 }

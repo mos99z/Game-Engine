@@ -9,15 +9,20 @@ namespace RendererD3D
 	class RenderNode
 	{
 	protected:
-		RenderNode *nextPtr;
+		RenderNode *nextPtr = nullptr;
 	public:
-		RenderNode() { nextPtr = 0; }
 		RenderFunc RenderFunc;
-		void RenderProcess()
+
+		RenderNode() {}
+		~RenderNode() {}
+
+		inline RenderNode *GetNext(void) { return nextPtr; }
+		inline void SetNext(RenderNode *nodePtr) { nextPtr = nodePtr; }
+		
+		inline void RenderProcess()
 		{
 			RenderFunc(*this);
 		}
-		inline RenderNode *GetNext(void) { return nextPtr; }
-		inline void SetNext(RenderNode *nodePtr) { nextPtr = nodePtr; }
+
 	};
 }

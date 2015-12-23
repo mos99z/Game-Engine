@@ -1,12 +1,23 @@
 #pragma once
-#include "RenderNode.h"
+
 namespace RendererD3D
 {
-	class RenderSet :
-		public RenderNode
+	class RenderNode;
+
+	class RenderSet
 	{
+		friend class Renderer;
+	protected:
+		RenderNode* headPtr = nullptr;
 	public:
-		RenderSet();
-		~RenderSet();
+		RenderSet() {}
+		virtual ~RenderSet() {}
+		inline RenderNode* GetHead() { return headPtr; }
+		inline void ClearSet() { headPtr  = nullptr; }
+
+		virtual void AddNode(RenderNode* _node);
+		
+
+
 	};
 }

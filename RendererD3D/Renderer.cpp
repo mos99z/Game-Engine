@@ -1,11 +1,20 @@
 
 #include "stdafx.h"
 #include "Renderer.h"
-
-
-
+#import "E:\GitHub\Clone\Game-Engine\Test\bin\x64\Debug\Test.tlb"   no_namespace
 namespace RendererD3D
 {
+	
+	void CSharpDLLTest()
+	{
+		CoInitialize(NULL);
+		ITestPtr obj;
+		obj.CreateInstance(__uuidof(Test));
+		int i = obj->Get();
+		OutputDebugString(std::to_wstring(i).c_str());
+		CoUninitialize();
+	}
+
 
 	ID3D11Device* Renderer::theDevicePtr = nullptr;
 	ID3D11DeviceContext* Renderer::theContextPtr = nullptr;
@@ -115,7 +124,10 @@ namespace RendererD3D
 	void  Renderer::Render(RenderSet &set)
 	{
 		
+		
 	}
+
+	
 
 	void Renderer::Render(RenderSet &set, RenderFunc renderFuncOverride)
 	{
@@ -165,3 +177,4 @@ namespace RendererD3D
 		return nullptr;
 	}
 }
+
