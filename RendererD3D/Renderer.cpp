@@ -1,11 +1,8 @@
+
 #include "stdafx.h"
 #include "Renderer.h"
 
-#ifdef RENDERERDLL_EXPORTS
-#define RENDERERDLL_API __declspec(dllexport) 
-#else
-#define RENDERERDLL_API __declspec(dllimport) 
-#endif
+
 
 namespace RendererD3D
 {

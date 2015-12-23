@@ -1,6 +1,15 @@
+#ifdef RENDERERDLL_EXPORTS
+#define RENDERERDLL_API __declspec(dllexport) 
+#else
+#define RENDERERDLL_API __declspec(dllimport) 
+#endif
+
 #pragma once
 #include "SharedDefines.h"
 #include "RenderNode.h"
+
+
+
 
 namespace RendererD3D
 {
@@ -10,14 +19,14 @@ namespace RendererD3D
 	{
 
 	public:
-		static ID3D11Device * theDevicePtr;
-		static ID3D11DeviceContext* theContextPtr;
-		static IDXGISwapChain* theSwapChainPtr;
-		static ID3D11RenderTargetView* theRenderTargetViewPtr;
-		static ID3D11Texture2D* theBackBufferPtr;
-		static ID3D11Texture2D* theDepthStencilBufferPtr;
-		static ID3D11DepthStencilView* theDepthStencilViewPtr;
-		static D3D11_VIEWPORT theScreenViewport;
+		RENDERERDLL_API static ID3D11Device * theDevicePtr;
+		RENDERERDLL_API static ID3D11DeviceContext* theContextPtr;
+		RENDERERDLL_API static IDXGISwapChain* theSwapChainPtr;
+		RENDERERDLL_API static ID3D11RenderTargetView* theRenderTargetViewPtr;
+		RENDERERDLL_API static ID3D11Texture2D* theBackBufferPtr;
+		RENDERERDLL_API static ID3D11Texture2D* theDepthStencilBufferPtr;
+		RENDERERDLL_API static ID3D11DepthStencilView* theDepthStencilViewPtr;
+		RENDERERDLL_API static D3D11_VIEWPORT theScreenViewport;
 
 		Renderer(void) {}
 		~Renderer(void) {}
@@ -25,33 +34,33 @@ namespace RendererD3D
 
 
 
-		inline static UINT GetRenderNumber(void) { return theRenderCounter; }
-		inline static void IncrementRenderCounter(void) { ++theRenderCounter; }
-		inline static void ClearRenderTarget(const FLOAT clearColor[4])
+		RENDERERDLL_API inline static  UINT GetRenderNumber(void) { return theRenderCounter; }
+		RENDERERDLL_API inline static  void IncrementRenderCounter(void) { ++theRenderCounter; }
+		RENDERERDLL_API inline static  void ClearRenderTarget(const FLOAT clearColor[4])
 		{
 			theContextPtr->ClearRenderTargetView(theRenderTargetViewPtr, clearColor);
 		}
-		inline static void ClearDepthAndStencilTarget(
+		 RENDERERDLL_API inline static  void ClearDepthAndStencilTarget(
 			UINT clearFlags = D3D10_CLEAR_DEPTH | D3D10_CLEAR_STENCIL, FLOAT depth = 1.0f,
 			UINT8 stencil = 0)
 		{
 			theContextPtr->ClearDepthStencilView(theDepthStencilViewPtr, clearFlags, depth, stencil);
 		}
-		inline static void Present(UINT syncInterval = 0, UINT flags = 0)
+		 RENDERERDLL_API inline static  void Present(UINT syncInterval = 0, UINT flags = 0)
 		{
 			theSwapChainPtr->Present(syncInterval, flags);
 		}
-		inline static UINT GetResolutionWidth() { return resolutionWidth; }
-		inline static UINT GetResolutionHeight() { return resolutionHeight; }
+		 RENDERERDLL_API inline static  UINT GetResolutionWidth() { return resolutionWidth; }
+		 RENDERERDLL_API inline static  UINT GetResolutionHeight() { return resolutionHeight; }
 
 
-		static void Initialize(HWND hWnd, UINT resWidth, UINT resHeight);
-		static void SetResolution(UINT _width, UINT _height);
-		static void Shutdown();
-		static void Render(RenderSet &set);
-		static void Render(RenderSet &set, RenderFunc renderFuncOverride);
-		static void ResizeBuffers();
-		static ID3D11ShaderResourceView *GetDepthSRV();
+		 RENDERERDLL_API static  void Initialize(HWND hWnd, UINT resWidth, UINT resHeight);
+		 RENDERERDLL_API static  void SetResolution(UINT _width, UINT _height);
+		 RENDERERDLL_API static  void Shutdown();
+		 RENDERERDLL_API static  void Render(RenderSet &set);
+		 RENDERERDLL_API static  void Render(RenderSet &set, RenderFunc renderFuncOverride);
+		 RENDERERDLL_API static  void ResizeBuffers();
+		 RENDERERDLL_API static  ID3D11ShaderResourceView *GetDepthSRV();
 
 	private:
 		static UINT theRenderCounter;
