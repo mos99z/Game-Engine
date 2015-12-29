@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{46688c97-ceba-4f1c-b719-7a594554eb73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\VertexLayout">
+      <UniqueIdentifier>{7b36ffa5-767c-44f4-a7ed-54ced2bbf332}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -45,6 +51,9 @@
     <ClInclude Include="RenderSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="StreamManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -65,5 +74,24 @@
     <ClCompile Include="RenderSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StreamManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\Vertex_POSNORDIFFSPEC.hlsl">
+      <Filter>Shaders\VertexLayout</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Vertex_PosNorDiffSpecUVTanBoneWeight.hlsl">
+      <Filter>Shaders\VertexLayout</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Vertex_PosNorDiffSpecUVTan.hlsl">
+      <Filter>Shaders\VertexLayout</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\InputLayout.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
