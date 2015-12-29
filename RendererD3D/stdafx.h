@@ -11,9 +11,11 @@
 
 
 #include <string>
+#include <vector>
+#include <cstdint>
 // TODO: reference additional headers your program requires here
 #include <d3d11.h>
-#pragma comment (lib, "d3d11.lib")
+#pragma comment(lib,"d3d11.lib")
 #include <atlbase.h>
 #include <Windows.h>
 #define RENDERERDLL_EXPORTS
