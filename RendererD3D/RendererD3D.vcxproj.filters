@@ -54,6 +54,9 @@
     <ClInclude Include="StreamManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="InputLayoutManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -75,6 +78,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StreamManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputLayoutManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

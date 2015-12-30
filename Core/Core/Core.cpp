@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "Core.h"
 #include <Renderer.h>
-
+#include <CSharpWarpper.h>
 
 HWND whd;
 
@@ -49,7 +49,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 
-
+	int number = CSharpWarpper::GetWrapper();
 
 
 	RendererD3D::Renderer render;
@@ -57,7 +57,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	FLOAT clearColor[4]{ 1.0f,0.0f,1.0f,1.0f };
 	render.ClearRenderTarget(clearColor);
 	render.Present();
-	RendererD3D::CSharpDLLTest();
+
+	//RendererD3D::CSharpDLLTest();
+	
 	while (true)
 	{
 		if (GetAsyncKeyState(VK_RETURN))

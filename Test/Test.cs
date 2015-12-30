@@ -4,15 +4,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace DC
+namespace CSharpTestClass
 {
-    [ComVisible(true)]
+   // [ComVisible(true)]
     public interface ITest
     {
         int Get();
     }
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.None)]
+   // [ComVisible(true)]
+   // [ClassInterface(ClassInterfaceType.None)]
     public class Test :ITest
     {
         public int Get()
