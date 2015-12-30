@@ -17,6 +17,7 @@ namespace RendererD3D
 	RENDERERDLL_API  void CSharpDLLTest(void);
 
 	class RenderSet;
+	class InputLayoutManager;
 	class Renderer
 	{
 
@@ -29,7 +30,7 @@ namespace RendererD3D
 		RENDERERDLL_API static ID3D11Texture2D* theDepthStencilBufferPtr;
 		RENDERERDLL_API static ID3D11DepthStencilView* theDepthStencilViewPtr;
 		RENDERERDLL_API static D3D11_VIEWPORT theScreenViewport;
-
+		RENDERERDLL_API static InputLayoutManager* theInputLayoutManagerPtr;
 		Renderer(void) {}
 		~Renderer(void) {}
 

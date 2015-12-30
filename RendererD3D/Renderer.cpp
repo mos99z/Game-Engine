@@ -1,11 +1,12 @@
 
 #include "stdafx.h"
 #include "Renderer.h"
-#import "E:\GitHub\Clone\Game-Engine\Test\bin\x64\Debug\Test.tlb"   no_namespace
+#include "InputLayoutManager.h"
+//#import "E:\GitHub\Clone\Game-Engine\Test\bin\x64\Debug\Test.tlb"   no_namespace
 namespace RendererD3D
 {
 	
-	void CSharpDLLTest()
+	/*void CSharpDLLTest()
 	{
 		CoInitialize(NULL);
 		ITestPtr obj;
@@ -13,7 +14,7 @@ namespace RendererD3D
 		int i = obj->Get();
 		OutputDebugString(std::to_wstring(i).c_str());
 		CoUninitialize();
-	}
+	}*/
 
 
 	ID3D11Device* Renderer::theDevicePtr = nullptr;
@@ -24,6 +25,7 @@ namespace RendererD3D
 	ID3D11Texture2D* Renderer::theDepthStencilBufferPtr = nullptr;
 	ID3D11DepthStencilView* Renderer::theDepthStencilViewPtr = nullptr;
 	D3D11_VIEWPORT Renderer::theScreenViewport;
+	InputLayoutManager* Renderer::theInputLayoutManagerPtr;
 	UINT Renderer::resolutionWidth = 0;
 	UINT Renderer::resolutionHeight = 0;
 	UINT Renderer::theRenderCounter = 1;
@@ -97,6 +99,8 @@ namespace RendererD3D
 		theScreenViewport.Width = (float)resolutionWidth;
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
+
+		theInputLayoutManagerPtr = new InputLayoutManager;
 	}
 
 	void  Renderer::SetResolution(UINT _width, UINT _height)
@@ -120,6 +124,7 @@ namespace RendererD3D
 		ReleaseCOM(theDepthStencilBufferPtr);
 		ReleaseCOM(theContextPtr);
 		ReleaseCOM(theDevicePtr);
+		delete theInputLayoutManagerPtr;
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
