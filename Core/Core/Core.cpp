@@ -4,9 +4,17 @@
 #include "stdafx.h"
 #include "Core.h"
 #include <Renderer.h>
-#include <CSharpWarpper.h>
 
-HWND whd;
+HWND ghd;
+void Render()
+{
+	RendererD3D::Renderer render;
+	render.Initialize(ghd, 800, 600);
+	FLOAT clearColor[4]{ 1.0f,0.0f,1.0f,1.0f };
+	render.ClearRenderTarget(clearColor);
+	render.Present();
+	render.Shutdown();
+}
 
 #define MAX_LOADSTRING 100
 char bitFlags = 0;
@@ -49,33 +57,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	MSG msg;
 
 
-	int number = CSharpWarpper::GetWrapper();
 
+	Render();
 
-	RendererD3D::Renderer render;
-	render.Initialize(whd, 800, 600);
-	FLOAT clearColor[4]{ 1.0f,0.0f,1.0f,1.0f };
-	render.ClearRenderTarget(clearColor);
-	render.Present();
-
-	//RendererD3D::CSharpDLLTest();
 	
-	while (true)
-	{
-		if (GetAsyncKeyState(VK_RETURN))
-		{
-			clearColor[1] = 1.0f;
-			render.SetResolution(1024, 800);
-			render.ClearRenderTarget(clearColor);
-			render.Present();
-		}
-		if (GetAsyncKeyState('K'))
-		{
-			break;
-		}
-	}
-	
-	render.Shutdown();
 
 	// Main message loop:
 	while (GetMessage(&msg, nullptr, 0, 0))
@@ -136,7 +121,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	HDC hdc = GetWindowDC(NULL);
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 		((GetDeviceCaps(hdc, HORZRES) - BUFFER_WIDTH) >> 1), ((GetDeviceCaps(hdc, VERTRES) - BUFFER_HEIGHT) >> 1), BUFFER_WIDTH, BUFFER_HEIGHT, nullptr, nullptr, hInstance, nullptr);
-	whd = hWnd;
+	ghd = hWnd;
 	if (!hWnd)
 	{
 		return FALSE;
@@ -242,3 +227,5 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return (INT_PTR)FALSE;
 }
+
+
