@@ -14,7 +14,7 @@
 #define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
 namespace RendererD3D
 {
-	RENDERERDLL_API  void CSharpDLLTest(void);
+
 
 	class RenderSet;
 	class InputLayoutManager;
@@ -44,7 +44,7 @@ namespace RendererD3D
 			theContextPtr->ClearRenderTargetView(theRenderTargetViewPtr, clearColor);
 		}
 		 RENDERERDLL_API inline static  void ClearDepthAndStencilTarget(
-			UINT clearFlags = D3D10_CLEAR_DEPTH | D3D10_CLEAR_STENCIL, FLOAT depth = 1.0f,
+			UINT clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, FLOAT depth = 1.0f,
 			UINT8 stencil = 0)
 		{
 			theContextPtr->ClearDepthStencilView(theDepthStencilViewPtr, clearFlags, depth, stencil);
