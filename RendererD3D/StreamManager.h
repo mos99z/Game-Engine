@@ -35,10 +35,10 @@ namespace RendererD3D
 	public:
 		StreamManager();
 		~StreamManager();
-		int AppendToGstreamBuffer(Gstream& _gblock);
-		int AppendToTstreamBuffer(Tstream& _tblock);
-		int AppendToAstreamBuffer(Astream& _ablock);
-		int AppendToIstreamBuffer(Istream& _iblock);
+		auto AppendToGstreamBuffer(Gstream& _gblock);
+		auto AppendToTstreamBuffer(Tstream& _tblock);
+		auto AppendToAstreamBuffer(Astream& _ablock);
+		auto AppendToIstreamBuffer(Istream& _iblock);
 
 	};
 
