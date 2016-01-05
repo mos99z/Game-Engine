@@ -15,27 +15,27 @@ namespace RendererD3D
 
 	
 	
-	int StreamManager::AppendToGstreamBuffer(Gstream& _gblock)
+	auto StreamManager::AppendToGstreamBuffer(Gstream& _gblock)
 	{
-		int startIndex = GstreamRawBuffer.size();
+		auto startIndex = GstreamRawBuffer.size();
 		GstreamRawBuffer.push_back(_gblock);
 		return startIndex;
 	}
-	int StreamManager::AppendToTstreamBuffer(Tstream& _tblock)
+	auto StreamManager::AppendToTstreamBuffer(Tstream& _tblock)
 	{
-		int startIndex = TstreamRawBuffer.size();
+		auto startIndex = TstreamRawBuffer.size();
 		TstreamRawBuffer.push_back(_tblock);
 		return startIndex;
 	}
-	int StreamManager::AppendToAstreamBuffer(Astream& _ablock)
+	auto StreamManager::AppendToAstreamBuffer(Astream& _ablock)
 	{
-		int startIndex = AstreamRawBuffer.size();
+		auto startIndex = AstreamRawBuffer.size();
 		AstreamRawBuffer.push_back(_ablock);
 		return startIndex;
 	}
-	int StreamManager::AppendToIstreamBuffer(Istream& _iblock)
+	auto StreamManager::AppendToIstreamBuffer(Istream& _iblock)
 	{
-		int startIndex = IstreamRawBuffer.size();
+		auto startIndex = IstreamRawBuffer.size();
 		IstreamRawBuffer.push_back(_iblock);
 		return startIndex;
 	}
