@@ -91,13 +91,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\Vertex_POSNORDIFFSPEC.hlsl">
+    <FxCompile Include="Shaders\Vertex_POSNORDIFF.hlsl">
       <Filter>Shaders\VertexLayout</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\Vertex_PosNorDiffSpecUVTanBoneWeight.hlsl">
+    <FxCompile Include="Shaders\Vertex_PosNorDiffUVTan.hlsl">
       <Filter>Shaders\VertexLayout</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\Vertex_PosNorDiffSpecUVTan.hlsl">
+    <FxCompile Include="Shaders\Vertex_PosNorDiffUVTanBoneWeight.hlsl">
       <Filter>Shaders\VertexLayout</Filter>
     </FxCompile>
   </ItemGroup>
