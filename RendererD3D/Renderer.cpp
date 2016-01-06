@@ -18,6 +18,10 @@ namespace RendererD3D
 	UINT Renderer::resolutionWidth = 0;
 	UINT Renderer::resolutionHeight = 0;
 	UINT Renderer::theRenderCounter = 1;
+	cbPerObject Renderer::thePerObjectData;
+	ID3D11Buffer* Renderer::thePerObjectCBuffer;
+	DirectX::XMMATRIX Renderer::viewMatrix;
+	DirectX::XMMATRIX Renderer::proj;
 
 	void Renderer::Initialize(HWND hWnd, UINT resWidth, UINT resHeight)
 	{
@@ -35,7 +39,7 @@ namespace RendererD3D
 		swapchain_DESC.OutputWindow = hWnd;
 		swapchain_DESC.SampleDesc.Count = 1;
 		swapchain_DESC.Windowed = true;
-		
+
 
 
 		D3D11CreateDeviceAndSwapChain
@@ -89,7 +93,38 @@ namespace RendererD3D
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
 
+		//Build Constant Buffer
+		D3D11_BUFFER_DESC bd;
+		ZeroMemory(&bd, sizeof(bd));
+		bd.Usage = D3D11_USAGE_DYNAMIC;
+		bd.ByteWidth = sizeof(cbPerObject);
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerObjectCBuffer);
 
+		//Set sampler
+		CComPtr<ID3D11SamplerState> sampler;
+		D3D11_SAMPLER_DESC desc;
+		//anisoWrapSampler
+		desc.Filter = D3D11_FILTER_ANISOTROPIC;
+		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.MipLODBias = 0.0f;
+		desc.MaxAnisotropy = 16;
+		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		desc.BorderColor[0] = desc.BorderColor[1] = desc.BorderColor[2] = desc.BorderColor[3] = 0;
+		desc.MinLOD = -FLT_MAX;
+		desc.MaxLOD = FLT_MAX;
+		theDevicePtr->CreateSamplerState(&desc, &sampler.p);
+		theContextPtr->PSSetSamplers(0, 1, &sampler.p);
+
+		//Build simple camera stuffs
+		proj = DirectX::XMMatrixPerspectiveFovLH(90.0f, 16.0f / 9.0f, 0.0f, 1.0f);
+		float3 eyepos = { 0.0f,5.0f,-10.0f };
+		float3 eyedir = { 1.0f,0.0f,0.0f };
+		float3 updir = { 0.0f,1.0f,0.0f };
+		viewMatrix = DirectX::XMMatrixLookToLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
 	}
 
 	void  Renderer::SetResolution(UINT _width, UINT _height)
@@ -117,11 +152,11 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
-		
-		
+
+
 	}
 
-	
+
 
 	void Renderer::Render(RenderSet &set, RenderFunc renderFuncOverride)
 	{
@@ -169,6 +204,20 @@ namespace RendererD3D
 	ID3D11ShaderResourceView * Renderer::GetDepthSRV()
 	{
 		return nullptr;
+	}
+	void Renderer::SetPerObjectData(float4x4& _world)
+	{
+		DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(viewMatrix, proj);
+		thePerObjectData.gWorld = _world;
+		DirectX::XMStoreFloat4x4(&thePerObjectData.gMVP, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&_world), vp));
+
+		D3D11_MAPPED_SUBRESOURCE edit;
+		theContextPtr->Map(thePerObjectCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &edit);
+		memcpy(edit.pData, &thePerObjectData, sizeof(thePerObjectData));
+		theContextPtr->Unmap(thePerObjectCBuffer, 0);
+
+		theContextPtr->VSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
+		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 }
 

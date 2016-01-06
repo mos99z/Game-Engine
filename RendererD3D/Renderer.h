@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "SharedDefines.h"
 #include "RenderNode.h"
-
+#include "ConstantBuffer.h"
 
 
 #define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
@@ -31,6 +31,8 @@ namespace RendererD3D
 		RENDERERDLL_API static ID3D11DepthStencilView* theDepthStencilViewPtr;
 		RENDERERDLL_API static D3D11_VIEWPORT theScreenViewport;
 		RENDERERDLL_API static InputLayoutManager* theInputLayoutManagerPtr;
+		static cbPerObject thePerObjectData;
+		static ID3D11Buffer *thePerObjectCBuffer;
 		Renderer(void) {}
 		~Renderer(void) {}
 
@@ -39,11 +41,11 @@ namespace RendererD3D
 
 		RENDERERDLL_API inline static  UINT GetRenderNumber(void) { return theRenderCounter; }
 		RENDERERDLL_API inline static  void IncrementRenderCounter(void) { ++theRenderCounter; }
-		RENDERERDLL_API inline static  void ClearRenderTarget(const FLOAT clearColor[4])
+		 inline static  void ClearRenderTarget(const FLOAT clearColor[4])
 		{
 			theContextPtr->ClearRenderTargetView(theRenderTargetViewPtr, clearColor);
 		}
-		 RENDERERDLL_API inline static  void ClearDepthAndStencilTarget(
+		  inline static  void ClearDepthAndStencilTarget(
 			UINT clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, FLOAT depth = 1.0f,
 			UINT8 stencil = 0)
 		{
@@ -63,9 +65,13 @@ namespace RendererD3D
 		 RENDERERDLL_API static  void Render(RenderSet &set);
 		 RENDERERDLL_API static  void Render(RenderSet &set, RenderFunc renderFuncOverride);
 		 RENDERERDLL_API static  void ResizeBuffers();
-		 RENDERERDLL_API static  ID3D11ShaderResourceView *GetDepthSRV();
+		  static  ID3D11ShaderResourceView *GetDepthSRV();
 
+		 static void SetPerObjectData(float4x4& _world);
+		 
 	private:
+		static DirectX::XMMATRIX viewMatrix;
+		static DirectX::XMMATRIX proj;
 		static UINT theRenderCounter;
 		static UINT resolutionWidth;
 		static UINT resolutionHeight;

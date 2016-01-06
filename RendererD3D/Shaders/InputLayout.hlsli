@@ -1,3 +1,5 @@
+#ifndef INPUTLAYOUT_HLSLI
+#define INPUTLAYOUT_HLSLI
 #include "../SharedDefines.h"
 
 struct VERIN_POSNORDIFF
@@ -26,3 +28,9 @@ struct VERIN_PosNorDiffUVTanBoneWeight
 	int4   bone     :   BONEIDS0;
 	float4 weights  :   BONEWEIGHTS0;
 };
+struct VSOUT
+{
+	float4 pos : POSITION0;
+	float2 uv : TEXCOORD0;
+};
+#endif //INPUTLAYOUT_HLSLI
