@@ -1,8 +1,9 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "FBXLoaderManager.h"
 #include <fbxsdk.h>
 #include <fstream>
-#include <iostream>
-
+#include <comdef.h>
 
 static std::ofstream writeStream;
 
@@ -13,29 +14,25 @@ FBXLoaderManager::FBXLoaderManager()
 	mp_FbxImporter = nullptr;
 	mp_FbxScene = nullptr;
 	mp_FbxRootNode = nullptr;
-	mp_FbxFileName = nullptr;
-	mp_FileOutName = nullptr;
 }
 
 FBXLoaderManager::~FBXLoaderManager()
 {
-	if (mp_FileOutName)
-		delete[] mp_FileOutName;
 }
 
-void FBXLoaderManager::Initilize(char* _FbxFileName)
+void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
 {
-	if (mp_FileOutName)
-		delete[] mp_FileOutName;
-	mp_FileOutName = nullptr;
-	mp_FbxFileName = nullptr;
-	m_NumTabs = 0;
 
 #if _DEBUG
 	_ASSERT_EXPR(_FbxFileName, L"FBXLoader - Passed In File Name Can NOT Be Null!");
 #endif
 
-	mp_FbxFileName = _FbxFileName;
+	ms_FbxFileName = ms_FilePath;
+	m_NumTabs = 0;
+
+	_bstr_t wideToChar(_FbxFileName);
+	ms_FileOutName = wideToChar;
+	ms_FbxFileName.append(wideToChar);
 	ParseOutFileName();
 
 	mp_FbxManager = FbxManager::Create();
@@ -58,12 +55,17 @@ void FBXLoaderManager::Initilize(char* _FbxFileName)
 	_ASSERT_EXPR(mp_FbxImporter, L"FBXLoader - FbxImporter failed to create!");
 #endif
 
-
-	if (!mp_FbxImporter->Initialize(mp_FbxFileName, -1, mp_FbxManager->GetIOSettings()))
+	if (!mp_FbxImporter->Initialize(ms_FbxFileName.c_str(), -1, mp_FbxManager->GetIOSettings()))
 	{
 #if _DEBUG
-		_ASSERT_EXPR(0, "Fbx Importer failed to initilize With the following error message: ");
-		_ASSERT_EXPR(0, mp_FbxImporter->GetStatus().GetErrorString());
+		std::wstring message = L"Fbx Importer failed to initilize With the following error message: ";
+		const char* charErrorMessage = mp_FbxImporter->GetStatus().GetErrorString();
+		size_t errorMessageLength = strlen(charErrorMessage) + 1;
+		wchar_t* errorMessage = new wchar_t[errorMessageLength];
+		mbstowcs(errorMessage, charErrorMessage, errorMessageLength);
+		message.append(errorMessage);
+		_ASSERT_EXPR(0, message.c_str());
+		delete[] errorMessage;
 #endif
 		return;
 	}
@@ -79,23 +81,11 @@ void FBXLoaderManager::Initilize(char* _FbxFileName)
 
 	mp_FbxRootNode = mp_FbxScene->GetRootNode();
 
-	if (mp_FileOutName)
+	if (mp_FbxRootNode)
 	{
-		writeStream = std::ofstream(mp_FileOutName);
-		if (writeStream.is_open())
-		{
-			if (mp_FbxRootNode)
-			{
-				int numChildren = mp_FbxRootNode->GetChildCount();
-				for (int child = 0; child < numChildren; child++)
-					PrintNodes(mp_FbxRootNode->GetChild(child));
-			}
-			writeStream.close();
-		}
-#if _DEBUG
-		else
-			_ASSERT_EXPR(0, L"Could Not Open File For Output!");
-#endif
+		int numChildren = mp_FbxRootNode->GetChildCount();
+		for (int child = 0; child < numChildren; child++)
+			PrintNodes(mp_FbxRootNode->GetChild(child));
 	}
 
 	mp_FbxManager->Destroy();
@@ -181,40 +171,10 @@ void FBXLoaderManager::PrintTabs()
 
 void FBXLoaderManager::ParseOutFileName()
 {
-	int totalLength = 1;
-	int subLength = 0;
-	int lastSlash = 0;
+	int deleteFrom = 0;
+	while (ms_FileOutName.at(deleteFrom) != '.')
+		deleteFrom++;
 
-	char* currChar = mp_FbxFileName;
-	while (*currChar != '\0')
-	{
-		if (*currChar == '\\')
-			lastSlash = totalLength;
-		totalLength++;
-		currChar++;
-
-		if (totalLength > 255)
-		{
-			mp_FileOutName = nullptr;
-			return;
-		}
-	}
-
-	currChar = mp_FbxFileName + lastSlash;
-	while (*currChar != '\0' || *currChar != '.')
-	{
-		subLength++;
-		currChar++;
-	}
-
-	if (subLength < 1)
-	{
-		mp_FileOutName = nullptr;
-		return;
-	}
-
-	mp_FileOutName = new char[subLength + 5];
-	memcpy(mp_FileOutName, mp_FbxFileName + lastSlash, subLength);
-	memcpy(mp_FileOutName, ".xml", 4);
-	mp_FileOutName[subLength + 4] = '\0';
+	if (deleteFrom > 0)
+		ms_FileOutName.erase(deleteFrom);
 }
