@@ -3,9 +3,9 @@
 namespace RendererD3D
 {
 	enum VertexFormat {
-		eVertex_POSNORDIFFSPEC = 0, 
-		eVertex_PosNorDiffSpecUVTan, 
-		eVertex_PosNorDiffSpecUVTanBoneWeight,
+		eVertex_POSNORDIFF= 0, 
+		eVertex_PosNorDiffUVTan, 
+		eVertex_PosNorDiffUVTanBoneWeight,
 		eVetex_MAX,
 	};
 	class InputLayoutManager

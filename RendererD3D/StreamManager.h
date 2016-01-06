@@ -4,14 +4,13 @@ namespace RendererD3D
 {
 	struct _regAlign Gstream
 	{
-		DirectX::XMFLOAT4 position;
-		DirectX::XMFLOAT4 normal;
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT3 normal;
 		DirectX::XMFLOAT4 diffuse;
-		DirectX::XMFLOAT4 specular;
 	};
 	struct _regAlign Tstream
 	{
-		DirectX::XMFLOAT4 texture1;
+		DirectX::XMFLOAT2 texture1;
 		DirectX::XMFLOAT4 tangent;
 	};
 
@@ -35,10 +34,10 @@ namespace RendererD3D
 	public:
 		StreamManager();
 		~StreamManager();
-		int AppendToGstreamBuffer(Gstream& _gblock);
-		int AppendToTstreamBuffer(Tstream& _tblock);
-		int AppendToAstreamBuffer(Astream& _ablock);
-		int AppendToIstreamBuffer(Istream& _iblock);
+		auto AppendToGstreamBuffer(Gstream& _gblock);
+		auto AppendToTstreamBuffer(Tstream& _tblock);
+		auto AppendToAstreamBuffer(Astream& _ablock);
+		auto AppendToIstreamBuffer(Istream& _iblock);
 
 	};
 

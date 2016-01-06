@@ -191,19 +191,19 @@
     <ClCompile Include="StreamManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\Vertex_PosNorDiffSpecUVTan.hlsl">
+    <FxCompile Include="Shaders\Vertex_PosNorDiffUVTan.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
-    <FxCompile Include="Shaders\Vertex_POSNORDIFFSPEC.hlsl">
+    <FxCompile Include="Shaders\Vertex_POSNORDIFF.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
-    <FxCompile Include="Shaders\Vertex_PosNorDiffSpecUVTanBoneWeight.hlsl">
+    <FxCompile Include="Shaders\Vertex_PosNorDiffUVTanBoneWeight.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>

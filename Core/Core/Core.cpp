@@ -6,14 +6,16 @@
 #include <Renderer.h>
 
 HWND ghd;
+RendererD3D::Renderer render;
+
 void Render()
 {
-	RendererD3D::Renderer render;
-	render.Initialize(ghd, 800, 600);
+	
+	
 	FLOAT clearColor[4]{ 1.0f,0.0f,1.0f,1.0f };
 	render.ClearRenderTarget(clearColor);
 	render.Present();
-	render.Shutdown();
+
 }
 
 #define MAX_LOADSTRING 100
@@ -56,15 +58,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
+	render.Initialize(ghd, 800, 600);
 
-
-	Render();
+		
 
 	
 
+
+
 	// Main message loop:
-	while (GetMessage(&msg, nullptr, 0, 0))
+	while (GetMessage(&msg, nullptr, 0, 0) )
 	{
+		Render();
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);
@@ -72,7 +77,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 
 	}
-
+	render.Shutdown();
 	return (int)msg.wParam;
 }
 
@@ -186,6 +191,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
 			break;
+		case WM_SIZE:
+		{
+		UINT width = LOWORD(lParam);
+		UINT height = HIWORD(lParam);
+		render.SetResolution(width, height);
+		break;
+		}
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
