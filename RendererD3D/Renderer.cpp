@@ -35,7 +35,7 @@ namespace RendererD3D
 		swapchain_DESC.OutputWindow = hWnd;
 		swapchain_DESC.SampleDesc.Count = 1;
 		swapchain_DESC.Windowed = true;
-		swapchain_DESC.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+		
 
 
 		D3D11CreateDeviceAndSwapChain
@@ -89,7 +89,7 @@ namespace RendererD3D
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
 
-		theInputLayoutManagerPtr = new InputLayoutManager;
+
 	}
 
 	void  Renderer::SetResolution(UINT _width, UINT _height)
@@ -129,7 +129,7 @@ namespace RendererD3D
 
 	void  Renderer::ResizeBuffers()
 	{
-		theSwapChainPtr->ResizeBuffers(NULL, resolutionWidth, resolutionHeight, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+		theSwapChainPtr->ResizeBuffers(0, resolutionWidth, resolutionHeight, DXGI_FORMAT_UNKNOWN, 0);
 		theSwapChainPtr->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&theBackBufferPtr));
 		theDevicePtr->CreateRenderTargetView(theBackBufferPtr, 0, &theRenderTargetViewPtr);
 		ReleaseCOM(theBackBufferPtr);
