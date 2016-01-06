@@ -1,8 +1,12 @@
 
 #include "stdafx.h"
 #include "Renderer.h"
+#include "RenderContext.h"
+#include "RenderMaterial.h"
+#include "RenderShape.h"
+#include "RenderSet.h"
 #include "InputLayoutManager.h"
-
+#include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
 {
 
@@ -23,6 +27,11 @@ namespace RendererD3D
 	DirectX::XMMATRIX Renderer::viewMatrix;
 	DirectX::XMMATRIX Renderer::proj;
 
+
+	RenderContext*		Renderer::cubeContextPtr = nullptr;
+	RenderShape*		Renderer::cubeShapePtr = nullptr;
+	RenderMaterial*	Renderer::cubeMaterialPtr = nullptr;
+	RenderSet* Renderer::rSetPtr = new RenderSet;
 	void Renderer::Initialize(HWND hWnd, UINT resWidth, UINT resHeight)
 	{
 
@@ -102,22 +111,22 @@ namespace RendererD3D
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerObjectCBuffer);
 
-		//Set sampler
-		CComPtr<ID3D11SamplerState> sampler;
-		D3D11_SAMPLER_DESC desc;
-		//anisoWrapSampler
-		desc.Filter = D3D11_FILTER_ANISOTROPIC;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		desc.MipLODBias = 0.0f;
-		desc.MaxAnisotropy = 16;
-		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		desc.BorderColor[0] = desc.BorderColor[1] = desc.BorderColor[2] = desc.BorderColor[3] = 0;
-		desc.MinLOD = -FLT_MAX;
-		desc.MaxLOD = FLT_MAX;
-		theDevicePtr->CreateSamplerState(&desc, &sampler.p);
-		theContextPtr->PSSetSamplers(0, 1, &sampler.p);
+		////Set sampler
+		//CComPtr<ID3D11SamplerState> sampler;
+		//D3D11_SAMPLER_DESC desc;
+		////anisoWrapSampler
+		//desc.Filter = D3D11_FILTER_ANISOTROPIC;
+		//desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		//desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		//desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		//desc.MipLODBias = 0.0f;
+		//desc.MaxAnisotropy = 16;
+		//desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		//desc.BorderColor[0] = desc.BorderColor[1] = desc.BorderColor[2] = desc.BorderColor[3] = 0;
+		//desc.MinLOD = -FLT_MAX;
+		//desc.MaxLOD = FLT_MAX;
+		//theDevicePtr->CreateSamplerState(&desc, &sampler.p);
+		//theContextPtr->PSSetSamplers(0, 1, &sampler.p);
 
 		//Build simple camera stuffs
 		proj = DirectX::XMMatrixPerspectiveFovLH(90.0f, 16.0f / 9.0f, 0.0f, 1.0f);
@@ -125,6 +134,59 @@ namespace RendererD3D
 		float3 eyedir = { 1.0f,0.0f,0.0f };
 		float3 updir = { 0.0f,1.0f,0.0f };
 		viewMatrix = DirectX::XMMatrixLookToLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
+
+
+
+		//Set Vertex buffer
+		VERIN_POSNORDIFF cubeVertices[] =
+		{
+			{ float3(0.0f, 0.5f, 0.0f), float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(0.45f, -0.5f,  0.0f), float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(-0.45f,  -0.5f, 0.0f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },
+			{ float3(-0.5f,  0.5f,  0.5f), float3(0.0f, 1.0f, 1.0f) , float4(0.0f, 1.0f, 1.0f,1.0f) },
+			{ float3(0.5f, -0.5f, -0.5f),  float3(1.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(0.5f, -0.5f,  0.5f),  float3(1.0f, 0.0f, 1.0f) , float4(1.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(0.5f,  0.5f, -0.5f),  float3(1.0f, 1.0f, 0.0f) , float4(1.0f, 1.0f, 0.0f,1.0f) },
+			{ float3(0.5f,  0.5f,  0.5f),  float3(1.0f, 1.0f, 1.0f) , float4(1.0f, 1.0f, 1.0f,1.0f) },
+		};
+
+		const UINT vertexBufferSize = sizeof(cubeVertices);
+		ID3D11Buffer* vertexBuffer = nullptr;
+
+		D3D11_BUFFER_DESC bufferDesc;
+		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc.ByteWidth = vertexBufferSize;
+		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		bufferDesc.CPUAccessFlags = 0;
+		bufferDesc.MiscFlags = 0;
+		D3D11_SUBRESOURCE_DATA InitData;
+		InitData.pSysMem = cubeVertices;
+		InitData.SysMemPitch = 0;
+		InitData.SysMemSlicePitch = 0;
+		theDevicePtr->CreateBuffer(&bufferDesc, &InitData, &vertexBuffer);
+		UINT stripe = sizeof VERIN_POSNORDIFF;
+		UINT offset = 0;
+		theContextPtr->IASetVertexBuffers(0, 1, &vertexBuffer, &stripe, &offset);
+		ReleaseCOM(vertexBuffer);
+		//Set Inputlayout
+		theInputLayoutManagerPtr = new InputLayoutManager;
+		theContextPtr->IASetInputLayout(theInputLayoutManagerPtr->inputLayouts[0]);
+
+		cubeContextPtr = new RenderContext;
+		cubeShapePtr = new RenderShape;
+		cubeMaterialPtr = new RenderMaterial;
+
+		rSetPtr->AddNode(cubeContextPtr);
+		cubeContextPtr->RenderFunc = RenderContext::Draw;
+		cubeContextPtr->renderSetPtr->AddNode(cubeMaterialPtr);
+		cubeMaterialPtr->RenderFunc = RenderMaterial::Draw;
+		cubeMaterialPtr->renderSetPtr->AddNode(cubeShapePtr);
+		cubeShapePtr->RenderFunc = RenderShape::Draw;
+		cubeShapePtr->numofVertices = 3;
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity());
+
+		FLOAT clearColor[4]{ 0.0f,0.0f,1.0f,1.0f };
+		ClearRenderTarget(clearColor);
 	}
 
 	void  Renderer::SetResolution(UINT _width, UINT _height)
@@ -152,10 +214,18 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
-
-
+		RenderNode* item = set.GetHead();
+		while (item)
+		{
+			item->RenderProcess();
+			item = item->GetNext();
+		}
 	}
 
+	RenderSet& Renderer::GetSet()
+	{ 
+		return *(rSetPtr);
+	}
 
 
 	void Renderer::Render(RenderSet &set, RenderFunc renderFuncOverride)
@@ -218,6 +288,18 @@ namespace RendererD3D
 
 		theContextPtr->VSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
+	}
+
+	Renderer::Renderer()
+	{
+		
+	}
+
+	Renderer::~Renderer()
+	{
+		delete cubeContextPtr;
+		delete cubeShapePtr;
+		delete cubeMaterialPtr;
 	}
 }
 

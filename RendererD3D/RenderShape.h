@@ -7,9 +7,12 @@ namespace  RendererD3D
 	class RenderShape :
 		public RenderNode
 	{
+		
+	public:
 		float4x4 worldMatrix;
 		RenderMesh* mesh;
-	public:
+		UINT numofVertices = 0;
+		UINT startVertex = 0;
 		RenderShape();
 		~RenderShape();
 		static void Draw(RenderNode &node);

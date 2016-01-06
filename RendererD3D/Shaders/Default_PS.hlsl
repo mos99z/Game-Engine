@@ -1,5 +1,6 @@
-#include "Samplers.hlsli"
-float4 main() : SV_TARGET
+#include "InputLayout.hlsli"
+
+float4 main(VSOUT input) : SV_TARGET
 {
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	return input.color;
 }

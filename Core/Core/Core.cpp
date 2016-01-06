@@ -5,6 +5,7 @@
 #include "Core.h"
 #include <Renderer.h>
 
+
 HWND ghd;
 RendererD3D::Renderer render;
 
@@ -12,8 +13,8 @@ void Render()
 {
 	
 	
-	FLOAT clearColor[4]{ 1.0f,0.0f,1.0f,1.0f };
-	render.ClearRenderTarget(clearColor);
+
+	render.Render(render.GetSet());
 	render.Present();
 
 }

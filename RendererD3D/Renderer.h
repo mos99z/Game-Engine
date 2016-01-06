@@ -14,8 +14,9 @@
 #define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
 namespace RendererD3D
 {
-
-
+	class RenderMaterial;
+	class RenderShape;
+	class RenderContext;
 	class RenderSet;
 	class InputLayoutManager;
 	class Renderer
@@ -33,8 +34,8 @@ namespace RendererD3D
 		RENDERERDLL_API static InputLayoutManager* theInputLayoutManagerPtr;
 		static cbPerObject thePerObjectData;
 		static ID3D11Buffer *thePerObjectCBuffer;
-		Renderer(void) {}
-		~Renderer(void) {}
+		RENDERERDLL_API Renderer(void);
+		RENDERERDLL_API ~Renderer(void);
 
 
 
@@ -69,6 +70,12 @@ namespace RendererD3D
 
 		 static void SetPerObjectData(float4x4& _world);
 		 
+		
+		  static RenderContext*		cubeContextPtr;
+		 static RenderShape*		cubeShapePtr;
+		 static RenderMaterial*	cubeMaterialPtr;
+		 static RenderSet* rSetPtr;
+		 RENDERERDLL_API  RenderSet& GetSet();
 	private:
 		static DirectX::XMMATRIX viewMatrix;
 		static DirectX::XMMATRIX proj;

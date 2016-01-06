@@ -1,7 +1,10 @@
 #include "InputLayout.hlsli"
 #include "..\ConstantBuffer.h"
 
-float4 main(VERIN_POSNORDIFF input) : SV_POSITION
+VSOUT main(VERIN_POSNORDIFF input) 
 {
-	return mul(float4(input.position,1),gMVP);
+	VSOUT output = (VSOUT)0;
+	output.pos = float4(input.position, 1);
+	output.color = input.diffuse;
+	return output;
 }
