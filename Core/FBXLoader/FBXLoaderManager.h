@@ -11,33 +11,49 @@ namespace fbxsdk
 	class FbxNode;
 	class FbxNodeAttribute;
 	class FbxString;
+	class FbxGeometryConverter;
 };
 
-enum DataType { VertexBuffer, IndexBuffer, Texture };
+enum DataType : int8_t { VertexBuffer, IndexBuffer, Texture, MeshData };
+enum IndexStride : int8_t { Size32 = 4, Size16 = 2, Size8 = 1 };
+
 
 struct BinaryFileHeaderData
 {
-	char m_FileVarification[4]{ 'B', 'F', 'b', 'x' };
-	int m_TotalDataSize = 0;
+	int8_t m_FileVarification[4]{ 'A', 'W', 'B', 'X' };
 };
 
-struct ObjectHeader
+struct MeshHeader
 {
-	int m_DataSize = 0;
-	DataType m_DataType;
-	float worldMatrix[3];
+	DataType m_DataType = MeshData;
+	int16_t m_MeshNameSize;
+	int8_t* m_MeshName;
 };
 
-struct __declspec(align(16)) Gstream
+struct VertexHeader
 {
-	float position[3];
-	float normal[3];
-	float diffuse[4]{1,0,1,1};
-	float specular[2];
-	float UV[2];
-	float tangent[2];
-	int bone[4]{0,0,0,0};
-	float weights[4]{0,0,0,0};
+	DataType m_DataType = VertexBuffer;
+	int16_t m_DataByteSize;
+};
+
+struct IndexHeader
+{
+	DataType m_DataType = IndexBuffer;
+	IndexStride m_IndexStride = Size32;
+	int16_t m_DataByteSize;
+};
+
+struct TextureHeader
+{
+	DataType m_DataType = Texture;
+	int16_t m_DataByteSize;
+};
+
+struct __declspec(align(16)) VBuffer
+{
+	float m_Position[3]{ 0,0,0 };
+	float m_Normal[3]{ 0,0,1 };
+	float m_Diffuse[4]{ 1,0,1,1 };
 };
 
 class FBXLoaderManager
@@ -45,21 +61,34 @@ class FBXLoaderManager
 private:
 	std::string ms_FilePath = "..\\..\\Assets\\FBXs\\";
 
+	// Importer / Scene
 	fbxsdk::FbxManager* mp_FbxManager;
 	fbxsdk::FbxIOSettings* mp_FbxIOSettings;
 	fbxsdk::FbxImporter* mp_FbxImporter;
 	fbxsdk::FbxScene* mp_FbxScene;
 	fbxsdk::FbxNode* mp_FbxRootNode;
+	fbxsdk::FbxGeometryConverter* mp_FbxGeoConverter;
 	std::string ms_FbxFileName;
 	std::string ms_FileOutName;
 	int m_NumTabs;
 
-	/// Private Functions 
+	int m_DepthLevel;
+
+	int m_numVerts;
+	int m_numIndexes;
+	VBuffer* m_VertBuffer;
+	unsigned int* m_IndexBuffer;
+
+	// Private Functions 
+	void Uninitilize();
 	void PrintNodes(fbxsdk::FbxNode* _node);
+	void HandleNode(fbxsdk::FbxNode* _node);
 	void PrintAttribute(fbxsdk::FbxNodeAttribute* _nodeAttribute);
 	fbxsdk::FbxString GetAttributeTypeName(fbxsdk::FbxNodeAttribute* _nodeAttribute);
 	void PrintTabs();
 	void ParseOutFileName();
+
+	void HandleMesh(fbxsdk::FbxNode* _node);
 
 public:
 
