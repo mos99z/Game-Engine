@@ -20,7 +20,7 @@
 
 // TODO: reference additional headers your program requires here
 #define BUFFER_WIDTH 1600
-#define BUFFER_HEIGHT 900
+#define BUFFER_HEIGHT 1024
 
 #define FULLSCREEN (1 << 0)
 #define STYLEMOD (WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX)

@@ -3,11 +3,22 @@
 #include "Renderer.h"
 namespace  RendererD3D
 {
+	RasterizerStateManager* RasterizerStateManager::instancePtr = nullptr;
 	RasterizerStateManager& RasterizerStateManager::GetRef()
 	{
-		static RasterizerStateManager rasterizerstatemanager;
-		return rasterizerstatemanager;
+		if (!instancePtr)
+		{
+			instancePtr = new RasterizerStateManager;
+		}
+		return *instancePtr;
 	}
+
+	void RasterizerStateManager::DeleteInstance()
+	{
+		delete instancePtr;
+	}
+
+
 	RasterizerStateManager::RasterizerStateManager()
 	{
 		D3D11_RASTERIZER_DESC desc;
@@ -37,7 +48,5 @@ namespace  RendererD3D
 	}
 
 
-	RasterizerStateManager::~RasterizerStateManager()
-	{
-	}
+
 }

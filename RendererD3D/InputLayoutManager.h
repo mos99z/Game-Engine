@@ -12,9 +12,14 @@ namespace RendererD3D
 	{
 		friend class Renderer;
 		
-	public:
-		ID3D11InputLayout*	 inputLayouts[eVetex_MAX];
+	private:
+		static InputLayoutManager* instancePtr;
 		InputLayoutManager();
-		~InputLayoutManager();
+	public:
+	
+		CComPtr<ID3D11InputLayout>	 inputLayouts[eVetex_MAX];
+		
+		static InputLayoutManager& GetRef();
+		static void DeleteInstance();
 	};
 }

@@ -7,12 +7,11 @@ namespace  RendererD3D
 		enum RasterStates { RS_Default = 0, RS_LINE, RS_CCW, RS_NOCULL, RS_COUNT };
 		CComPtr<ID3D11RasterizerState> rasterStates[RS_COUNT];
 	private:
+		static RasterizerStateManager* instancePtr;
 		RasterStates currentState;
-	public:
 		RasterizerStateManager();
-		~RasterizerStateManager();
-
+	public:
 		static RasterizerStateManager& GetRef();
-		
+		static void DeleteInstance();
 	};
 }

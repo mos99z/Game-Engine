@@ -7,16 +7,14 @@
 
 
 HWND ghd;
-RendererD3D::Renderer render;
+RendererD3D::Renderer render = RendererD3D::Renderer::GetRef();
 
 void Render()
 {
-	
-	
-
+	FLOAT clearColor[4]{ 0.0f,0.0f,0.0f,1.0f };
+	render.ClearRenderTarget(clearColor);
 	render.Render(render.GetSet());
 	render.Present();
-
 }
 
 #define MAX_LOADSTRING 100
@@ -59,13 +57,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-	render.Initialize(ghd, 800, 600);
-
-		
-
-	
-
-
+	render.Initialize(ghd, 1600, 1024);
 
 	// Main message loop:
 	while (GetMessage(&msg, nullptr, 0, 0) )

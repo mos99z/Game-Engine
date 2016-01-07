@@ -3,6 +3,8 @@
 #include "Renderer.h"
 namespace  RendererD3D
 {
+	BlendStateManager*  BlendStateManager::instancePtr = nullptr;
+
 	BlendStateManager::BlendStateManager()
 	{
 		D3D11_BLEND_DESC desc = CD3D11_BLEND_DESC(CD3D11_DEFAULT());
@@ -27,10 +29,18 @@ namespace  RendererD3D
 		desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 		Renderer::theDevicePtr->CreateBlendState(&desc, &blendStates[BS_Additive].p);
 	}
-
-
-	BlendStateManager::~BlendStateManager()
+	BlendStateManager& BlendStateManager::GetRef()
 	{
+		if (!instancePtr)
+		{
+			instancePtr = new BlendStateManager;
+		}
+		 return *instancePtr;
 	}
+	void BlendStateManager::DeleteInstance()
+	{
+		delete instancePtr;
+	}
+
 
 }
