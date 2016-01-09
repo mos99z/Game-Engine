@@ -78,6 +78,9 @@
     <ClInclude Include="DepthStencilStateManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ShaderManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -116,6 +119,9 @@
     <ClCompile Include="DepthStencilStateManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Vertex_POSNORDIFF.hlsl">
@@ -132,6 +138,9 @@
     </FxCompile>
     <FxCompile Include="Shaders\Default_PS.hlsl">
       <Filter>Shaders\PixelShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ComputeShader.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

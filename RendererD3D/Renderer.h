@@ -19,6 +19,7 @@ namespace RendererD3D
 	class RenderContext;
 	class RenderSet;
 	class InputLayoutManager;
+	class ShaderManager;
 	class Renderer
 	{
 		Renderer(void) {};
@@ -83,6 +84,7 @@ namespace RendererD3D
 		static UINT resolutionWidth;
 		static UINT resolutionHeight;
 		static ID3D11ShaderResourceView *theDepthStencilSRVPtr;
+		static ShaderManager* shaderManagerPtr;
 	};
 
 

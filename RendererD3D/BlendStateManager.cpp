@@ -40,6 +40,7 @@ namespace  RendererD3D
 	void BlendStateManager::DeleteInstance()
 	{
 		delete instancePtr;
+		instancePtr = nullptr;
 	}
 
 

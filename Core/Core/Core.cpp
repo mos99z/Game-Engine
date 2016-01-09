@@ -5,7 +5,6 @@
 #include "Core.h"
 #include <Renderer.h>
 
-
 HWND ghd;
 RendererD3D::Renderer render = RendererD3D::Renderer::GetRef();
 

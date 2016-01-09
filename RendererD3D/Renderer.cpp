@@ -5,6 +5,7 @@
 #include "RenderMaterial.h"
 #include "RenderShape.h"
 #include "RenderSet.h"
+#include "ShaderManager.h"
 #include "InputLayoutManager.h"
 #include "RasterizerStateManager.h"
 #include "DepthStencilStateManager.h"
@@ -35,6 +36,7 @@ namespace RendererD3D
 	RenderShape*		Renderer::cubeShapePtr = nullptr;
 	RenderMaterial*	Renderer::cubeMaterialPtr = nullptr;
 	RenderSet* Renderer::rSetPtr = new RenderSet;
+	ShaderManager* Renderer::shaderManagerPtr = nullptr;
 
 
 
@@ -115,6 +117,8 @@ namespace RendererD3D
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
 
+
+		shaderManagerPtr = &ShaderManager::GetRef();
 		//Build Constant Buffer
 	/*	D3D11_BUFFER_DESC bd;
 		ZeroMemory(&bd, sizeof(bd));
@@ -230,6 +234,7 @@ namespace RendererD3D
 		delete cubeShapePtr;
 		delete cubeMaterialPtr;
 		delete rSetPtr;
+		shaderManagerPtr->DeleteInstance();
 		ReleaseCOM(vertexBuffer);
 		ReleaseCOM(thePerObjectCBuffer);
 		ReleaseCOM(theSwapChainPtr);

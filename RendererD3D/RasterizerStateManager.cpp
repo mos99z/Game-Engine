@@ -16,6 +16,7 @@ namespace  RendererD3D
 	void RasterizerStateManager::DeleteInstance()
 	{
 		delete instancePtr;
+		instancePtr = nullptr;
 	}
 
 

@@ -32,6 +32,7 @@ namespace  RendererD3D
 	void DepthStencilStateManager::DeleteInstance()
 	{
 		delete instancePtr;
+		instancePtr = nullptr;
 	}
 
 }

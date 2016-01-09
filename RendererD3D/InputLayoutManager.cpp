@@ -18,6 +18,7 @@ namespace RendererD3D
 	 void InputLayoutManager::DeleteInstance()
 	 {
 		 delete instancePtr;
+		 instancePtr = nullptr;
 	 }
 
 	InputLayoutManager::InputLayoutManager()
