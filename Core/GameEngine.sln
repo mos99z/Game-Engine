@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj", "{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FBXLoader", "FBXLoader\FBXLoader.vcxproj", "{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RendererD3D", "..\RendererD3D\RendererD3D.vcxproj", "{C6013C58-CE83-4B8B-ACED-4EE28DD2160A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utilities", "..\Utilities\Utilities.vcxproj", "{51505304-C387-41DB-8F5B-F66F8184C791}"
@@ -18,6 +16,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTK_Desktop_2015", "..\External\DirectXTK\DirectXTK_Desktop_2015.vcxproj", "{E0B52AE7-E160-4D32-BF3F-910B785E5A8E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSharpWarpper", "..\CSharpWarpper\CSharpWarpper.vcxproj", "{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FBXBinaryLoader", "..\FBXBinaryLoader\FBXBinaryLoader.vcxproj", "{E9731A80-CB62-4017-99BB-58A7A0274C22}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FBXBinaryConverter", "..\FBXBinaryConverter\FBXBinaryConverter.vcxproj", "{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,16 +41,6 @@ Global
 		{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}.Release|x64.Build.0 = Release|x64
 		{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}.Release|x86.ActiveCfg = Release|Win32
 		{4BDDF0CA-7371-45C0-86A7-05E6E2FB1994}.Release|x86.Build.0 = Release|Win32
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x64.ActiveCfg = Debug|x64
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x64.Build.0 = Debug|x64
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x86.ActiveCfg = Debug|Win32
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x86.Build.0 = Debug|Win32
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|Any CPU.ActiveCfg = Release|Win32
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x64.ActiveCfg = Release|x64
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x64.Build.0 = Release|x64
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x86.ActiveCfg = Release|Win32
-		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x86.Build.0 = Release|Win32
 		{C6013C58-CE83-4B8B-ACED-4EE28DD2160A}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{C6013C58-CE83-4B8B-ACED-4EE28DD2160A}.Debug|x64.ActiveCfg = Debug|x64
 		{C6013C58-CE83-4B8B-ACED-4EE28DD2160A}.Debug|x64.Build.0 = Debug|x64
@@ -101,6 +93,26 @@ Global
 		{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}.Release|x64.Build.0 = Release|x64
 		{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}.Release|x86.ActiveCfg = Release|Win32
 		{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}.Release|x86.Build.0 = Release|Win32
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Debug|x64.ActiveCfg = Debug|x64
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Debug|x64.Build.0 = Debug|x64
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Debug|x86.ActiveCfg = Debug|Win32
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Debug|x86.Build.0 = Debug|Win32
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Release|Any CPU.ActiveCfg = Release|Win32
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Release|x64.ActiveCfg = Release|x64
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Release|x64.Build.0 = Release|x64
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Release|x86.ActiveCfg = Release|Win32
+		{E9731A80-CB62-4017-99BB-58A7A0274C22}.Release|x86.Build.0 = Release|Win32
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x64.ActiveCfg = Debug|x64
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x64.Build.0 = Debug|x64
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x86.ActiveCfg = Debug|Win32
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Debug|x86.Build.0 = Debug|Win32
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|Any CPU.ActiveCfg = Release|Win32
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x64.ActiveCfg = Release|x64
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x64.Build.0 = Release|x64
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x86.ActiveCfg = Release|Win32
+		{BFC7F787-41BF-4CA6-BDB9-1C68CFF716D7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
