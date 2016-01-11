@@ -1,8 +1,17 @@
-
 #include "stdafx.h"
 #include "Renderer.h"
+#include "RenderContext.h"
+#include "RenderMaterial.h"
+#include "RenderShape.h"
+#include "RenderSet.h"
+#include "ShaderManager.h"
 #include "InputLayoutManager.h"
-
+#include "RasterizerStateManager.h"
+#include "DepthStencilStateManager.h"
+#include "BlendStateManager.h"
+#include "IndexBufferManager.h"
+#include <DDSTextureLoader.h>
+#include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
 {
 
@@ -14,10 +23,28 @@ namespace RendererD3D
 	ID3D11Texture2D* Renderer::theDepthStencilBufferPtr = nullptr;
 	ID3D11DepthStencilView* Renderer::theDepthStencilViewPtr = nullptr;
 	D3D11_VIEWPORT Renderer::theScreenViewport;
-	InputLayoutManager* Renderer::theInputLayoutManagerPtr;
 	UINT Renderer::resolutionWidth = 0;
 	UINT Renderer::resolutionHeight = 0;
 	UINT Renderer::theRenderCounter = 1;
+	cbPerObject Renderer::thePerObjectData;
+	ID3D11Buffer* Renderer::thePerObjectCBuffer;
+	DirectX::XMMATRIX Renderer::viewMatrix;
+	DirectX::XMMATRIX Renderer::proj;
+	ID3D11Buffer* Renderer::vertexBuffer = nullptr;
+
+	RenderContext*		Renderer::cubeContextPtr = nullptr;
+	RenderShape*		Renderer::cubeShapePtr = nullptr;
+	RenderMaterial*	Renderer::cubeMaterialPtr = nullptr;
+	RenderSet* Renderer::rSetPtr = new RenderSet;
+	ShaderManager* Renderer::shaderManagerPtr = nullptr;
+	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
+	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
+
+	Renderer& Renderer::GetRef()
+	{
+		static Renderer renderer;
+		return renderer;
+	}
 
 	void Renderer::Initialize(HWND hWnd, UINT resWidth, UINT resHeight)
 	{
@@ -35,7 +62,7 @@ namespace RendererD3D
 		swapchain_DESC.OutputWindow = hWnd;
 		swapchain_DESC.SampleDesc.Count = 1;
 		swapchain_DESC.Windowed = true;
-		
+
 
 
 		D3D11CreateDeviceAndSwapChain
@@ -75,6 +102,7 @@ namespace RendererD3D
 
 
 		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDESC = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2D, DXGI_FORMAT_D24_UNORM_S8_UINT);
+
 		theDevicePtr->CreateDepthStencilView(theDepthStencilBufferPtr, &depthStencilViewDESC, &theDepthStencilViewPtr);
 
 
@@ -89,6 +117,102 @@ namespace RendererD3D
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
 
+
+		shaderManagerPtr = &ShaderManager::GetRef();
+		//Build Constant Buffer
+		D3D11_BUFFER_DESC bd;
+		ZeroMemory(&bd, sizeof(bd));
+		bd.Usage = D3D11_USAGE_DYNAMIC;
+		bd.ByteWidth = sizeof(cbPerObject);
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerObjectCBuffer);
+
+		//Set sampler
+
+		D3D11_SAMPLER_DESC desc;
+		//anisoWrapSampler
+		desc.Filter = D3D11_FILTER_ANISOTROPIC;
+		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.MipLODBias = 0.0f;
+		desc.MaxAnisotropy = 16;
+		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		desc.BorderColor[0] = desc.BorderColor[1] = desc.BorderColor[2] = desc.BorderColor[3] = 0;
+		desc.MinLOD = -FLT_MAX;
+		desc.MaxLOD = FLT_MAX;
+		theDevicePtr->CreateSamplerState(&desc, &anisoWrapSampler);
+		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
+
+		//Build simple camera stuffs
+		proj = DirectX::XMMatrixPerspectiveFovLH(70.0f * DirectX::XM_PI / 180.0f , 16.0f / 9.0f, 0.01f, 100.0f);
+		float3 eyepos = { 0.0f, 0.7f, 1.5f};
+		float3 eyedir = { 0.0f, -0.1f, 0.0f};
+		float3 updir = { 0.0f,1.0f,0.0f };
+		viewMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
+
+
+
+		//Set Vertex buffer
+		VERIN_POSNORDIFF cubeVertices[] =
+		{
+			//Tri
+			/*{ float3(0.0f, 0.5f, 0.0f), float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(0.45f, -0.5f,  0.0f), float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(-0.45f,  -0.5f, 0.0f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },*/
+			{ float3(-0.5f, -0.5f, -0.5f),float3(0.0f, 1.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(-0.5f, -0.5f,  0.5f), float3(1.0f, 1.0f, 0.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(-0.5f,  0.5f, -0.5f), float3(1.0f, 0.0f, 1.0f), float4(0.0f, 1.0f, 0.0f,1.0f) },
+			{ float3(-0.5f,  0.5f,  0.5f),float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 1.0f, 1.0f,1.0f) },
+			{ float3(0.5f, -0.5f, -0.5f),   float3(0.0f, 1.0f, 1.0f), float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(0.5f, -0.5f,  0.5f),  float3(1.0f, 1.0f, 1.0f) , float4(1.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(0.5f,  0.5f, -0.5f),  float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 1.0f, 0.0f,1.0f) },
+			{ float3(0.5f,  0.5f,  0.5f),  float3(1.0f, 0.0f, 0.0f) , float4(1.0f, 1.0f, 1.0f,1.0f) },
+		};
+
+		const UINT vertexBufferSize = sizeof(cubeVertices);
+
+
+		D3D11_BUFFER_DESC bufferDesc;
+		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc.ByteWidth = vertexBufferSize;
+		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		bufferDesc.CPUAccessFlags = 0;
+		bufferDesc.MiscFlags = 0;
+		D3D11_SUBRESOURCE_DATA InitData;
+		InitData.pSysMem = cubeVertices;
+		InitData.SysMemPitch = 0;
+		InitData.SysMemSlicePitch = 0;
+		theDevicePtr->CreateBuffer(&bufferDesc, &InitData, &vertexBuffer);
+
+		UINT stripe = sizeof(VERIN_POSNORDIFF);
+		UINT offset = 0;
+		theContextPtr->IASetVertexBuffers(0, 1, &vertexBuffer, &stripe, &offset);
+
+
+		//Set index buffer 
+		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
+
+
+		//Set Inputlayout
+		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_POSNORDIFF]);
+
+		cubeContextPtr = new RenderContext;
+		cubeShapePtr = new RenderShape;
+		cubeMaterialPtr = new RenderMaterial;
+
+		rSetPtr->AddNode(cubeContextPtr);
+		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
+		cubeMaterialPtr->renderSet.AddNode(cubeShapePtr);
+		cubeShapePtr->numofVertices = 8;
+		cubeShapePtr->numofIndices = 36;
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity());
+
+		//Load texture for cube 
+		
+		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"texture.dds", nullptr, &cubeSRV);
+		theContextPtr->PSSetShaderResources(0, 1, &cubeSRV);
 
 	}
 
@@ -107,21 +231,60 @@ namespace RendererD3D
 
 	void  Renderer::Shutdown()
 	{
+		InputLayoutManager::DeleteInstance();
+		RasterizerStateManager::DeleteInstance();
+		DepthStencilStateManager::DeleteInstance();
+		BlendStateManager::DeleteInstance();
+		cubeContextPtr->renderSet.ClearSet();
+		cubeMaterialPtr->renderSet.ClearSet();
+		rSetPtr->ClearSet();
+		delete cubeContextPtr;
+		delete cubeShapePtr;
+		delete cubeMaterialPtr;
+		delete rSetPtr;
+		shaderManagerPtr->DeleteInstance();
+		IndexBufferManager::DeleteInstance();
+		ReleaseCOM(cubeSRV);
+		ReleaseCOM(anisoWrapSampler);
+		ReleaseCOM(vertexBuffer);
+		ReleaseCOM(thePerObjectCBuffer);
 		ReleaseCOM(theSwapChainPtr);
 		ReleaseCOM(theRenderTargetViewPtr);
 		ReleaseCOM(theDepthStencilViewPtr);
 		ReleaseCOM(theDepthStencilBufferPtr);
 		ReleaseCOM(theContextPtr);
+
+		//CComPtr<ID3D11Debug> pDebug;
+		//theDevicePtr->QueryInterface(IID_PPV_ARGS(&pDebug));
+		//if (pDebug != nullptr)
+		//{
+		//	pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+		//	pDebug = nullptr;
+		//}
 		ReleaseCOM(theDevicePtr);
-		delete theInputLayoutManagerPtr;
+
+
+
+
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
-		
-		
+		static float rotSpeed = 0.001f;
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, (DirectX::XMMatrixRotationY(rotSpeed)));
+		rotSpeed += 0.0001f;
+		RenderNode* item = set.GetHead();
+		while (item)
+		{
+			item->RenderProcess();
+			item = item->GetNext();
+		}
 	}
 
-	
+	RenderSet& Renderer::GetSet()
+	{
+		return *(rSetPtr);
+	}
+
 
 	void Renderer::Render(RenderSet &set, RenderFunc renderFuncOverride)
 	{
@@ -170,5 +333,22 @@ namespace RendererD3D
 	{
 		return nullptr;
 	}
+	void Renderer::SetPerObjectData(float4x4& _world)
+	{
+		DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(viewMatrix, proj);
+		thePerObjectData.gWorld = _world;
+		DirectX::XMStoreFloat4x4(&thePerObjectData.gMVP, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&_world), vp));
+
+		D3D11_MAPPED_SUBRESOURCE edit;
+		theContextPtr->Map(thePerObjectCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &edit);
+		memcpy(edit.pData, &thePerObjectData, sizeof(thePerObjectData));
+		theContextPtr->Unmap(thePerObjectCBuffer, 0);
+
+		theContextPtr->VSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
+		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
+	}
+
+
+
 }
 

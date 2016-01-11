@@ -1,4 +1,11 @@
 #pragma once
+
+#ifdef RENDERNODEDLL_EXPORTS
+#define  RENDERNODEDLL __declspec(dllexport) 
+#else
+#define  RENDERNODEDLL __declspec(dllimport) 
+#endif
+
 #include "SharedDefines.h"
 
 namespace RendererD3D
@@ -13,11 +20,11 @@ namespace RendererD3D
 	public:
 		RenderFunc RenderFunc;
 
-		RenderNode() {}
-		~RenderNode() {}
+		RENDERNODEDLL RenderNode() {}
+		RENDERNODEDLL ~RenderNode() {}
 
-		inline RenderNode *GetNext(void) { return nextPtr; }
-		inline void SetNext(RenderNode *nodePtr) { nextPtr = nodePtr; }
+		RENDERNODEDLL inline RenderNode *GetNext(void) { return nextPtr; }
+		RENDERNODEDLL inline void SetNext(RenderNode *nodePtr) { nextPtr = nodePtr; }
 		
 		inline void RenderProcess()
 		{
