@@ -74,16 +74,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>E:\GitHub\Clone\Game-Engine\External\DirectXTK\Inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\External\DirectXTK\Inc;..\FBXBinaryLoader;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>E:\GitHub\Clone\Game-Engine\External\DirectXTK\Inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\External\DirectXTK\Inc;..\FBXBinaryLoader;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>E:\GitHub\Clone\Game-Engine\External\DirectXTK\Inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\External\DirectXTK\Inc;..\FBXBinaryLoader;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>E:\GitHub\Clone\Game-Engine\External\DirectXTK\Inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\External\DirectXTK\Inc;..\FBXBinaryLoader;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -275,6 +275,9 @@
   <ItemGroup>
     <ProjectReference Include="..\External\DirectXTK\DirectXTK_Desktop_2015.vcxproj">
       <Project>{e0b52ae7-e160-4d32-bf3f-910b785e5a8e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\FBXBinaryLoader\FBXBinaryLoader.vcxproj">
+      <Project>{e9731a80-cb62-4017-99bb-58a7a0274c22}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
