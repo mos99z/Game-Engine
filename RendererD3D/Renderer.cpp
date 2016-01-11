@@ -197,7 +197,7 @@ namespace RendererD3D
 
 
 		//Set Inputlayout
-		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[0]);
+		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_POSNORDIFF]);
 
 		cubeContextPtr = new RenderContext;
 		cubeShapePtr = new RenderShape;
@@ -271,7 +271,7 @@ namespace RendererD3D
 	void  Renderer::Render(RenderSet &set)
 	{
 		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixTranspose(DirectX::XMMatrixRotationY(rotSpeed)));
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, (DirectX::XMMatrixRotationY(rotSpeed)));
 		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
