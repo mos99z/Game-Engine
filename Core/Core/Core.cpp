@@ -7,6 +7,7 @@
 
 HWND ghd;
 RendererD3D::Renderer render = RendererD3D::Renderer::GetRef();
+bool gGameEnd = false;
 
 void Render()
 {
@@ -59,19 +60,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	render.Initialize(ghd, 1600, 1024);
 
-	while (true)
-	{
-		Render();
-	}
+
 	// Main message loop:
-	while (GetMessage(&msg, nullptr, 0, 0) )
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gGameEnd)
 	{
-		
+
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		Render();
+		//Update();
+		
 
 	}
 	render.Shutdown();
@@ -190,10 +192,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_SIZE:
 		{
-		UINT width = LOWORD(lParam);
-		UINT height = HIWORD(lParam);
-		render.SetResolution(width, height);
-		break;
+			UINT width = LOWORD(lParam);
+			UINT height = HIWORD(lParam);
+			render.SetResolution(width, height);
+			break;
 		}
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
@@ -209,6 +211,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_DESTROY:
+		gGameEnd = true;
 		PostQuitMessage(0);
 		break;
 	default:

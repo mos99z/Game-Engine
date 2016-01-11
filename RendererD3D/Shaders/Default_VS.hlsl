@@ -13,6 +13,6 @@ VSOUT main(VERIN_POSNORDIFF input)
 {
 	VSOUT output = (VSOUT)0;
 	output.pos = mul(float4(input.position,1), gMVP);
-	output.color = input.diffuse;
+	output.color = float4(input.normal,1);
 	return output;
 }

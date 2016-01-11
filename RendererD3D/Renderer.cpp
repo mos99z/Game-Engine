@@ -11,7 +11,7 @@
 #include "DepthStencilStateManager.h"
 #include "BlendStateManager.h"
 #include "IndexBufferManager.h"
-
+#include <DDSTextureLoader.h>
 #include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
 {
@@ -39,7 +39,7 @@ namespace RendererD3D
 	RenderSet* Renderer::rSetPtr = new RenderSet;
 	ShaderManager* Renderer::shaderManagerPtr = nullptr;
 	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
-
+	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
 
 	Renderer& Renderer::GetRef()
 	{
@@ -158,17 +158,18 @@ namespace RendererD3D
 		//Set Vertex buffer
 		VERIN_POSNORDIFF cubeVertices[] =
 		{
+			//Tri
 			/*{ float3(0.0f, 0.5f, 0.0f), float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
 			{ float3(0.45f, -0.5f,  0.0f), float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
 			{ float3(-0.45f,  -0.5f, 0.0f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },*/
-			{ float3(-0.5f, -0.5f, -0.5f),float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
-			{ float3(-0.5f, -0.5f,  0.5f),float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
-			{ float3(-0.5f,  0.5f, -0.5f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },
-			{ float3(-0.5f,  0.5f,  0.5f),float3(0.0f, 1.0f, 1.0f) , float4(0.0f, 1.0f, 1.0f,1.0f) },
-			{ float3(0.5f, -0.5f, -0.5f),  float3(1.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
-			{ float3(0.5f, -0.5f,  0.5f),  float3(1.0f, 0.0f, 1.0f) , float4(1.0f, 0.0f, 1.0f,1.0f) },
-			{ float3(0.5f,  0.5f, -0.5f),  float3(1.0f, 1.0f, 0.0f) , float4(1.0f, 1.0f, 0.0f,1.0f) },
-			{ float3(0.5f,  0.5f,  0.5f),  float3(1.0f, 1.0f, 1.0f) , float4(1.0f, 1.0f, 1.0f,1.0f) },
+			{ float3(-0.5f, -0.5f, -0.5f),float3(0.0f, 1.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(-0.5f, -0.5f,  0.5f), float3(1.0f, 1.0f, 0.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(-0.5f,  0.5f, -0.5f), float3(1.0f, 0.0f, 1.0f), float4(0.0f, 1.0f, 0.0f,1.0f) },
+			{ float3(-0.5f,  0.5f,  0.5f),float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 1.0f, 1.0f,1.0f) },
+			{ float3(0.5f, -0.5f, -0.5f),   float3(0.0f, 1.0f, 1.0f), float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(0.5f, -0.5f,  0.5f),  float3(1.0f, 1.0f, 1.0f) , float4(1.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(0.5f,  0.5f, -0.5f),  float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 1.0f, 0.0f,1.0f) },
+			{ float3(0.5f,  0.5f,  0.5f),  float3(1.0f, 0.0f, 0.0f) , float4(1.0f, 1.0f, 1.0f,1.0f) },
 		};
 
 		const UINT vertexBufferSize = sizeof(cubeVertices);
@@ -209,6 +210,10 @@ namespace RendererD3D
 		cubeShapePtr->numofIndices = 36;
 		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity());
 
+		//Load texture for cube 
+		
+		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"texture.dds", nullptr, &cubeSRV);
+		theContextPtr->PSSetShaderResources(0, 1, &cubeSRV);
 
 	}
 
@@ -240,6 +245,7 @@ namespace RendererD3D
 		delete rSetPtr;
 		shaderManagerPtr->DeleteInstance();
 		IndexBufferManager::DeleteInstance();
+		ReleaseCOM(cubeSRV);
 		ReleaseCOM(anisoWrapSampler);
 		ReleaseCOM(vertexBuffer);
 		ReleaseCOM(thePerObjectCBuffer);
