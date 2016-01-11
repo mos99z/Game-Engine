@@ -6,14 +6,15 @@
 	#pragma once
 	#include <DirectXMath.h>
 	typedef unsigned int		uint;
-	typedef DirectX::XMFLOAT2	xmfloat2;
-	typedef DirectX::XMFLOAT3	xmfloat3;
-	typedef DirectX::XMFLOAT4	xmfloat4;
-	typedef DirectX::XMFLOAT4X4	xmfloat4x4;
+	typedef DirectX::XMINT4	int4;
+	typedef DirectX::XMFLOAT2	float2;
+	typedef DirectX::XMFLOAT3	float3;
+	typedef DirectX::XMFLOAT4	float4;
+	typedef DirectX::XMFLOAT4X4	float4x4;
 	// lets us ensure constant buffers and their variables are 16byte aligned to HLSL 4-float registers
 	#define _regAlign __declspec(align(16))
 	// allows us to attach semantics to HLSL variables without bugging C++
-	#define SEMANTIC(s_name) /* : s_name */
+	#define SEMANTIC(s_name)  /* : s_name */
 
 	#define CONSTANT_BUFFER_BEGIN(cb_name, reg) struct _regAlign cb_name {
 	#define CONSTANT_BUFFER_END };

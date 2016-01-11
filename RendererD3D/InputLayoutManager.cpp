@@ -4,6 +4,23 @@
 
 namespace RendererD3D
 {
+	InputLayoutManager* InputLayoutManager::instancePtr = nullptr;
+
+	 InputLayoutManager& InputLayoutManager::GetRef()
+	{
+		if (!instancePtr)
+		{
+			instancePtr = new InputLayoutManager;
+		}
+		return *instancePtr;
+	}
+
+	 void InputLayoutManager::DeleteInstance()
+	 {
+		 delete instancePtr;
+		 instancePtr = nullptr;
+	 }
+
 	InputLayoutManager::InputLayoutManager()
 	{
 		//eVertex_POSNORDIFF
@@ -73,12 +90,6 @@ namespace RendererD3D
 	}
 
 
-	InputLayoutManager::~InputLayoutManager()
-	{
-		for (auto& inputLayout : inputLayouts)
-		{
-			ReleaseCOM(inputLayout);
-		}
-	}
+
 
 }

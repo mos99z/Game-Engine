@@ -1,21 +1,26 @@
 #pragma once
 
+#ifdef RENDERSETDLL_EXPORTS
+#define  RENDERSETDLL __declspec(dllexport) 
+#else
+#define  RENDERSETDLL __declspec(dllimport) 
+#endif
+
 namespace RendererD3D
 {
 	class RenderNode;
-
 	class RenderSet
 	{
 		friend class Renderer;
 	protected:
 		RenderNode* headPtr = nullptr;
 	public:
-		RenderSet() {}
-		virtual ~RenderSet() {}
-		inline RenderNode* GetHead() { return headPtr; }
-		inline void ClearSet() { headPtr  = nullptr; }
+		RENDERSETDLL RenderSet() {}
+		RENDERSETDLL virtual ~RenderSet() {}
+		RENDERSETDLL inline RenderNode* GetHead() { return headPtr; }
+		RENDERSETDLL inline void ClearSet() { headPtr  = nullptr; }
 
-		virtual void AddNode(RenderNode* _node);
+		RENDERSETDLL virtual void AddNode(RenderNode* _node);
 		
 
 

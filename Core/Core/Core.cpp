@@ -6,16 +6,16 @@
 #include <Renderer.h>
 
 HWND ghd;
-RendererD3D::Renderer render;
+RendererD3D::Renderer render = RendererD3D::Renderer::GetRef();
+bool gGameEnd = false;
 
 void Render()
 {
-	
-	
-	FLOAT clearColor[4]{ 1.0f,0.0f,1.0f,1.0f };
+	FLOAT clearColor[4]{ 0.0f,0.0f,0.0f,1.0f };
 	render.ClearRenderTarget(clearColor);
+	render.ClearDepthAndStencilTarget();
+	render.Render(render.GetSet());
 	render.Present();
-
 }
 
 #define MAX_LOADSTRING 100
@@ -58,23 +58,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-	render.Initialize(ghd, 800, 600);
-
-		
-
-	
-
+	render.Initialize(ghd, 1600, 1024);
 
 
 	// Main message loop:
-	while (GetMessage(&msg, nullptr, 0, 0) )
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gGameEnd)
 	{
-		Render();
+
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		Render();
+		//Update();
+		
 
 	}
 	render.Shutdown();
@@ -193,10 +192,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_SIZE:
 		{
-		UINT width = LOWORD(lParam);
-		UINT height = HIWORD(lParam);
-		render.SetResolution(width, height);
-		break;
+			UINT width = LOWORD(lParam);
+			UINT height = HIWORD(lParam);
+			render.SetResolution(width, height);
+			break;
 		}
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
@@ -212,6 +211,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_DESTROY:
+		gGameEnd = true;
 		PostQuitMessage(0);
 		break;
 	default:
