@@ -12,6 +12,7 @@ void Render()
 {
 	FLOAT clearColor[4]{ 0.0f,0.0f,0.0f,1.0f };
 	render.ClearRenderTarget(clearColor);
+	render.ClearDepthAndStencilTarget();
 	render.Render(render.GetSet());
 	render.Present();
 }
@@ -58,10 +59,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	render.Initialize(ghd, 1600, 1024);
 
+	while (true)
+	{
+		Render();
+	}
 	// Main message loop:
 	while (GetMessage(&msg, nullptr, 0, 0) )
 	{
-		Render();
+		
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);

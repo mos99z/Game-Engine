@@ -10,6 +10,7 @@
 #include "RasterizerStateManager.h"
 #include "DepthStencilStateManager.h"
 #include "BlendStateManager.h"
+#include "IndexBufferManager.h"
 
 #include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
@@ -37,7 +38,7 @@ namespace RendererD3D
 	RenderMaterial*	Renderer::cubeMaterialPtr = nullptr;
 	RenderSet* Renderer::rSetPtr = new RenderSet;
 	ShaderManager* Renderer::shaderManagerPtr = nullptr;
-
+	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
 
 
 	Renderer& Renderer::GetRef()
@@ -120,47 +121,50 @@ namespace RendererD3D
 
 		shaderManagerPtr = &ShaderManager::GetRef();
 		//Build Constant Buffer
-	/*	D3D11_BUFFER_DESC bd;
+		D3D11_BUFFER_DESC bd;
 		ZeroMemory(&bd, sizeof(bd));
 		bd.Usage = D3D11_USAGE_DYNAMIC;
 		bd.ByteWidth = sizeof(cbPerObject);
 		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerObjectCBuffer);*/
+		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerObjectCBuffer);
 
-		////Set sampler
-		//CComPtr<ID3D11SamplerState> sampler;
-		//D3D11_SAMPLER_DESC desc;
-		////anisoWrapSampler
-		//desc.Filter = D3D11_FILTER_ANISOTROPIC;
-		//desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		//desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		//desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		//desc.MipLODBias = 0.0f;
-		//desc.MaxAnisotropy = 16;
-		//desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		//desc.BorderColor[0] = desc.BorderColor[1] = desc.BorderColor[2] = desc.BorderColor[3] = 0;
-		//desc.MinLOD = -FLT_MAX;
-		//desc.MaxLOD = FLT_MAX;
-		//theDevicePtr->CreateSamplerState(&desc, &sampler.p);
-		//theContextPtr->PSSetSamplers(0, 1, &sampler.p);
+		//Set sampler
+
+		D3D11_SAMPLER_DESC desc;
+		//anisoWrapSampler
+		desc.Filter = D3D11_FILTER_ANISOTROPIC;
+		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.MipLODBias = 0.0f;
+		desc.MaxAnisotropy = 16;
+		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		desc.BorderColor[0] = desc.BorderColor[1] = desc.BorderColor[2] = desc.BorderColor[3] = 0;
+		desc.MinLOD = -FLT_MAX;
+		desc.MaxLOD = FLT_MAX;
+		theDevicePtr->CreateSamplerState(&desc, &anisoWrapSampler);
+		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
 
 		//Build simple camera stuffs
-		/*proj = DirectX::XMMatrixPerspectiveFovLH(90.0f, 16.0f / 9.0f, 0.0f, 1.0f);
-		float3 eyepos = { 0.0f,5.0f,-10.0f };
-		float3 eyedir = { 1.0f,0.0f,0.0f };
+		proj = DirectX::XMMatrixPerspectiveFovLH(70.0f * DirectX::XM_PI / 180.0f , 16.0f / 9.0f, 0.01f, 100.0f);
+		float3 eyepos = { 0.0f, 0.7f, 1.5f};
+		float3 eyedir = { 0.0f, -0.1f, 0.0f};
 		float3 updir = { 0.0f,1.0f,0.0f };
-		viewMatrix = DirectX::XMMatrixLookToLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
-*/
+		viewMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
 
 
-//Set Vertex buffer
+
+		//Set Vertex buffer
 		VERIN_POSNORDIFF cubeVertices[] =
 		{
-			{ float3(0.0f, 0.5f, 0.0f), float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
+			/*{ float3(0.0f, 0.5f, 0.0f), float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
 			{ float3(0.45f, -0.5f,  0.0f), float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
-			{ float3(-0.45f,  -0.5f, 0.0f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },
-			{ float3(-0.5f,  0.5f,  0.5f), float3(0.0f, 1.0f, 1.0f) , float4(0.0f, 1.0f, 1.0f,1.0f) },
+			{ float3(-0.45f,  -0.5f, 0.0f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },*/
+			{ float3(-0.5f, -0.5f, -0.5f),float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
+			{ float3(-0.5f, -0.5f,  0.5f),float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
+			{ float3(-0.5f,  0.5f, -0.5f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },
+			{ float3(-0.5f,  0.5f,  0.5f),float3(0.0f, 1.0f, 1.0f) , float4(0.0f, 1.0f, 1.0f,1.0f) },
 			{ float3(0.5f, -0.5f, -0.5f),  float3(1.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
 			{ float3(0.5f, -0.5f,  0.5f),  float3(1.0f, 0.0f, 1.0f) , float4(1.0f, 0.0f, 1.0f,1.0f) },
 			{ float3(0.5f,  0.5f, -0.5f),  float3(1.0f, 1.0f, 0.0f) , float4(1.0f, 1.0f, 0.0f,1.0f) },
@@ -182,12 +186,14 @@ namespace RendererD3D
 		InitData.SysMemSlicePitch = 0;
 		theDevicePtr->CreateBuffer(&bufferDesc, &InitData, &vertexBuffer);
 
-
-
-
 		UINT stripe = sizeof(VERIN_POSNORDIFF);
 		UINT offset = 0;
 		theContextPtr->IASetVertexBuffers(0, 1, &vertexBuffer, &stripe, &offset);
+
+
+		//Set index buffer 
+		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
+
 
 		//Set Inputlayout
 		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[0]);
@@ -197,13 +203,11 @@ namespace RendererD3D
 		cubeMaterialPtr = new RenderMaterial;
 
 		rSetPtr->AddNode(cubeContextPtr);
-		cubeContextPtr->RenderFunc = RenderContext::Draw;
-		cubeContextPtr->renderSetPtr->AddNode(cubeMaterialPtr);
-		cubeMaterialPtr->RenderFunc = RenderMaterial::Draw;
-		cubeMaterialPtr->renderSetPtr->AddNode(cubeShapePtr);
-		cubeShapePtr->RenderFunc = RenderShape::Draw;
-		cubeShapePtr->numofVertices = 3;
-		//DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity());
+		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
+		cubeMaterialPtr->renderSet.AddNode(cubeShapePtr);
+		cubeShapePtr->numofVertices = 8;
+		cubeShapePtr->numofIndices = 36;
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity());
 
 
 	}
@@ -227,14 +231,16 @@ namespace RendererD3D
 		RasterizerStateManager::DeleteInstance();
 		DepthStencilStateManager::DeleteInstance();
 		BlendStateManager::DeleteInstance();
-		cubeContextPtr->renderSetPtr->ClearSet();
-		cubeMaterialPtr->renderSetPtr->ClearSet();
+		cubeContextPtr->renderSet.ClearSet();
+		cubeMaterialPtr->renderSet.ClearSet();
 		rSetPtr->ClearSet();
 		delete cubeContextPtr;
 		delete cubeShapePtr;
 		delete cubeMaterialPtr;
 		delete rSetPtr;
 		shaderManagerPtr->DeleteInstance();
+		IndexBufferManager::DeleteInstance();
+		ReleaseCOM(anisoWrapSampler);
 		ReleaseCOM(vertexBuffer);
 		ReleaseCOM(thePerObjectCBuffer);
 		ReleaseCOM(theSwapChainPtr);
@@ -258,6 +264,9 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
+		static float rotSpeed = 0.001f;
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixTranspose(DirectX::XMMatrixRotationY(rotSpeed)));
+		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
 		{

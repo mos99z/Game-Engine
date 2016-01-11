@@ -42,5 +42,13 @@ const static int REGISTER_SLOT = 1;
 CONSTANT_BUFFER_END
 
 
+//Light buffers
+CONSTANT_BUFFER_BEGIN(cbDirLight, b2)
+float3 lightPos;
+float4 DLightColor;
 
+#ifdef __cplusplus
+const static int REGISTER_SLOT = 2;
+#endif
+CONSTANT_BUFFER_END
 #endif //CONSTANT_BUFFERS_H

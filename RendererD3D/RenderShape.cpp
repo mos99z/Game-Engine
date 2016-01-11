@@ -6,7 +6,7 @@ namespace RendererD3D
 {
 	RenderShape::RenderShape()
 	{
-		RenderFunc = &Draw;
+		RenderFunc = RenderShape::Draw;
 	}
 
 
@@ -17,7 +17,7 @@ namespace RendererD3D
 	void  RenderShape::Draw(RenderNode &node)
 	{
 		RenderShape& nodeShape = (RenderShape&)node;
-		//Renderer::SetPerObjectData(nodeShape.worldMatrix);
-		Renderer::theContextPtr->Draw(nodeShape.numofVertices, nodeShape.startVertex);
+		Renderer::SetPerObjectData(nodeShape.worldMatrix);
+		Renderer::theContextPtr->DrawIndexed(nodeShape.numofIndices,nodeShape.startIndex, nodeShape.startVertex);
 	}
 }

@@ -1,10 +1,12 @@
+#pragma once
+
 #ifdef RENDERERDLL_EXPORTS
 #define RENDERERDLL_API __declspec(dllexport) 
 #else
 #define RENDERERDLL_API __declspec(dllimport) 
 #endif
 
-#pragma once
+
 #include "stdafx.h"
 #include "SharedDefines.h"
 #include "RenderNode.h"
@@ -35,7 +37,7 @@ namespace RendererD3D
 		static ID3D11Buffer* vertexBuffer;
 		static cbPerObject thePerObjectData;
 		static ID3D11Buffer *thePerObjectCBuffer;
-		
+		static ID3D11SamplerState* anisoWrapSampler;
 		
 
 
@@ -47,7 +49,7 @@ namespace RendererD3D
 		{
 			theContextPtr->ClearRenderTargetView(theRenderTargetViewPtr, clearColor);
 		}
-		inline static  void ClearDepthAndStencilTarget(
+		RENDERERDLL_API inline static  void ClearDepthAndStencilTarget(
 			UINT clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, FLOAT depth = 1.0f,
 			UINT8 stencil = 0)
 		{
@@ -86,6 +88,8 @@ namespace RendererD3D
 		static ID3D11ShaderResourceView *theDepthStencilSRVPtr;
 		static ShaderManager* shaderManagerPtr;
 	};
+
+
 
 
 }

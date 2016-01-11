@@ -6,19 +6,17 @@ namespace RendererD3D
 {
 	RenderMaterial::RenderMaterial()
 	{
-		renderSetPtr = new RenderSet;
-
+		RenderFunc = RenderMaterial::Draw;
 	}
 
 
 	RenderMaterial::~RenderMaterial()
 	{
-		delete renderSetPtr;
 	}
 
 	void RenderMaterial::Draw(RenderNode &node)
 	{
 		RenderMaterial& nodeMaterial = (RenderMaterial&)node;
-		Renderer::Render(*nodeMaterial.renderSetPtr);
+		Renderer::Render(nodeMaterial.renderSet);
 	}
 }

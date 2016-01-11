@@ -162,11 +162,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlendStateManager.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DepthStencilStateManager.h" />
+    <ClInclude Include="IndexBufferManager.h" />
     <ClInclude Include="InputLayoutManager.h" />
     <ClInclude Include="RasterizerStateManager.h" />
     <ClInclude Include="RenderContext.h" />
+    <ClInclude Include="RenderController.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderMaterial.h" />
     <ClInclude Include="RenderMesh.h" />
@@ -181,10 +184,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlendStateManager.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DepthStencilStateManager.cpp" />
+    <ClCompile Include="IndexBufferManager.cpp" />
     <ClCompile Include="InputLayoutManager.cpp" />
     <ClCompile Include="RasterizerStateManager.cpp" />
     <ClCompile Include="RenderContext.cpp" />
+    <ClCompile Include="RenderController.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderMaterial.cpp" />
     <ClCompile Include="RenderMesh.cpp" />
@@ -262,6 +268,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\CommonShaderFunctions.hlsli" />
     <None Include="Shaders\InputLayout.hlsli" />
     <None Include="Shaders\Samplers.hlsli" />
   </ItemGroup>

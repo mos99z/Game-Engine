@@ -1,7 +1,6 @@
 #ifndef INPUTLAYOUT_HLSLI
 #define INPUTLAYOUT_HLSLI
 #include "../SharedDefines.h"
-
 struct _regAlign VERIN_POSNORDIFF
 {
     float3 position SEMANTIC(POSITION0);
@@ -33,4 +32,14 @@ struct _regAlign VSOUT
 	float4 pos SEMANTIC(SV_POSITION);
 	float4 color SEMANTIC(COLOR);
 };
+
+struct _regAlign Material
+{
+	float3 normal;
+	float4 diffuseColor;
+	float specExp;
+	float specIntensity;
+};
+
+
 #endif //INPUTLAYOUT_HLSLI
