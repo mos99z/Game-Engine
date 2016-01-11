@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTK_Desktop_2015", ".
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSharpWarpper", "..\CSharpWarpper\CSharpWarpper.vcxproj", "{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Input", "Input\Input.vcxproj", "{A987FA13-2DA1-4E72-A474-AA4B521E7600}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +103,16 @@ Global
 		{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}.Release|x64.Build.0 = Release|x64
 		{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}.Release|x86.ActiveCfg = Release|Win32
 		{250FF69E-FEBA-4AE2-ABCC-69E21067BD14}.Release|x86.Build.0 = Release|Win32
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Debug|x64.ActiveCfg = Debug|x64
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Debug|x64.Build.0 = Debug|x64
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Debug|x86.ActiveCfg = Debug|Win32
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Debug|x86.Build.0 = Debug|Win32
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Release|Any CPU.ActiveCfg = Release|Win32
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Release|x64.ActiveCfg = Release|x64
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Release|x64.Build.0 = Release|x64
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Release|x86.ActiveCfg = Release|Win32
+		{A987FA13-2DA1-4E72-A474-AA4B521E7600}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
