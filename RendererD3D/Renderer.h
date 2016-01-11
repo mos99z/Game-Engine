@@ -71,6 +71,4 @@ namespace RendererD3D
 		static UINT resolutionHeight;
 		static ID3D11ShaderResourceView *theDepthStencilSRVPtr;
 	};
-
-	
 }
