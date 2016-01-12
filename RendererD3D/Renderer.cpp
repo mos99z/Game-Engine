@@ -153,6 +153,9 @@ namespace RendererD3D
 		viewMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
 
 
+		cubeContextPtr = new RenderContext;
+		cubeShapePtr = new RenderShape;
+		cubeMaterialPtr = new RenderMaterial;
 
 		//Set Vertex buffer
 		VERIN_POSNORDIFF cubeVertices[] =
@@ -192,21 +195,41 @@ namespace RendererD3D
 
 
 		//Set index buffer 
-		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
+		
+		unsigned int cubeIndices[] =
+		{
+			0, 2, 1, // -x
+			1, 2, 3,
 
+			4, 5, 6, // +x
+			5, 7, 6,
+
+			0, 1, 5, // -y
+			0, 5, 4,
+
+			2, 6, 7, // +y
+			2, 7, 3,
+
+			0, 4, 6, // -z
+			0, 6, 2,
+
+			1, 3, 7, // +z
+			1, 7, 5,
+		};
+		cubeShapePtr->numofIndices = 36;
+		cubeShapePtr->startIndex = IndexBufferManager::GetRef().AddIndices(cubeIndices, cubeShapePtr->numofIndices);
+		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
 
 		//Set Inputlayout
 		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_POSNORDIFF]);
 
-		cubeContextPtr = new RenderContext;
-		cubeShapePtr = new RenderShape;
-		cubeMaterialPtr = new RenderMaterial;
+		
 
 		rSetPtr->AddNode(cubeContextPtr);
 		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
 		cubeMaterialPtr->renderSet.AddNode(cubeShapePtr);
 		cubeShapePtr->numofVertices = 8;
-		cubeShapePtr->numofIndices = 36;
+	
 		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity());
 
 		//Load texture for cube 
