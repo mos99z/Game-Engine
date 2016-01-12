@@ -35,11 +35,11 @@ namespace RendererD3D
 
 	void StreamManager::AddGStream(RenderShape& renderShape)
 	{
-		/*AWBX::AWBXLoader loaderTest;
+		AWBX::AWBXLoader loaderTest;
 		unsigned int* indices = nullptr;
-		loaderTest.LoadAWBXMeshes("model.awbx", renderShape.numofVertices, &GstreamRawBufferPtr, renderShape.numofIndices, &indices);
+		loaderTest.LoadAWBXMesh("E:\\GitHub\\Clone\\Game-Engine\\Assets\\FBXs\\Teddy_Idle.AWBX", renderShape.numofVertices, (void**)&GstreamRawBufferPtr, renderShape.numofIndices, &indices);
 		numofGstream += renderShape.numofVertices;
-		IndexBufferManager::GetRef().AddIndices(indices, renderShape.numofIndices);*/
+		IndexBufferManager::GetRef().AddIndices(indices, renderShape.numofIndices);
 
 
 	}

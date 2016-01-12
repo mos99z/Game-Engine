@@ -11,6 +11,7 @@
 #include "BlendStateManager.h"
 #include "IndexBufferManager.h"
 #include <DDSTextureLoader.h>
+#include "StreamManager.h"
 #include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
 {
@@ -39,7 +40,7 @@ namespace RendererD3D
 	ShaderManager* Renderer::shaderManagerPtr = nullptr;
 	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
 	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
-
+	StreamManager* Renderer::streamManagerPtr = nullptr;
 	Renderer& Renderer::GetRef()
 	{
 		static Renderer renderer;
@@ -146,9 +147,9 @@ namespace RendererD3D
 		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
 
 		//Build simple camera stuffs
-		proj = DirectX::XMMatrixPerspectiveFovLH(70.0f * DirectX::XM_PI / 180.0f , 16.0f / 9.0f, 0.01f, 100.0f);
-		float3 eyepos = { 0.0f, 0.7f, 1.5f};
-		float3 eyedir = { 0.0f, -0.1f, 0.0f};
+		proj = DirectX::XMMatrixPerspectiveFovLH(70.0f * DirectX::XM_PI / 180.0f , 16.0f / 9.0f, 0.01f, 1000.0f);
+		float3 eyepos = { 0.0f, 100.0f, 300.0f};
+		float3 eyedir = { 0.0f, 50.0f, 0.0f};
 		float3 updir = { 0.0f,1.0f,0.0f };
 		viewMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
 
@@ -157,6 +158,9 @@ namespace RendererD3D
 		cubeShapePtr = new RenderShape;
 		cubeMaterialPtr = new RenderMaterial;
 
+
+		//Get stream manager class
+		streamManagerPtr = &StreamManager::GetRef();
 		//Set Vertex buffer
 		VERIN_POSNORDIFF cubeVertices[] =
 		{
@@ -175,16 +179,16 @@ namespace RendererD3D
 		};
 
 		const UINT vertexBufferSize = sizeof(cubeVertices);
-
-
+		
+		streamManagerPtr->AddGStream(*cubeShapePtr);
 		D3D11_BUFFER_DESC bufferDesc;
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		bufferDesc.ByteWidth = vertexBufferSize;
+		bufferDesc.ByteWidth = streamManagerPtr->numofGstream * sizeof (Gstream);
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		bufferDesc.CPUAccessFlags = 0;
 		bufferDesc.MiscFlags = 0;
 		D3D11_SUBRESOURCE_DATA InitData;
-		InitData.pSysMem = cubeVertices;
+		InitData.pSysMem = streamManagerPtr->GstreamRawBufferPtr;
 		InitData.SysMemPitch = 0;
 		InitData.SysMemSlicePitch = 0;
 		theDevicePtr->CreateBuffer(&bufferDesc, &InitData, &vertexBuffer);
@@ -216,8 +220,8 @@ namespace RendererD3D
 			1, 3, 7, // +z
 			1, 7, 5,
 		};
-		cubeShapePtr->numofIndices = 36;
-		cubeShapePtr->startIndex = IndexBufferManager::GetRef().AddIndices(cubeIndices, cubeShapePtr->numofIndices);
+		/*cubeShapePtr->numofIndices = 36;
+		cubeShapePtr->startIndex = IndexBufferManager::GetRef().AddIndices(cubeIndices, cubeShapePtr->numofIndices);*/
 		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
 
 		//Set Inputlayout
@@ -228,10 +232,10 @@ namespace RendererD3D
 		rSetPtr->AddNode(cubeContextPtr);
 		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
 		cubeMaterialPtr->renderSet.AddNode(cubeShapePtr);
-		cubeShapePtr->numofVertices = 8;
+		//cubeShapePtr->numofVertices = 8;
 	
-		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity());
-
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity() * DirectX::XMMatrixScaling(0.1f, 0.1f, 0.1f));
+		;
 		//Load texture for cube 
 		
 		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"texture.dds", nullptr, &cubeSRV);
@@ -265,6 +269,7 @@ namespace RendererD3D
 		delete cubeShapePtr;
 		delete cubeMaterialPtr;
 		delete rSetPtr;
+		streamManagerPtr->DeleteInstance();
 		shaderManagerPtr->DeleteInstance();
 		IndexBufferManager::DeleteInstance();
 		ReleaseCOM(cubeSRV);

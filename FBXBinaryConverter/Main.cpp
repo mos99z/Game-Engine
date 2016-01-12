@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 	FindClose(findHandle);
 
 #if _DEBUG
-	AWBX::AWBXLoader loaderTest;
+	/*AWBX::AWBXLoader loaderTest;
 
 	unsigned int VertexSizes;
 	VBuffer* VertexData = nullptr;
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 
 	if (IndexData)
 		delete[] IndexData;
-	IndexData = nullptr;
+	IndexData = nullptr;*/
 
 #endif
 

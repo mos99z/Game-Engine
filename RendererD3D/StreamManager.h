@@ -27,6 +27,7 @@ namespace RendererD3D
 
 	class StreamManager
 	{
+	public:
 		Gstream* GstreamRawBufferPtr = nullptr;
 		UINT numofGstream = 0;
 		Tstream* TstreamRawBufferPtr = nullptr;

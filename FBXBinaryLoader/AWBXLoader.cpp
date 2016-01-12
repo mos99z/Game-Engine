@@ -67,8 +67,9 @@ namespace AWBX
 			unsigned int indexOffset = 0;
 			for (int mesh = 0; mesh < m_currNumMeshes; mesh++)
 			{
-				memcpy_s((VBuffer*)(*OUT_VertexData) + vertOffset, m_VertexSizes[mesh] * sizeof(VBuffer), m_VertexData[mesh], m_VertexSizes[mesh] * sizeof(VBuffer));
-				vertOffset += m_VertexSizes[mesh];
+	
+				memcpy_s((char*)(*OUT_VertexData) + vertOffset, m_VertexSizes[mesh] * sizeof(VBuffer), (char*)m_VertexData[mesh], m_VertexSizes[mesh] * sizeof(VBuffer));
+				vertOffset += m_VertexSizes[mesh] * sizeof(VBuffer);
 				memcpy_s((*OUT_IndexData) + indexOffset, m_IndexSizes[mesh] * sizeof(unsigned int), m_IndexData[mesh], (int)m_IndexSizes[mesh] * sizeof(unsigned int));
 				indexOffset += m_IndexSizes[mesh];
 			}
