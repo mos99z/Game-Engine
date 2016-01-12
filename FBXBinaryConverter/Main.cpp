@@ -26,34 +26,22 @@ int main(int argc, char** argv)
 	FindClose(findHandle);
 
 #if _DEBUG
-	AWBX::AWBXLoader loaderTest;
+	/*AWBX::AWBXLoader loaderTest;
 
-	int numMeshes = 0;
-	unsigned int* VertexSizes = nullptr;
-	VBuffer** VertexData = nullptr;
-	unsigned int* IndexSizes = nullptr;
-	unsigned int** IndexData = nullptr;
+	unsigned int VertexSizes;
+	VBuffer* VertexData = nullptr;
+	unsigned int IndexSizes;
+	unsigned int* IndexData = nullptr;
 
-	loaderTest.LoadAWBXMeshes("D:\\Game-Engine\\Assets\\FBXs\\bat.AWBX", numMeshes, &VertexSizes, (void***)&VertexData, &IndexSizes, &IndexData);
+	loaderTest.LoadAWBXMesh("..\\Assets\\FBXs\\bat.AWBX", VertexSizes, (void**)&VertexData, IndexSizes, &IndexData);
 
-	if (numMeshes)
-	{
-		for (int mesh = 0; mesh < numMeshes; mesh++)
-		{
-			delete[] VertexData[mesh];
-			VertexData[mesh] = nullptr;
-			delete[] IndexData[mesh];
-			IndexData[mesh] = nullptr;
-		}
-		delete[] VertexSizes;
-		VertexSizes = nullptr;
-		delete[] IndexSizes;
-		IndexSizes = nullptr;
+	if (VertexData)
 		delete[] VertexData;
-		VertexData = nullptr;
+	VertexData = nullptr;
+
+	if (IndexData)
 		delete[] IndexData;
-		IndexData = nullptr;
-	}
+	IndexData = nullptr;*/
 
 #endif
 

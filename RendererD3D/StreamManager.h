@@ -27,17 +27,22 @@ namespace RendererD3D
 
 	class StreamManager
 	{
-		std::vector<Gstream> GstreamRawBuffer;
-		std::vector<Tstream> TstreamRawBuffer;
-		std::vector<Astream> AstreamRawBuffer;
-		std::vector<Istream> IstreamRawBuffer;
+	public:
+		Gstream* GstreamRawBufferPtr = nullptr;
+		UINT numofGstream = 0;
+		Tstream* TstreamRawBufferPtr = nullptr;
+		UINT numofTstream = 0;
+		/*std::vector<Astream> AstreamRawBuffer;
+		std::vector<Istream> IstreamRawBuffer;*/
+		static StreamManager*  instancePtr;
 	public:
 		StreamManager();
 		~StreamManager();
-		auto AppendToGstreamBuffer(Gstream& _gblock);
-		auto AppendToTstreamBuffer(Tstream& _tblock);
-		auto AppendToAstreamBuffer(Astream& _ablock);
-		auto AppendToIstreamBuffer(Istream& _iblock);
+		static StreamManager& GetRef();
+		static void DeleteInstance();
+
+
+		void AddGStream(RenderShape& renderShape);
 
 	};
 

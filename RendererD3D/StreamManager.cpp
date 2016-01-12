@@ -1,8 +1,27 @@
 #include "stdafx.h"
 #include "StreamManager.h"
-
+#include "RenderShape.h"
+#include "IndexBufferManager.h"
+#include <AWBXLoader.h>
 namespace RendererD3D
 {
+	StreamManager*  StreamManager::instancePtr = nullptr;
+
+	StreamManager& StreamManager::GetRef()
+	{
+		if (!instancePtr)
+		{
+			instancePtr = new StreamManager;
+		}
+		return *instancePtr;
+	}
+
+	void StreamManager::DeleteInstance()
+	{
+		delete instancePtr;
+		instancePtr = nullptr;
+	}
+
 	StreamManager::StreamManager()
 	{
 	}
@@ -10,33 +29,20 @@ namespace RendererD3D
 
 	StreamManager::~StreamManager()
 	{
-		
+		delete[] GstreamRawBufferPtr;
+		delete[] TstreamRawBufferPtr;
 	}
 
-	
-	
-	auto StreamManager::AppendToGstreamBuffer(Gstream& _gblock)
+	void StreamManager::AddGStream(RenderShape& renderShape)
 	{
-		auto startIndex = GstreamRawBuffer.size();
-		GstreamRawBuffer.push_back(_gblock);
-		return startIndex;
+		AWBX::AWBXLoader loaderTest;
+		unsigned int* indices = nullptr;
+		loaderTest.LoadAWBXMesh("E:\\GitHub\\Clone\\Game-Engine\\Assets\\FBXs\\Teddy_Idle.AWBX", renderShape.numofVertices, (void**)&GstreamRawBufferPtr, renderShape.numofIndices, &indices);
+		numofGstream += renderShape.numofVertices;
+		IndexBufferManager::GetRef().AddIndices(indices, renderShape.numofIndices);
+
+
 	}
-	auto StreamManager::AppendToTstreamBuffer(Tstream& _tblock)
-	{
-		auto startIndex = TstreamRawBuffer.size();
-		TstreamRawBuffer.push_back(_tblock);
-		return startIndex;
-	}
-	auto StreamManager::AppendToAstreamBuffer(Astream& _ablock)
-	{
-		auto startIndex = AstreamRawBuffer.size();
-		AstreamRawBuffer.push_back(_ablock);
-		return startIndex;
-	}
-	auto StreamManager::AppendToIstreamBuffer(Istream& _iblock)
-	{
-		auto startIndex = IstreamRawBuffer.size();
-		IstreamRawBuffer.push_back(_iblock);
-		return startIndex;
-	}
+
+
 }

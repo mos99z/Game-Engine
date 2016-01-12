@@ -22,6 +22,7 @@ namespace RendererD3D
 	class RenderSet;
 	class InputLayoutManager;
 	class ShaderManager;
+	class StreamManager;
 	class Renderer
 	{
 		Renderer(void) {};
@@ -88,6 +89,7 @@ namespace RendererD3D
 		static ID3D11ShaderResourceView *theDepthStencilSRVPtr;
 		static ShaderManager* shaderManagerPtr;
 		static ID3D11ShaderResourceView* cubeSRV;
+		static StreamManager* streamManagerPtr;
 	};
 
 

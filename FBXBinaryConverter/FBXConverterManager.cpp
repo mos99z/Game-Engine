@@ -279,30 +279,19 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 	int polyCount = nodeMesh->GetPolygonCount();
 	int polySize;
 
-	unsigned int m_numVerts = polyCount * 3;
+	unsigned int m_numVerts = nodeMesh->GetControlPointsCount();
 	VBuffer* m_VertBuffer = new VBuffer[m_numVerts];
 
-	unsigned int m_numIndexes = nodeMesh->GetPolygonVertexCount();
+	unsigned int m_numIndexes = nodeMesh-> GetPolygonVertexCount();
 	unsigned int* m_IndexBuffer = new unsigned int[m_numIndexes];
 	memcpy_s(m_IndexBuffer, m_numIndexes * sizeof(unsigned int), nodeMesh->GetPolygonVertices(), m_numIndexes  * sizeof(unsigned int));
-
-	for (int poly = 0; poly < polyCount; poly++)
+	 
+	auto versBuffer = nodeMesh->GetControlPoints();
+	for (unsigned int  i = 0; i < m_numVerts; i++)
 	{
-		polySize = nodeMesh->GetPolygonSize(poly);
-		for (int subPoly = 0; subPoly < polySize; subPoly++)
-		{
-			currVector = nodeMesh->GetControlPointAt(nodeMesh->GetPolygonVertex(poly, subPoly));
-			m_VertBuffer[poly].m_Position[0] = (float)currVector[0];
-			m_VertBuffer[poly].m_Position[1] = (float)currVector[1];
-			m_VertBuffer[poly].m_Position[2] = (float)currVector[2];
-
-			nodeMesh->GetPolygonVertexNormal(poly, subPoly, currNormal);
-			currNormal.Normalize();
-			m_VertBuffer[poly].m_Normal[0] = (float)currNormal[0];
-			m_VertBuffer[poly].m_Normal[1] = (float)currNormal[1];
-			m_VertBuffer[poly].m_Normal[2] = (float)currNormal[2];
-
-		}
+		m_VertBuffer[i].m_Position[0] = versBuffer[i].mData[0];
+		m_VertBuffer[i].m_Position[1] = versBuffer[i].mData[1];
+		m_VertBuffer[i].m_Position[2] = versBuffer[i].mData[2];
 	}
 
 	// Write Out Vertex Header
