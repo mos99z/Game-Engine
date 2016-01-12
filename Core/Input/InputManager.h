@@ -73,7 +73,8 @@ namespace Input
 			InputManager();
 			~InputManager();
 
-			void UpdateKeyboard();
+			void Update();
+			static void DoStuff();
 			void PressKey(int keycode);
 			void ReleaseKey(int keycode);
 			KeyStates GetKeyState(int keycode);
@@ -81,14 +82,15 @@ namespace Input
 			void SetKeyPressed(int keycode, void(*function)());
 			void SetKeyHeld(int keycode, void(*function)());
 			void SetKeyReleased(int keycode, void(*function)());
-			void KeyUpdates();
-
+			
 		private:
 			std::unordered_map<int, Key> keyboard;
 			int timer = TIMER_WAIT;
 
 			void ReleaseAll();
 			void NullAllFunctionPointers();
+			void UpdateKeyboard();
+			void KeyUpdates();
 	};
 }
 

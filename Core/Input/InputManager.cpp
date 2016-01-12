@@ -1,4 +1,5 @@
 #include "InputManager.h"
+#include <iostream>
 
 namespace Input
 {
@@ -12,6 +13,17 @@ namespace Input
 	InputManager::~InputManager()
 	{
 		keyboard.clear();
+	}
+
+	void InputManager::DoStuff()
+	{
+		std::cout << "Did stuff";
+	}
+
+	void InputManager::Update()
+	{
+		UpdateKeyboard();
+		KeyUpdates();
 	}
 
 	void InputManager::UpdateKeyboard()
@@ -489,7 +501,7 @@ namespace Input
 	void InputManager::PressKey(int keycode)
 	{
 		keyboard[keycode].prevState = keyboard[keycode].currState;
-		if (keyboard[keycode].currState == PRESSED)
+		if (keyboard[keycode].prevState == PRESSED)
 			keyboard[keycode].currState = HELD;
 		else
 			keyboard[keycode].currState = PRESSED;

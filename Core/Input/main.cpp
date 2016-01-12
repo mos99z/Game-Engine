@@ -7,14 +7,12 @@ Input::InputManager Iman;
 
 int main(int argc, char** argv)
 {
-	
-
 	Iman.SetKeyPressed(Input::IM_A, PrintAMessage);
+	Iman.SetKeyPressed(Input::IM_B, Input::InputManager::DoStuff);
 
 	while (true)
 	{
-		Iman.UpdateKeyboard();
-		Iman.KeyUpdates();
+		Iman.Update();
 
 		if (Iman.GetKeyState(VK_ESCAPE) == Input::PRESSED)
 			break;
