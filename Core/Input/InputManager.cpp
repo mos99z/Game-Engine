@@ -14,6 +14,12 @@ namespace Input
 		keyboard.clear();
 	}
 
+	void InputManager::Update()
+	{
+		UpdateKeyboard();
+		KeyUpdates();
+	}
+
 	void InputManager::UpdateKeyboard()
 	{		
 		if (timer < TIMER_WAIT)

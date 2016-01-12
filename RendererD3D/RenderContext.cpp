@@ -24,7 +24,7 @@ namespace RendererD3D
 		Renderer::theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[ShaderManager::DEFAULT_VS], 0, 0);
 		Renderer::theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[ShaderManager::DEFAULT_PS], 0, 0);
 		Renderer::theContextPtr->OMSetDepthStencilState(DepthStencilStateManager::GetRef().dsStates[DepthStencilStateManager::DSS_Default], 0);
-		Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_CCW]);
+		//Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_LINE]);
 		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		Renderer::Render(nodeContext.renderSet);
 	}
