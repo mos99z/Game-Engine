@@ -15,11 +15,6 @@ namespace Input
 		keyboard.clear();
 	}
 
-	void InputManager::DoStuff()
-	{
-		std::cout << "Did stuff";
-	}
-
 	void InputManager::Update()
 	{
 		UpdateKeyboard();

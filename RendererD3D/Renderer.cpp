@@ -376,7 +376,21 @@ namespace RendererD3D
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 
-
+	void Renderer::ChangeRS()
+	{
+		static bool line = false;
+		if (!line)
+		{
+			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_LINE]);
+			line = !line;
+		}
+		else
+		{
+			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_Default]);
+			line = !line;
+		}
+		
+	}
 
 }
 

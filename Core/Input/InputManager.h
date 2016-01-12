@@ -1,11 +1,21 @@
 #pragma once
 #include "stdafx.h"
+
+#ifdef INPUTMANAGERDLL_EXPORTS
+#define INPUTMANAGERDLL __declspec(dllexport) 
+#else
+#define INPUTMANAGERDLL __declspec(dllimport) 
+#endif
+
+
+
+
 #include <unordered_map>
 #define TIMER_WAIT 500
 
 namespace Input 
 {
-	enum Keys
+	 enum Keys
 	{
 		IM_0 = 0x30,
 		IM_1,
@@ -56,7 +66,7 @@ namespace Input
 		IM_QUOTE,
 	};
 
-	enum KeyStates {PRESSED, HELD, RELEASED};
+	 enum KeyStates {PRESSED, HELD, RELEASED};
 
 	struct Key
 	{
@@ -70,27 +80,27 @@ namespace Input
 	class InputManager
 	{
 		public:
-			InputManager();
-			~InputManager();
+			INPUTMANAGERDLL InputManager();
+			INPUTMANAGERDLL ~InputManager();
 
-			void Update();
-			static void DoStuff();
-			void PressKey(int keycode);
-			void ReleaseKey(int keycode);
-			KeyStates GetKeyState(int keycode);
-			KeyStates GetPreviousKeyState(int keycode);
-			void SetKeyPressed(int keycode, void(*function)());
-			void SetKeyHeld(int keycode, void(*function)());
-			void SetKeyReleased(int keycode, void(*function)());
-			
+			INPUTMANAGERDLL void Update();
+
+			INPUTMANAGERDLL void UpdateKeyboard();
+			INPUTMANAGERDLL void PressKey(int keycode);
+			INPUTMANAGERDLL void ReleaseKey(int keycode);
+			INPUTMANAGERDLL KeyStates GetKeyState(int keycode);
+			INPUTMANAGERDLL KeyStates GetPreviousKeyState(int keycode);
+			INPUTMANAGERDLL void SetKeyPressed(int keycode, void(*function)());
+			INPUTMANAGERDLL void SetKeyHeld(int keycode, void(*function)());
+			INPUTMANAGERDLL void SetKeyReleased(int keycode, void(*function)());
+			INPUTMANAGERDLL void KeyUpdates();
+
 		private:
 			std::unordered_map<int, Key> keyboard;
 			int timer = TIMER_WAIT;
 
 			void ReleaseAll();
 			void NullAllFunctionPointers();
-			void UpdateKeyboard();
-			void KeyUpdates();
 	};
 }
 

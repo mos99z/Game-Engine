@@ -80,6 +80,8 @@ namespace RendererD3D
 		static RenderMaterial*	cubeMaterialPtr;
 		static RenderSet* rSetPtr;
 		RENDERERDLL_API  RenderSet& GetSet();
+		RENDERERDLL_API static void ChangeRS();
+
 	private:
 		static DirectX::XMMATRIX viewMatrix;
 		static DirectX::XMMATRIX proj;
@@ -90,6 +92,7 @@ namespace RendererD3D
 		static ShaderManager* shaderManagerPtr;
 		static ID3D11ShaderResourceView* cubeSRV;
 		static StreamManager* streamManagerPtr;
+
 	};
 
 

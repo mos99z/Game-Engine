@@ -13,3 +13,5 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
+
+#define INPUTMANAGERDLL_EXPORTS
