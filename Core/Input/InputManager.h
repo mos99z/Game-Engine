@@ -1,5 +1,7 @@
 #pragma once
 #include "stdafx.h"
+#include <unordered_map>
+#define TIMER_WAIT 500
 
 namespace Input 
 {
@@ -60,6 +62,9 @@ namespace Input
 	{
 		KeyStates currState;
 		KeyStates prevState;
+		void(*KeyPressed)();
+		void(*KeyHeld)();
+		void(*KeyReleased)();
 	};
 
 	class InputManager
@@ -68,13 +73,22 @@ namespace Input
 			InputManager();
 			~InputManager();
 
-			void updateKeyboard();
+			void UpdateKeyboard();
 			void PressKey(int keycode);
 			void ReleaseKey(int keycode);
 			KeyStates GetKeyState(int keycode);
 			KeyStates GetPreviousKeyState(int keycode);
+			void SetKeyPressed(int keycode, void(*function)());
+			void SetKeyHeld(int keycode, void(*function)());
+			void SetKeyReleased(int keycode, void(*function)());
+			void KeyUpdates();
+
 		private:
 			std::unordered_map<int, Key> keyboard;
+			int timer = TIMER_WAIT;
+
+			void ReleaseAll();
+			void NullAllFunctionPointers();
 	};
 }
 
