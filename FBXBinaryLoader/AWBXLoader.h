@@ -43,15 +43,23 @@ namespace AWBX
 			float m_Diffuse[4]{ 1,0,1,1 };
 		};
 
-		std::vector<int32_t> m_VertexSizes;
+		std::vector<unsigned int> m_VertexSizes;
 		std::vector<VBuffer*> m_VertexData;
 
-		std::vector<int32_t> m_IndexSizes;
+		std::vector<unsigned int> m_IndexSizes;
 		std::vector<unsigned int*> m_IndexData;
+
+		int m_currNumMeshes;
+
+		unsigned int m_totalVertexes;
+		unsigned int m_totalIndexes;
 
 		void HandleMeshHeader();
 		void HandleVertexBuffer();
 		void HandleIndexBuffer();
+
+		bool AWBXLoader::OpenFile(char* _filePath);
+		bool AWBXLoader::ParseFile();
 
 	public:
 		AWBXLOADERDLL_API AWBXLoader();
@@ -61,6 +69,7 @@ namespace AWBX
 		///		float Position[3]
 		///		float Normal[3]
 		///		float Diffuse[4]
-		AWBXLOADERDLL_API bool LoadAWBXMeshes(char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_MeshVertexSizes, void*** OUT_VertexData, unsigned int** OUT_MeshIndexSizes, unsigned int*** OUT_IndexData);
+		AWBXLOADERDLL_API bool LoadAWBXMeshes(char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData);
+		AWBXLOADERDLL_API bool LoadAWBXMesh(char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData);
 	};
 }
