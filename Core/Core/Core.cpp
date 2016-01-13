@@ -5,6 +5,7 @@
 #include "Core.h"
 #include <Renderer.h>
 #include <InputManager.h>
+#include <Camera.h>
 #include <RenderContext.h>
 
 
@@ -78,6 +79,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		inputManager.Update();
 		Render();
+
 		//Update();
 		
 

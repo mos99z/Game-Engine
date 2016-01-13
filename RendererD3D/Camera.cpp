@@ -3,10 +3,18 @@
 
 namespace RendererD3D
 {
-	Camera::Camera() : up(0.0f, 1.0f, 0.0f), side(1.0f, 0.0f, 0.0f), forward(0.0f, 0.0f, 1.0f), position(0.0f, 25.0f, 50.0f)
+
+	XMFLOAT3 Camera::up(0.0f, 1.0f, 0.0f);
+	XMFLOAT3 Camera::side(1.0f, 0.0f, 0.0f);
+	XMFLOAT3 Camera::forward(0.0f, 0.0f, -1.0f);
+	XMFLOAT3 Camera::position(0.0f, 25.0f, 50.0f);
+	XMMATRIX Camera::view;
+	XMMATRIX Camera::proj;
+
+	Camera::Camera() 
 	{
 		XMFLOAT3 focus{ 0.0f, 0.0f,-1.0f };
-		view = XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&focus), XMLoadFloat3(&up));
+		view = XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&forward), XMLoadFloat3(&up));
 		proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0f), 16.0f/9.0f, 0.1f, 1000.0f);
 	}
 

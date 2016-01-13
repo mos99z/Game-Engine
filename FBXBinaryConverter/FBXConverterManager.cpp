@@ -41,7 +41,7 @@ void FBXLoaderManager::Uninitilize()
 
 void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
 {
-	
+
 
 #if _DEBUG
 	_ASSERT_EXPR(_FbxFileName, L"FBXLoader - Passed In File Name Can NOT Be Null!");
@@ -134,8 +134,10 @@ void FBXLoaderManager::HandleNode(FbxNode* _node)
 		case FbxNodeAttribute::eSkeleton: break;
 		case FbxNodeAttribute::eMesh:
 		{
-			mp_FbxGeoConverter->Triangulate(_node->GetNodeAttributeByIndex(attribute), false);
-			
+			if (!_node->GetMesh()->IsTriangleMesh())
+			{
+				mp_FbxGeoConverter->Triangulate(_node->GetNodeAttributeByIndex(attribute), false);
+			}
 			HandleMesh(_node);
 			break;
 		}
@@ -265,9 +267,16 @@ void FBXLoaderManager::ParseOutFileName()
 	ms_FileOutName.append(".AWBX");
 }
 
+
+
+
+
 void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 {
 	FbxMesh* nodeMesh = _node->GetMesh();
+
+	////////////////////////////////////////////////////////////*******************////////////////////TODO: Austin is stupid !
+	_node->EvaluateGlobalTransform();
 
 	// Write Out Mesh Header Data
 	DataType meshDataType = MeshData;
@@ -284,17 +293,64 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 	unsigned int m_numVerts = nodeMesh->GetControlPointsCount();
 	VBuffer* m_VertBuffer = new VBuffer[m_numVerts];
 
-	unsigned int m_numIndexes = nodeMesh-> GetPolygonVertexCount();
+	unsigned int m_numIndexes = nodeMesh->GetPolygonVertexCount();
 	unsigned int* m_IndexBuffer = new unsigned int[m_numIndexes];
 	memcpy_s(m_IndexBuffer, m_numIndexes * sizeof(unsigned int), nodeMesh->GetPolygonVertices(), m_numIndexes  * sizeof(unsigned int));
-	 
+
 	auto versBuffer = nodeMesh->GetControlPoints();
-	for (unsigned int  i = 0; i < m_numVerts; i++)
+	/*for (unsigned int  i = 0; i < m_numVerts; i++)
 	{
 		m_VertBuffer[i].m_Position[0] = (float)versBuffer[i].mData[0];
 		m_VertBuffer[i].m_Position[1] = (float)versBuffer[i].mData[1];
 		m_VertBuffer[i].m_Position[2] = (float)versBuffer[i].mData[2];
+	}*/
+
+
+	// For each polygon in the input mesh
+	for (int iPolygon = 0; iPolygon < nodeMesh->GetPolygonCount(); iPolygon++)
+	{
+		// For each vertex in the polygon
+		for (unsigned iPolygonVertex = 0; iPolygonVertex < 3; iPolygonVertex++)
+		{
+			int fbxCornerIndex = nodeMesh->GetPolygonVertex(iPolygon, iPolygonVertex);
+
+			// Get vertex position
+			fbxsdk::FbxVector4 fbxVertex = versBuffer[fbxCornerIndex];
+			m_VertBuffer[fbxCornerIndex].m_Position[0] = (float)fbxVertex.mData[0];
+			m_VertBuffer[fbxCornerIndex].m_Position[1] = (float)fbxVertex.mData[1];
+			m_VertBuffer[fbxCornerIndex].m_Position[2] = (float)fbxVertex.mData[2];
+
+			// Get normal
+			fbxsdk::FbxVector4 fbxNormal;
+			nodeMesh->GetPolygonVertexNormal(iPolygon, iPolygonVertex, fbxNormal);
+			fbxNormal.Normalize();
+			m_VertBuffer[fbxCornerIndex].m_Normal[0] = (float)fbxNormal.mData[0];
+			m_VertBuffer[fbxCornerIndex].m_Normal[1] = (float)fbxNormal.mData[1];
+			m_VertBuffer[fbxCornerIndex].m_Normal[2] = (float)fbxNormal.mData[2];
+
+			// Get texture coordinate
+			fbxsdk::FbxVector2 fbxUV = fbxsdk::FbxVector2(0.0, 0.0);
+			fbxsdk::FbxLayerElementUV* fbxLayerUV = nodeMesh->GetLayer(0)->GetUVs();
+			if (fbxLayerUV)
+			{
+				int iUVIndex = 0;
+				switch (fbxLayerUV->GetMappingMode())
+				{
+				case fbxsdk::FbxLayerElement::eByControlPoint:
+					iUVIndex = fbxCornerIndex;
+					break;
+
+				case fbxsdk::FbxLayerElement::eByPolygonVertex:
+					iUVIndex = nodeMesh->GetTextureUVIndex(iPolygon, iPolygonVertex);
+					break;
+				}
+				fbxUV = fbxLayerUV->GetDirectArray().GetAt(iUVIndex);
+				m_VertBuffer[fbxCornerIndex].m_Diffuse[1] = (float)fbxUV.mData[0];
+				m_VertBuffer[fbxCornerIndex].m_Diffuse[0] = (float)fbxUV.mData[1];
+			}												
+		}
 	}
+
 
 	// Write Out Vertex Header
 	VertexHeader newVertHeader;

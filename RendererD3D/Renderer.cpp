@@ -88,13 +88,16 @@ namespace RendererD3D
 		theDevicePtr->CreateRenderTargetView(theBackBufferPtr, nullptr, &theRenderTargetViewPtr);
 		ReleaseCOM(theBackBufferPtr);
 
+
+
 		D3D11_TEXTURE2D_DESC ZBufferdesc;
 		ZeroMemory(&ZBufferdesc, sizeof(ZBufferdesc));
 		ZBufferdesc.Width = resolutionWidth;
 		ZBufferdesc.Height = resolutionHeight;
 		ZBufferdesc.MipLevels = 1;
 		ZBufferdesc.ArraySize = 1;
-		ZBufferdesc.SampleDesc.Count = 1;
+		ZBufferdesc.SampleDesc.Count = swapchain_DESC.SampleDesc.Count;
+		ZBufferdesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
 		ZBufferdesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 		ZBufferdesc.Usage = D3D11_USAGE_DEFAULT;
 		ZBufferdesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
@@ -148,11 +151,8 @@ namespace RendererD3D
 		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
 		
 		//Build simple camera stuffs
-		proj = camera.GetProj();//DirectX::XMMatrixPerspectiveFovLH(70.0f * DirectX::XM_PI / 180.0f , 16.0f / 9.0f, 0.01f, 1000.0f);
-		float3 eyepos = { 0.0f, 100.0f, 250.0f};
-		float3 focusPos = { 0.0f, 50.0f, 0.0f};
-		float3 updir = { 0.0f,1.0f,0.0f };
-		viewMatrix = camera.GetView();// DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&focusPos), DirectX::XMLoadFloat3(&updir));
+		proj = camera.GetProj();
+		viewMatrix = camera.GetView();
 
 
 		cubeContextPtr = new RenderContext;
@@ -298,6 +298,8 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
+		camera.UpdateView();
+		viewMatrix = camera.GetView();
 		static float rotSpeed = 0.001f;
 		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, (DirectX::XMMatrixRotationX(DirectX ::XMConvertToRadians(-90.0f)) *DirectX::XMMatrixRotationY(rotSpeed)* DirectX::XMMatrixScaling(0.3f,0.3f,0.3f)));
 		rotSpeed += 0.0001f;
