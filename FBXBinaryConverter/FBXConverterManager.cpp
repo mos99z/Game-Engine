@@ -41,6 +41,7 @@ void FBXLoaderManager::Uninitilize()
 
 void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
 {
+	
 
 #if _DEBUG
 	_ASSERT_EXPR(_FbxFileName, L"FBXLoader - Passed In File Name Can NOT Be Null!");
@@ -53,6 +54,7 @@ void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
 	ParseOutFileName();
 
 	mp_FbxManager = FbxManager::Create();
+	mp_FbxGeoConverter = new FbxGeometryConverter(mp_FbxManager);
 #if _DEBUG
 	_ASSERT_EXPR(mp_FbxManager, L"FBXLoader - FbxManager failed to create!");
 #endif
@@ -133,6 +135,7 @@ void FBXLoaderManager::HandleNode(FbxNode* _node)
 		case FbxNodeAttribute::eMesh:
 		{
 			mp_FbxGeoConverter->Triangulate(_node->GetNodeAttributeByIndex(attribute), false);
+			
 			HandleMesh(_node);
 			break;
 		}
@@ -276,8 +279,7 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 
 	FbxVector4 currVector;
 	FbxVector4 currNormal;
-	int polyCount = nodeMesh->GetPolygonCount();
-	int polySize;
+
 
 	unsigned int m_numVerts = nodeMesh->GetControlPointsCount();
 	VBuffer* m_VertBuffer = new VBuffer[m_numVerts];
@@ -289,9 +291,9 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 	auto versBuffer = nodeMesh->GetControlPoints();
 	for (unsigned int  i = 0; i < m_numVerts; i++)
 	{
-		m_VertBuffer[i].m_Position[0] = versBuffer[i].mData[0];
-		m_VertBuffer[i].m_Position[1] = versBuffer[i].mData[1];
-		m_VertBuffer[i].m_Position[2] = versBuffer[i].mData[2];
+		m_VertBuffer[i].m_Position[0] = (float)versBuffer[i].mData[0];
+		m_VertBuffer[i].m_Position[1] = (float)versBuffer[i].mData[1];
+		m_VertBuffer[i].m_Position[2] = (float)versBuffer[i].mData[2];
 	}
 
 	// Write Out Vertex Header

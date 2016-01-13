@@ -6,7 +6,7 @@
 #include "DepthStencilStateManager.h"
 namespace RendererD3D
 {
-
+	bool RenderContext::wireFrame = false;
 	RenderContext::RenderContext()
 	{
 		RenderFunc = RenderContext::Draw;
@@ -24,8 +24,20 @@ namespace RendererD3D
 		Renderer::theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[ShaderManager::DEFAULT_VS], 0, 0);
 		Renderer::theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[ShaderManager::DEFAULT_PS], 0, 0);
 		Renderer::theContextPtr->OMSetDepthStencilState(DepthStencilStateManager::GetRef().dsStates[DepthStencilStateManager::DSS_Default], 0);
-		//Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_LINE]);
+		if (wireFrame)
+		{
+			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_LINE]);
+		}
+		else
+		{
+			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_Default]);
+		}
 		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		Renderer::Render(nodeContext.renderSet);
+	}
+
+	void RenderContext::ToggleWireFrame()
+	{
+		wireFrame = !wireFrame;
 	}
 }

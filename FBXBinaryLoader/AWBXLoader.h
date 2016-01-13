@@ -58,7 +58,7 @@ namespace AWBX
 		void HandleVertexBuffer();
 		void HandleIndexBuffer();
 
-		bool AWBXLoader::OpenFile(char* _filePath);
+		bool AWBXLoader::OpenFile(const char* _filePath);
 		bool AWBXLoader::ParseFile();
 
 	public:
@@ -69,7 +69,7 @@ namespace AWBX
 		///		float Position[3]
 		///		float Normal[3]
 		///		float Diffuse[4]
-		AWBXLOADERDLL_API bool LoadAWBXMeshes(char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData);
-		AWBXLOADERDLL_API bool LoadAWBXMesh(char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData);
+		AWBXLOADERDLL_API bool LoadAWBXMeshes(const char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData);
+		AWBXLOADERDLL_API bool LoadAWBXMesh(const char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData);
 	};
 }

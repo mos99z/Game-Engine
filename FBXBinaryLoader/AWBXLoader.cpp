@@ -18,7 +18,7 @@ namespace AWBX
 	{
 	}
 
-	bool AWBXLoader::LoadAWBXMeshes(char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData)
+	bool AWBXLoader::LoadAWBXMeshes(const char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData)
 	{
 		if (OpenFile(IN_AWBXFilePath))
 		{
@@ -48,7 +48,7 @@ namespace AWBX
 		return true;
 	}
 
-	bool AWBXLoader::LoadAWBXMesh(char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData)
+	bool AWBXLoader::LoadAWBXMesh(const char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData)
 	{
 		m_totalVertexes = 0;
 		m_totalIndexes = 0;
@@ -80,7 +80,7 @@ namespace AWBX
 		return true;
 	}
 
-	bool AWBXLoader::OpenFile(char* _filePath)
+	bool AWBXLoader::OpenFile(const char* _filePath)
 	{
 		ReadStream.open(_filePath, std::ios_base::binary);
 		m_currNumMeshes = 0;

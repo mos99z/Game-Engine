@@ -1,5 +1,5 @@
 #pragma once
-#include "Renderer.h"
+#include <DirectXMath.h>
 using namespace DirectX;
 namespace RendererD3D
 {
