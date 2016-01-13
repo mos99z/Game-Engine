@@ -14,8 +14,6 @@ FBXLoaderManager::FBXLoaderManager()
 	mp_FbxImporter = nullptr;
 	mp_FbxScene = nullptr;
 	mp_FbxRootNode = nullptr;
-	/*m_VertBuffer = nullptr;
-	m_IndexBuffer = nullptr;*/
 }
 
 FBXLoaderManager::~FBXLoaderManager()
@@ -25,38 +23,29 @@ FBXLoaderManager::~FBXLoaderManager()
 
 void FBXLoaderManager::Uninitilize()
 {
-	/*if (m_VertBuffer)
-		delete[] m_VertBuffer;
-	if (m_IndexBuffer)
-		delete[] m_IndexBuffer;*/
-
-	m_NumTabs = 0;
 	m_DepthLevel = 0;
-	/*m_numVerts = 0;
-	m_numIndexes = 0;*/
-
 	if (writeStream.is_open())
 		writeStream.close();
 }
 
-void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
+void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 {
+	Uninitilize();
 
 #if _DEBUG
 	_ASSERT_EXPR(_FbxFileName, L"FBXLoader - Passed In File Name Can NOT Be Null!");
 #endif
 
-	ms_FbxFileName = ms_FileOutName = ms_FilePath;
-	_bstr_t wideToChar(_FbxFileName);
-	ms_FileOutName.append(wideToChar);
-	ms_FbxFileName.append(wideToChar);
+	ms_FbxFileName = ms_AWBXFileName = _FbxFileName;
 	ParseOutFileName();
 
 	mp_FbxManager = FbxManager::Create();
+
 #if _DEBUG
 	_ASSERT_EXPR(mp_FbxManager, L"FBXLoader - FbxManager failed to create!");
 #endif
 
+	mp_FbxGeoConverter = new FbxGeometryConverter(mp_FbxManager);
 	mp_FbxIOSettings = FbxIOSettings::Create(mp_FbxManager, IOSROOT);
 
 #if _DEBUG
@@ -64,14 +53,16 @@ void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
 #endif
 
 	mp_FbxManager->SetIOSettings(mp_FbxIOSettings);
-
 	mp_FbxImporter = FbxImporter::Create(mp_FbxManager, "");
 
 #if _DEBUG
 	_ASSERT_EXPR(mp_FbxImporter, L"FBXLoader - FbxImporter failed to create!");
 #endif
 
-	if (!mp_FbxImporter->Initialize(ms_FbxFileName.c_str(), -1, mp_FbxManager->GetIOSettings()))
+	char* deleteMe = new char[ms_FbxFileName.size()+1];
+	deleteMe[ms_FbxFileName.size()] = '\0';
+	wcstombs(deleteMe, ms_FbxFileName.c_str(), ms_FbxFileName.size());
+	if (!mp_FbxImporter->Initialize(deleteMe, -1, mp_FbxManager->GetIOSettings()))
 	{
 #if _DEBUG
 		std::wstring message = L"Fbx Importer failed to initilize With the following error message: ";
@@ -83,8 +74,10 @@ void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
 		_ASSERT_EXPR(0, message.c_str());
 		delete[] errorMessage;
 #endif
+		delete[] deleteMe;
 		return;
 	}
+	delete[] deleteMe;
 
 	mp_FbxScene = FbxScene::Create(mp_FbxManager, "For_External_Programs");
 
@@ -101,7 +94,7 @@ void FBXLoaderManager::Initilize(wchar_t* _FbxFileName)
 	{
 		if (writeStream.is_open())
 			writeStream.close();
-		writeStream.open(ms_FileOutName, std::ios_base::binary | std::ios_base::trunc);
+		writeStream.open(ms_AWBXFileName.c_str(), std::ios_base::binary | std::ios_base::trunc);
 
 		if (writeStream.is_open())
 		{
@@ -164,102 +157,23 @@ void FBXLoaderManager::HandleNode(FbxNode* _node)
 	m_DepthLevel--;
 }
 
-#pragma region Old Code
-void FBXLoaderManager::PrintNodes(FbxNode* _node)
-{
-	PrintTabs();
-
-	const char* nodesName = _node->GetName();
-	FbxDouble3 nodeTranslation = _node->LclTranslation.Get();
-	FbxDouble3 nodeRotation = _node->LclRotation.Get();
-	FbxDouble3 nodeScale = _node->LclScaling.Get();
-
-	printf("<Node Name='%s' Translation='(%f, %f, %f)' Rotation='(%f, %f, %f)' Scale='(%f, %f, %f)'>\n",
-		nodesName,
-		nodeTranslation[0], nodeTranslation[1], nodeTranslation[2],
-		nodeRotation[0], nodeRotation[1], nodeRotation[2],
-		nodeScale[0], nodeScale[1], nodeScale[2]);
-
-	m_NumTabs++;
-
-	int numNodeAttributes = _node->GetNodeAttributeCount();
-	for (int attribute = 0; attribute < numNodeAttributes; attribute++)
-		PrintAttribute(_node->GetNodeAttributeByIndex(attribute));
-
-	int numChildren = _node->GetChildCount();
-	for (int child = 0; child < numChildren; child++)
-		PrintNodes(_node->GetChild(child));
-
-	m_NumTabs--;
-	PrintTabs();
-	printf("</Node>\n");
-}
-
-void FBXLoaderManager::PrintAttribute(FbxNodeAttribute* _nodeAttribute)
-{
-	if (!_nodeAttribute)
-		return;
-
-	FbxString typeName = GetAttributeTypeName(_nodeAttribute);
-	FbxString attributeName = _nodeAttribute->GetName();
-	PrintTabs();
-
-	printf("<Attribute Type='%s' Name='%s'/>\n", typeName.Buffer(), attributeName.Buffer());
-}
-
-FbxString FBXLoaderManager::GetAttributeTypeName(FbxNodeAttribute* _nodeAttribute)
-{
-	switch (_nodeAttribute->GetAttributeType())
-	{
-	case fbxsdk::FbxNodeAttribute::eUnknown: return "Unidentified";
-	case fbxsdk::FbxNodeAttribute::eNull: return "Null";
-	case fbxsdk::FbxNodeAttribute::eMarker: return "Marker";
-	case fbxsdk::FbxNodeAttribute::eSkeleton: return "Skeleton";
-	case fbxsdk::FbxNodeAttribute::eMesh: return "Mesh";
-	case fbxsdk::FbxNodeAttribute::eNurbs: return "Nurbs";
-	case fbxsdk::FbxNodeAttribute::ePatch: return "Patch";
-	case fbxsdk::FbxNodeAttribute::eCamera: return "Camera";
-	case fbxsdk::FbxNodeAttribute::eCameraStereo: return "Camera Stereo";
-	case fbxsdk::FbxNodeAttribute::eCameraSwitcher: return "Camera Switcher";
-	case fbxsdk::FbxNodeAttribute::eLight: return "Light";
-	case fbxsdk::FbxNodeAttribute::eOpticalReference: return "Optical Reference";
-	case fbxsdk::FbxNodeAttribute::eOpticalMarker: return "Optical Marker";
-	case fbxsdk::FbxNodeAttribute::eNurbsCurve: return "Nurbs Curve";
-	case fbxsdk::FbxNodeAttribute::eTrimNurbsSurface: return "Trim Nurbs Surface";
-	case fbxsdk::FbxNodeAttribute::eBoundary: return "Boundary";
-	case fbxsdk::FbxNodeAttribute::eNurbsSurface: return "Nurbs Surface";
-	case fbxsdk::FbxNodeAttribute::eShape: return "Shape";
-	case fbxsdk::FbxNodeAttribute::eLODGroup: return "LOD Group";
-	case fbxsdk::FbxNodeAttribute::eSubDiv: return "SubDiv";
-	case fbxsdk::FbxNodeAttribute::eCachedEffect: return "Cached Effect";
-	case fbxsdk::FbxNodeAttribute::eLine: return "Line";
-	default: return "Unkown";
-	}
-}
-
-void FBXLoaderManager::PrintTabs()
-{
-	for (int tab = 0; tab < m_NumTabs; tab++)
-		printf("\t");
-}
-#pragma endregion
-
 void FBXLoaderManager::ParseOutFileName()
 {
 	int letterCount = 0;
 	int deleteAt = 0;
-	size_t stingSize = ms_FileOutName.size();
-	while (stingSize > letterCount)
+	size_t stringSize = ms_AWBXFileName.size();
+	while (stringSize > letterCount)
 	{
-		if (ms_FileOutName.at(letterCount) == '.')
+		if (ms_AWBXFileName.at(letterCount) == L'.')
 			deleteAt = letterCount;
 		letterCount++;
 	}
 
 	if (deleteAt > 0)
-		ms_FileOutName.erase(deleteAt);
-
-	ms_FileOutName.append(".AWBX");
+	{
+		ms_AWBXFileName.erase(deleteAt);
+		ms_AWBXFileName.append(L".AWBX");
+	}
 }
 
 void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
@@ -274,24 +188,21 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 	writeStream.write((char*)&nameSize, sizeof(int16_t));
 	writeStream.write(meshNamePointer, nameSize);
 
-	FbxVector4 currVector;
-	FbxVector4 currNormal;
-	int polyCount = nodeMesh->GetPolygonCount();
-	int polySize;
+
+	unsigned int m_numIndexes = nodeMesh->GetPolygonVertexCount();
+	unsigned int* m_IndexBuffer = new unsigned int[m_numIndexes];
+	memcpy_s(m_IndexBuffer, m_numIndexes * sizeof(unsigned int), nodeMesh->GetPolygonVertices(), m_numIndexes  * sizeof(unsigned int));
 
 	unsigned int m_numVerts = nodeMesh->GetControlPointsCount();
 	VBuffer* m_VertBuffer = new VBuffer[m_numVerts];
 
-	unsigned int m_numIndexes = nodeMesh-> GetPolygonVertexCount();
-	unsigned int* m_IndexBuffer = new unsigned int[m_numIndexes];
-	memcpy_s(m_IndexBuffer, m_numIndexes * sizeof(unsigned int), nodeMesh->GetPolygonVertices(), m_numIndexes  * sizeof(unsigned int));
-	 
 	auto versBuffer = nodeMesh->GetControlPoints();
-	for (unsigned int  i = 0; i < m_numVerts; i++)
+	for (unsigned int i = 0; i < m_numVerts; i++)
 	{
-		m_VertBuffer[i].m_Position[0] = versBuffer[i].mData[0];
-		m_VertBuffer[i].m_Position[1] = versBuffer[i].mData[1];
-		m_VertBuffer[i].m_Position[2] = versBuffer[i].mData[2];
+		m_VertBuffer[i].m_Position[0] = (float)versBuffer[i].mData[0];
+		m_VertBuffer[i].m_Position[1] = (float)versBuffer[i].mData[1];
+		m_VertBuffer[i].m_Position[2] = (float)versBuffer[i].mData[2];
+
 	}
 
 	// Write Out Vertex Header

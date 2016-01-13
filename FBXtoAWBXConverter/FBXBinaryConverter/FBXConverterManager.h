@@ -50,15 +50,13 @@ struct TextureHeader
 struct __declspec(align(16)) VBuffer
 {
 	float m_Position[3]{ 0,0,0 };
-	float m_Normal[3]{ 0,0,1 };
+	float m_Normal[3]{ 0,1,0 };
 	float m_Diffuse[4]{ 1,0,1,1 };
 };
 
 class FBXLoaderManager
 {
 private:
-	std::string ms_FilePath = "..\\Assets\\FBXs\\";
-
 	// Importer / Scene
 	fbxsdk::FbxManager* mp_FbxManager;
 	fbxsdk::FbxIOSettings* mp_FbxIOSettings;
@@ -66,34 +64,22 @@ private:
 	fbxsdk::FbxScene* mp_FbxScene;
 	fbxsdk::FbxNode* mp_FbxRootNode;
 	fbxsdk::FbxGeometryConverter* mp_FbxGeoConverter;
-	std::string ms_FbxFileName;
-	std::string ms_FileOutName;
-	int m_NumTabs;
+	std::wstring ms_FbxFileName;
+	std::wstring ms_AWBXFileName;
 
 	int m_DepthLevel;
 
-	/*int m_numVerts;
-	int m_numIndexes;
-	VBuffer* m_VertBuffer;
-	unsigned int* m_IndexBuffer;*/
-
 	// Private Functions 
 	void Uninitilize();
-	void PrintNodes(fbxsdk::FbxNode* _node);
 	void HandleNode(fbxsdk::FbxNode* _node);
-	void PrintAttribute(fbxsdk::FbxNodeAttribute* _nodeAttribute);
-	fbxsdk::FbxString GetAttributeTypeName(fbxsdk::FbxNodeAttribute* _nodeAttribute);
-	void PrintTabs();
-	void ParseOutFileName();
-
 	void HandleMesh(fbxsdk::FbxNode* _node);
+	void ParseOutFileName();
 
 public:
 
 	FBXLoaderManager();
 	~FBXLoaderManager();
 
-	static inline const wchar_t* GetFilePathAndTypes() { return L"..\\Assets\\FBXs\\*.fbx"; };
-	void Initilize(wchar_t* _FbxFileName);
+	void Initilize(const wchar_t* _FbxFileName);
 };
 
