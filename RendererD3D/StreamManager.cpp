@@ -33,11 +33,12 @@ namespace RendererD3D
 		delete[] TstreamRawBufferPtr;
 	}
 
-	void StreamManager::AddGStream(RenderShape& renderShape)
+	void StreamManager::AddGStream(std::string& _filename, RenderShape& renderShape)
 	{
-		AWBX::AWBXLoader loaderTest;
+		static	AWBX::AWBXLoader loaderTest;
 		unsigned int* indices = nullptr;
-		loaderTest.LoadAWBXMesh("E:\\GitHub\\Clone\\Game-Engine\\Assets\\FBXs\\Teddy_Idle.AWBX", renderShape.numofVertices, (void**)&GstreamRawBufferPtr, renderShape.numofIndices, &indices);
+
+		loaderTest.LoadAWBXMesh(("E:\\GitHub\\Clone\\Game-Engine\\Assets\\FBXs\\" + _filename).c_str(), renderShape.numofVertices, (void**)&GstreamRawBufferPtr, renderShape.numofIndices, &indices);
 		numofGstream += renderShape.numofVertices;
 		IndexBufferManager::GetRef().AddIndices(indices, renderShape.numofIndices);
 

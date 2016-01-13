@@ -42,7 +42,7 @@ namespace RendererD3D
 		static void DeleteInstance();
 
 
-		void AddGStream(RenderShape& renderShape);
+		void AddGStream(std::string& _filename,  RenderShape& renderShape);
 
 	};
 

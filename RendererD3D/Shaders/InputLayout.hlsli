@@ -30,6 +30,7 @@ struct _regAlign VERIN_PosNorDiffUVTanBoneWeight
 struct _regAlign VSOUT
 {
 	float4 pos SEMANTIC(SV_POSITION);
+	float3 normal  SEMANTIC(NORMAL);
 	float4 color SEMANTIC(COLOR);
 };
 

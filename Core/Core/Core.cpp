@@ -4,10 +4,15 @@
 #include "stdafx.h"
 #include "Core.h"
 #include <Renderer.h>
+#include <InputManager.h>
+#include <Camera.h>
+#include <RenderContext.h>
+
 
 HWND ghd;
 RendererD3D::Renderer render = RendererD3D::Renderer::GetRef();
 bool gGameEnd = false;
+
 
 void Render()
 {
@@ -60,6 +65,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	render.Initialize(ghd, 1600, 1024);
 
+	Input::InputManager inputManager;
+	inputManager.SetKeyPressed(Input::IM_K, RendererD3D::RenderContext::ToggleWireFrame);
 
 	// Main message loop:
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gGameEnd)
@@ -70,8 +77,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
+		inputManager.Update();
 		Render();
+
 		//Update();
 		
 

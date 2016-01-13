@@ -11,6 +11,7 @@
 #include "SharedDefines.h"
 #include "RenderNode.h"
 #include "ConstantBuffer.h"
+#include "Camera.h"
 
 
 #define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
@@ -27,6 +28,7 @@ namespace RendererD3D
 	{
 		Renderer(void) {};
 	public:
+		RENDERERDLL_API static Camera camera;
 		RENDERERDLL_API static ID3D11Device * theDevicePtr;
 		RENDERERDLL_API static ID3D11DeviceContext* theContextPtr;
 		RENDERERDLL_API static IDXGISwapChain* theSwapChainPtr;
@@ -80,6 +82,7 @@ namespace RendererD3D
 		static RenderMaterial*	cubeMaterialPtr;
 		static RenderSet* rSetPtr;
 		RENDERERDLL_API  RenderSet& GetSet();
+
 	private:
 		static DirectX::XMMATRIX viewMatrix;
 		static DirectX::XMMATRIX proj;
@@ -90,6 +93,8 @@ namespace RendererD3D
 		static ShaderManager* shaderManagerPtr;
 		static ID3D11ShaderResourceView* cubeSRV;
 		static StreamManager* streamManagerPtr;
+		
+
 	};
 
 

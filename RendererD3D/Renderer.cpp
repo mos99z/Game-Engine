@@ -41,6 +41,7 @@ namespace RendererD3D
 	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
 	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
 	StreamManager* Renderer::streamManagerPtr = nullptr;
+	Camera Renderer::camera;
 	Renderer& Renderer::GetRef()
 	{
 		static Renderer renderer;
@@ -87,13 +88,16 @@ namespace RendererD3D
 		theDevicePtr->CreateRenderTargetView(theBackBufferPtr, nullptr, &theRenderTargetViewPtr);
 		ReleaseCOM(theBackBufferPtr);
 
+
+
 		D3D11_TEXTURE2D_DESC ZBufferdesc;
 		ZeroMemory(&ZBufferdesc, sizeof(ZBufferdesc));
 		ZBufferdesc.Width = resolutionWidth;
 		ZBufferdesc.Height = resolutionHeight;
 		ZBufferdesc.MipLevels = 1;
 		ZBufferdesc.ArraySize = 1;
-		ZBufferdesc.SampleDesc.Count = 1;
+		ZBufferdesc.SampleDesc.Count = swapchain_DESC.SampleDesc.Count;
+		ZBufferdesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
 		ZBufferdesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 		ZBufferdesc.Usage = D3D11_USAGE_DEFAULT;
 		ZBufferdesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
@@ -145,13 +149,10 @@ namespace RendererD3D
 		desc.MaxLOD = FLT_MAX;
 		theDevicePtr->CreateSamplerState(&desc, &anisoWrapSampler);
 		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
-
+		
 		//Build simple camera stuffs
-		proj = DirectX::XMMatrixPerspectiveFovLH(70.0f * DirectX::XM_PI / 180.0f , 16.0f / 9.0f, 0.01f, 1000.0f);
-		float3 eyepos = { 0.0f, 100.0f, 300.0f};
-		float3 eyedir = { 0.0f, 50.0f, 0.0f};
-		float3 updir = { 0.0f,1.0f,0.0f };
-		viewMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
+		proj = camera.GetProj();
+		viewMatrix = camera.GetView();
 
 
 		cubeContextPtr = new RenderContext;
@@ -180,7 +181,7 @@ namespace RendererD3D
 
 		const UINT vertexBufferSize = sizeof(cubeVertices);
 		
-		streamManagerPtr->AddGStream(*cubeShapePtr);
+		streamManagerPtr->AddGStream(std::string("Jump.AWBX"),*cubeShapePtr);
 		D3D11_BUFFER_DESC bufferDesc;
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.ByteWidth = streamManagerPtr->numofGstream * sizeof (Gstream);
@@ -234,8 +235,8 @@ namespace RendererD3D
 		cubeMaterialPtr->renderSet.AddNode(cubeShapePtr);
 		//cubeShapePtr->numofVertices = 8;
 	
-		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity() * DirectX::XMMatrixScaling(0.1f, 0.1f, 0.1f));
-		;
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity() );
+
 		//Load texture for cube 
 		
 		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"texture.dds", nullptr, &cubeSRV);
@@ -297,8 +298,10 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
+		camera.UpdateView();
+		viewMatrix = camera.GetView();
 		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, (DirectX::XMMatrixRotationY(rotSpeed)));
+		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, (DirectX::XMMatrixRotationX(DirectX ::XMConvertToRadians(-90.0f)) *DirectX::XMMatrixRotationY(rotSpeed)* DirectX::XMMatrixScaling(0.3f,0.3f,0.3f)));
 		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
@@ -376,7 +379,7 @@ namespace RendererD3D
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 
-
+	
 
 }
 
