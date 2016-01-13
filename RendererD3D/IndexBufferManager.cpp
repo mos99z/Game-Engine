@@ -69,13 +69,16 @@ namespace RendererD3D
 			indexBufferPtr->GetDesc(&inputBuffer_DESC);
 			unsigned int oldBufferSize = inputBuffer_DESC.ByteWidth;
 			inputBuffer_DESC.ByteWidth += _numIndices* sizeof(unsigned int);
-			indexBufferData.pSysMem = (char*)_indices - oldBufferSize;
+			indexBufferData.pSysMem = new unsigned int[inputBuffer_DESC.ByteWidth];
+			memcpy((char *)(indexBufferData.pSysMem) + oldBufferSize,
+				_indices, sizeof(unsigned int) * _numIndices);
 			ID3D11Buffer* tempIndexBufferPtr = nullptr;
 			Renderer::theDevicePtr->CreateBuffer(&inputBuffer_DESC, &indexBufferData, &tempIndexBufferPtr);
 			Renderer::theContextPtr->CopySubresourceRegion(tempIndexBufferPtr, 0, 0, 0, 0, indexBufferPtr, 0, 0);
 			ReleaseCOM(indexBufferPtr);
 			indexBufferPtr = tempIndexBufferPtr;
 			ret = oldBufferSize / sizeof(unsigned int);
+			delete[] indexBufferData.pSysMem;
 		}
 		else
 		{

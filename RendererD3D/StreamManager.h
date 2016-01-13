@@ -29,6 +29,7 @@ namespace RendererD3D
 	{
 	public:
 		Gstream* GstreamRawBufferPtr = nullptr;
+		static ID3D11Buffer* GstreamBufferPtr;
 		UINT numofGstream = 0;
 		Tstream* TstreamRawBufferPtr = nullptr;
 		UINT numofTstream = 0;
