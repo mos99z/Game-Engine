@@ -12,6 +12,7 @@ namespace fbxsdk
 	class FbxNodeAttribute;
 	class FbxString;
 	class FbxGeometryConverter;
+	class FbxAMatrix;
 };
 
 enum DataType : int8_t { VertexBuffer, IndexBuffer, Texture, MeshData };
@@ -52,6 +53,12 @@ struct __declspec(align(16)) VBuffer
 	float m_Position[3]{ 0,0,0 };
 	float m_Normal[3]{ 0,1,0 };
 	float m_Diffuse[4]{ 1,0,1,1 };
+};
+
+struct __declspec(align(16)) TBuffer
+{
+	float m_UV[2]{ 0.5f, 0.5f };
+	float m_Tangent[4]{0,0,1,1};
 };
 
 class FBXLoaderManager

@@ -31,7 +31,7 @@ namespace RendererD3D
 	StreamManager::~StreamManager()
 	{
 		
-		//delete[] TstreamRawBufferPtr;
+		delete[] TstreamRawBufferPtr;
 	}
 
 	void StreamManager::AddGStream(std::string& _filename, RenderShape& renderShape)
@@ -40,7 +40,7 @@ namespace RendererD3D
 		unsigned int* indices = nullptr;
 
 		Gstream* RawBufferPtr = nullptr;
-		loaderTest.LoadAWBXMesh(("E:\\GitHub\\Clone\\Game-Engine\\Assets\\FBXs\\" + _filename).c_str(), renderShape.numofVertices, (void**)&RawBufferPtr, renderShape.numofIndices, &indices);
+		loaderTest.LoadAWBXCombinedMesh(("..\\Assets\\FBXs\\" + _filename).c_str(), renderShape.numofVertices, (void**)&RawBufferPtr, (void**)&TstreamRawBufferPtr, renderShape.numofIndices, &indices);
 		numofGstream += renderShape.numofVertices;
 
 
