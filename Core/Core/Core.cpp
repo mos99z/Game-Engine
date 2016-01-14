@@ -67,7 +67,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	Input::InputManager inputManager;
 	inputManager.SetKeyPressed(Input::IM_K, RendererD3D::RenderContext::ToggleWireFrame);
-
+	inputManager.SetKeyPressed(Input::IM_1, RendererD3D::Renderer::SwitchTo0);
+	inputManager.SetKeyPressed(Input::IM_2, RendererD3D::Renderer::SwitchTo1);
+	inputManager.SetKeyPressed(Input::IM_3, RendererD3D::Renderer::SwitchTo2);
 	// Main message loop:
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gGameEnd)
 	{
