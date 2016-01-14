@@ -30,6 +30,7 @@ void FBXLoaderManager::Uninitilize()
 
 void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 {
+
 	Uninitilize();
 
 
@@ -60,7 +61,7 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	_ASSERT_EXPR(mp_FbxImporter, L"FBXLoader - FbxImporter failed to create!");
 #endif
 
-	char* deleteMe = new char[ms_FbxFileName.size()+1];
+	char* deleteMe = new char[ms_FbxFileName.size() + 1];
 	deleteMe[ms_FbxFileName.size()] = '\0';
 	wcstombs(deleteMe, ms_FbxFileName.c_str(), ms_FbxFileName.size());
 	if (!mp_FbxImporter->Initialize(deleteMe, -1, mp_FbxManager->GetIOSettings()))
@@ -90,16 +91,16 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	mp_FbxImporter->Destroy();
 
 	mp_FbxRootNode = mp_FbxScene->GetRootNode();
-
 	if (mp_FbxRootNode)
 	{
 		if (writeStream.is_open())
 			writeStream.close();
-		writeStream.open(ms_AWBXFileName.c_str(), std::ios_base::binary | std::ios_base::trunc);
 
+		writeStream.open(ms_AWBXFileName.c_str(), std::ios_base::binary | std::ios_base::trunc);
 		if (writeStream.is_open())
 		{
 			writeStream.write("AWBX", 4);
+
 			int numChildren = mp_FbxRootNode->GetChildCount();
 			for (int child = 0; child < numChildren; child++)
 				HandleNode(mp_FbxRootNode->GetChild(child));
@@ -180,29 +181,25 @@ void FBXLoaderManager::ParseOutFileName()
 	}
 }
 
-
-
-
-
 void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 {
 	FbxMesh* nodeMesh = _node->GetMesh();
 
-	////////////////////////////////////////////////////////////*******************////////////////////TODO: Austin is stupid !
-	_node->EvaluateGlobalTransform();
-
 	// Write Out Mesh Header Data
 	DataType meshDataType = MeshData;
 	writeStream.write((char*)&meshDataType, sizeof(DataType));
-	const char* meshNamePointer = nodeMesh->GetName();
-	int16_t nameSize = (int16_t)strlen(meshNamePointer);
-	writeStream.write((char*)&nameSize, sizeof(int16_t));
-	writeStream.write(meshNamePointer, nameSize);
+
+	// TODO: Implement parent index tracker for mesh hierarchy
+	//unsigned int parentIndex;
+
+	fbxsdk::FbxAMatrix globalMatrix = _node->EvaluateGlobalTransform();
+	writeStream.write((char*)&globalMatrix, sizeof(fbxsdk::FbxDouble4) * 4);
 
 
 
 	unsigned int m_numVerts = nodeMesh->GetControlPointsCount();
 	VBuffer* m_VertBuffer = new VBuffer[m_numVerts];
+	TBuffer* m_TextureBuffer = new TBuffer[m_numVerts];
 
 	unsigned int m_numIndexes = nodeMesh->GetPolygonVertexCount();
 	unsigned int* m_IndexBuffer = new unsigned int[m_numIndexes];
@@ -210,73 +207,165 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 
 	auto versBuffer = nodeMesh->GetControlPoints();
 
+
 	// For each polygon in the input mesh
-	for (int iPolygon = 0; iPolygon < nodeMesh->GetPolygonCount(); iPolygon++)
+	int nodeMeshPolyCount = nodeMesh->GetPolygonCount();
+	int currVert = 0;
+	for (int iPolygon = 0; iPolygon < nodeMeshPolyCount; iPolygon++)
 	{
+		_ASSERT_EXPR(3 == nodeMesh->GetPolygonSize(iPolygon), L"Polygon does not have exactly 3 verts!");
 		// For each vertex in the polygon
 		for (unsigned iPolygonVertex = 0; iPolygonVertex < 3; iPolygonVertex++)
 		{
 			int fbxCornerIndex = nodeMesh->GetPolygonVertex(iPolygon, iPolygonVertex);
 
-			// Get vertex position
-			fbxsdk::FbxVector4 fbxVertex = versBuffer[fbxCornerIndex];
-			m_VertBuffer[fbxCornerIndex].m_Position[0] = (float)fbxVertex.mData[0];
-			m_VertBuffer[fbxCornerIndex].m_Position[1] = (float)fbxVertex.mData[1];
-			m_VertBuffer[fbxCornerIndex].m_Position[2] = (float)fbxVertex.mData[2];
+#pragma region Get Verticies
 
-			// Get normal
+			fbxsdk::FbxVector4 fbxVertex = versBuffer[fbxCornerIndex];
+			m_VertBuffer[fbxCornerIndex].m_Position[0] = -(float)fbxVertex[0];
+			m_VertBuffer[fbxCornerIndex].m_Position[1] = (float)fbxVertex[1];
+			m_VertBuffer[fbxCornerIndex].m_Position[2] = (float)fbxVertex[2];
+
+#pragma endregion
+
+#pragma region Get Normals
+
 			fbxsdk::FbxVector4 fbxNormal;
 			nodeMesh->GetPolygonVertexNormal(iPolygon, iPolygonVertex, fbxNormal);
 			fbxNormal.Normalize();
-			m_VertBuffer[fbxCornerIndex].m_Normal[0] = (float)fbxNormal.mData[0];
-			m_VertBuffer[fbxCornerIndex].m_Normal[1] = (float)fbxNormal.mData[1];
-			m_VertBuffer[fbxCornerIndex].m_Normal[2] = (float)fbxNormal.mData[2];
+			m_VertBuffer[fbxCornerIndex].m_Normal[0] = (float)fbxNormal[0];
+			m_VertBuffer[fbxCornerIndex].m_Normal[1] = (float)fbxNormal[1];
+			m_VertBuffer[fbxCornerIndex].m_Normal[2] = (float)fbxNormal[2];
 
-			// Get texture coordinate
+#pragma endregion
+
+#pragma region Get UVs
+
 			fbxsdk::FbxVector2 fbxUV = fbxsdk::FbxVector2(0.0, 0.0);
-			fbxsdk::FbxLayerElementUV* fbxLayerUV = nodeMesh->GetLayer(0)->GetUVs();
-			if (fbxLayerUV)
+			fbxsdk::FbxLayerElementUV* elementUV = nodeMesh->GetLayer(0)->GetUVs();
+			if (elementUV)
 			{
-				int iUVIndex = 0;
-				switch (fbxLayerUV->GetMappingMode())
+				int iUVIndex = fbxCornerIndex;
+				switch (elementUV->GetMappingMode())
 				{
 				case fbxsdk::FbxLayerElement::eByControlPoint:
-					iUVIndex = fbxCornerIndex;
-					break;
-
-				case fbxsdk::FbxLayerElement::eByPolygonVertex:
-					iUVIndex = nodeMesh->GetTextureUVIndex(iPolygon, iPolygonVertex);
+				{
+					switch (elementUV->GetReferenceMode())
+					{
+					case FbxGeometryElement::eIndexToDirect:
+						iUVIndex = elementUV->GetIndexArray().GetAt(fbxCornerIndex);
+						break;
+					default: break;
+					}
 					break;
 				}
-				fbxUV = fbxLayerUV->GetDirectArray().GetAt(iUVIndex);
-				m_VertBuffer[fbxCornerIndex].m_Diffuse[1] = (float)fbxUV.mData[0];
-				m_VertBuffer[fbxCornerIndex].m_Diffuse[0] = (float)fbxUV.mData[1];
-			}												
-		}
-	}
+				case fbxsdk::FbxLayerElement::eByPolygonVertex:
+				{
+					switch (elementUV->GetReferenceMode())
+					{
+					case FbxGeometryElement::eDirect:
+					case FbxGeometryElement::eIndexToDirect:
+						iUVIndex = nodeMesh->GetTextureUVIndex(iPolygon, iPolygonVertex);
+						break;
+					default: break;
+					}
+					break;
+				}
+				default: break;
+				}
+				fbxUV = elementUV->GetDirectArray().GetAt(iUVIndex);
+				m_TextureBuffer[fbxCornerIndex].m_UV[0] = (float)fbxUV[0];
+				m_TextureBuffer[fbxCornerIndex].m_UV[1] = (float)fbxUV[1];
+			}
+
+#pragma endregion
+
+#pragma region Get Tangents
+
+			FbxVector4 Tangent;
+			FbxGeometryElementTangent* elementTangent = nodeMesh->GetElementTangent(0);
+			if (elementTangent)
+			{
+				int tangentIndex = fbxCornerIndex;
+				FbxLayerElement::EMappingMode tangentMapMode = elementTangent->GetMappingMode();
+				if (tangentMapMode == FbxGeometryElement::eByPolygonVertex)
+				{
+					switch (elementTangent->GetReferenceMode())
+					{
+					case FbxGeometryElement::eDirect:
+						tangentIndex = currVert;
+						break;
+					case FbxGeometryElement::eIndexToDirect:
+						tangentIndex = elementTangent->GetIndexArray().GetAt(currVert);
+					break;
+					default: break;
+					}
+				}
+				else if (tangentMapMode == FbxGeometryElement::eByControlPoint)
+				{
+					switch (elementTangent->GetReferenceMode())
+					{
+					case FbxGeometryElement::eIndexToDirect:
+						tangentIndex = elementTangent->GetIndexArray().GetAt(fbxCornerIndex);
+					break;
+					default: break;
+					}
+				}
+				Tangent = elementTangent->GetDirectArray().GetAt(tangentIndex);
+				m_TextureBuffer[fbxCornerIndex].m_Tangent[0] = (float)Tangent[0];
+				m_TextureBuffer[fbxCornerIndex].m_Tangent[1] = (float)Tangent[1];
+				m_TextureBuffer[fbxCornerIndex].m_Tangent[2] = (float)Tangent[2];
+				m_TextureBuffer[fbxCornerIndex].m_Tangent[3] = (float)Tangent[3];
+			}
+
+#pragma endregion
+
+			currVert++;
+		}//End each Vert
+	}//End Each Poly
 
 
-	// Write Out Vertex Header
+#pragma region Write out Data Buffers
+
+#pragma region Vertex Data
+
 	VertexHeader newVertHeader;
 	newVertHeader.m_DataByteSize = m_numVerts * sizeof(VBuffer);
 	writeStream.write((char*)&newVertHeader.m_DataType, sizeof(DataType));
 	writeStream.write((char*)&newVertHeader.m_DataByteSize, sizeof(unsigned int));
-
-	// Write Out Vertex Buffer
 	writeStream.write((char*)m_VertBuffer, newVertHeader.m_DataByteSize);
 
 	delete[] m_VertBuffer;
 	m_VertBuffer = nullptr;
 
-	// Write Out Index Header
+#pragma endregion
+
+#pragma region Index Data
+
 	IndexHeader newIndexHeader;
 	newIndexHeader.m_DataByteSize = m_numIndexes * sizeof(unsigned int);
 	writeStream.write((char*)&newIndexHeader.m_DataType, sizeof(DataType));
 	writeStream.write((char*)&newIndexHeader.m_DataByteSize, sizeof(unsigned int));
-
-	// Write Out Index Buffer
 	writeStream.write((char*)m_IndexBuffer, newIndexHeader.m_DataByteSize);
 
 	delete[] m_IndexBuffer;
 	m_IndexBuffer = nullptr;
+
+#pragma endregion
+
+#pragma region Texture Data
+
+	TextureHeader newTextureHeader;
+	newTextureHeader.m_DataByteSize = m_numVerts * sizeof(TBuffer);
+	writeStream.write((char*)&newTextureHeader.m_DataType, sizeof(DataType));
+	writeStream.write((char*)&newTextureHeader.m_DataByteSize, sizeof(unsigned int));
+	writeStream.write((char*)m_TextureBuffer, newTextureHeader.m_DataByteSize);
+
+	delete[] m_TextureBuffer;
+	m_TextureBuffer = nullptr;
+
+#pragma endregion
+
+#pragma endregion
+
 }
