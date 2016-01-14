@@ -3,7 +3,7 @@
 #include "../SharedDefines.h"
 struct _regAlign VERIN_POSNORDIFF
 {
-    float3 position SEMANTIC(POSITION0);
+	float3 position SEMANTIC(POSITION0);
 	float3 normal SEMANTIC(NORMAL0);
 	float4 diffuse SEMANTIC(COLOR0);
 };
@@ -40,6 +40,13 @@ struct _regAlign Material
 	float4 diffuseColor;
 	float specExp;
 	float specIntensity;
+};
+
+struct _regAlign PS_GBUFFER_OUT
+{
+	float4 ColorSpecInt SEMANTIC(SV_TARGET1);
+	float4 Normal		SEMANTIC(SV_TARGET4);
+	float4 SpecPow		SEMANTIC(SV_TARGET3);
 };
 
 
