@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <WinBase.h>
 #include <string>
+#include <vector>
 
 int wmain(int argc, wchar_t** argv)
 {

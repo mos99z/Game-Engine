@@ -9,14 +9,14 @@
 //	return output;
 //}
 
-VSOUT main(VERIN_POSNORDIFF input)
+VEROUT_PosNorDiffUVTan main(VERIN_PosNorDiffUVTan input)
 {
-	VSOUT output = (VSOUT)0;
-	output.pos = mul(float4(input.position,1), gMVP);
-	output.pos.x = output.pos.x;
+	VEROUT_PosNorDiffUVTan output = (VEROUT_PosNorDiffUVTan)0;
+	output.position = mul(float4(input.position,1), gMVP);
+	output.position.x = output.position.x;
 	output.normal = input.normal;
-	output.normal.x = output.normal.x;
-
+	output.texcoord = input.texcoord;
+	output.tangent = input.tangent;
 	output.color = input.diffuse;
 	return output;
 }

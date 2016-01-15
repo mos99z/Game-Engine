@@ -12,7 +12,6 @@
 #include "IndexBufferManager.h"
 #include <DDSTextureLoader.h>
 #include "StreamManager.h"
-#include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
 {
 
@@ -245,15 +244,16 @@ namespace RendererD3D
 
 
 		//Set VertexBuffer
-		UINT stripe = sizeof(VERIN_POSNORDIFF);
-		UINT offset = 0;
-		theContextPtr->IASetVertexBuffers(0, 1, &streamManagerPtr->GstreamBufferPtr, &stripe, &offset);
+		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
+		UINT offset[2] = {0,0};
+		ID3D11Buffer* buffers[2] = { streamManagerPtr->GstreamBufferPtr ,streamManagerPtr->TstreamBufferPtr };
+		theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
 
 		//Set IndexBuffer 
 		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
 
 		//Set InputLayout
-		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_POSNORDIFF]);
+		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_PosNorDiffUVTan]);
 
 
 

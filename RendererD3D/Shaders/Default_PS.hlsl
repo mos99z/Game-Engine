@@ -38,12 +38,12 @@ PS_GBUFFER_OUT PackGBuffer(float3 BaseColor, float3 Normal, float SpecIntensity,
 //}
 
 
-float4 main(VSOUT input) :SV_TARGET4
+float4 main(VEROUT_PosNorDiffUVTan input) :SV_TARGET4
 {
 
 	//return float4(HemisphericAmbient(float3(0.0f,0.0f,0.0f),float3(1.0f,0.2f,0.2f),normalize(input.normal),float4(1.0f,1.0f,1.0f,1.0f)),1);
 	//return input.color;
-	return map.Sample(anisoWrapSampler, float2(input.color.x,1.0f - input.color.y));
+	return map.Sample(anisoWrapSampler, float2(input.texcoord.x,1.0f - input.texcoord.y));
 //return input.pos.z / input.pos.w;
 //return map.Sample(anisoWrapSampler, input.pos.z / input.pos.w);
 }
