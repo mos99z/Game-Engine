@@ -287,8 +287,6 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 				fbxUV = elementUV->GetDirectArray().GetAt(iUVIndex);
 				newVertex.m_textureData.m_UV[0] = (float)fbxUV[0];
 				newVertex.m_textureData.m_UV[1] = (float)fbxUV[1];
-				newVertex.m_vertexData.m_Diffuse[0]= (float)fbxUV[0];
-				newVertex.m_vertexData.m_Diffuse[1] = (float)fbxUV[1];
 				if (FLIP_UV_Y)
 					newVertex.m_textureData.m_UV[1] = 1.0f - (float)fbxUV[1];
 			}

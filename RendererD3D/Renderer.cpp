@@ -311,13 +311,30 @@ namespace RendererD3D
 		ReleaseCOM(theDepthStencilBufferPtr);
 		ReleaseCOM(theContextPtr);
 
-		//CComPtr<ID3D11Debug> pDebug;
-		//theDevicePtr->QueryInterface(IID_PPV_ARGS(&pDebug));
-		//if (pDebug != nullptr)
-		//{
-		//	pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-		//	pDebug = nullptr;
-		//}
+
+		ReleaseCOM(depthRTVPtr);
+		ReleaseCOM(diffuseRTVPtr);
+		ReleaseCOM(normalRTVPtr);
+		ReleaseCOM(specRTVPtr);
+		ReleaseCOM(depthSRVPtr);
+		ReleaseCOM(diffuseSRVPtr);
+		ReleaseCOM(normalSRVPtr);
+		ReleaseCOM(specSRVPtr);
+		ReleaseCOM(depthResourcePtr);
+		ReleaseCOM(diffuseResourcePtr);
+		ReleaseCOM(normalResourcePtr);
+		ReleaseCOM(specResourcePtr);
+
+
+
+
+		/*CComPtr<ID3D11Debug> pDebug;
+		theDevicePtr->QueryInterface(IID_PPV_ARGS(&pDebug));
+		if (pDebug != nullptr)
+		{
+			pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+			pDebug = nullptr;
+		}*/
 		ReleaseCOM(theDevicePtr);
 
 

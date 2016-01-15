@@ -20,6 +20,7 @@ namespace RendererD3D
 	void StreamManager::DeleteInstance()
 	{
 		ReleaseCOM(GstreamBufferPtr);
+		ReleaseCOM(TstreamBufferPtr);
 		delete instancePtr;
 		instancePtr = nullptr;
 	}
