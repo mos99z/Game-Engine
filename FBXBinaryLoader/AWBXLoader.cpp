@@ -179,17 +179,17 @@ namespace AWBX
 				return false;
 			}
 
-			if (m_SingleMesh)
-			{
-				double* worldMatrix = new double[MATRIXSIZE];
-				ReadStream.read((char*)worldMatrix, m_MatrixByteSize);
-				m_Matricies.push_back(worldMatrix);
-			}
-			else
-			{
-				double buffer[MATRIXSIZE];
-				ReadStream.read((char*)buffer, m_MatrixByteSize);
-			}
+			//if (!m_SingleMesh)
+			//{
+			//	double* worldMatrix = new double[MATRIXSIZE];
+			//	ReadStream.read((char*)worldMatrix, m_MatrixByteSize);
+			//	m_Matricies.push_back(worldMatrix);
+			//}
+			//else
+			//{
+			//	double buffer[MATRIXSIZE];
+			//	ReadStream.read((char*)buffer, m_MatrixByteSize);
+			//}
 
 		}
 		else

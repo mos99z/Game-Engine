@@ -237,9 +237,11 @@ namespace RendererD3D
 		//Set Vertex buffer
 
 
-		streamManagerPtr->AddGStream(std::string("Leopard_2A6.AWBX"), renderShapes[0]);
+		//streamManagerPtr->AddGStream(std::string("Leopard_2A6.AWBX"), renderShapes[0]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[0]);
 		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[1]);
-		streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[2]);
+		//streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
 
 
 		//Set VertexBuffer
@@ -265,8 +267,8 @@ namespace RendererD3D
 
 		//Load texture for cube 
 
-		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"texture.dds", nullptr, &cubeSRV);
-		//theContextPtr->PSSetShaderResources(0, 1, &normalSRVPtr);
+		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"Teddy_D.dds", nullptr, &cubeSRV);
+		theContextPtr->PSSetShaderResources(0, 1, &cubeSRV);
 
 	}
 

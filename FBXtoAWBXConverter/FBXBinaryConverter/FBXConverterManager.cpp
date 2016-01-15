@@ -193,7 +193,7 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 	//unsigned int parentIndex;
 
 	fbxsdk::FbxAMatrix globalMatrix = _node->EvaluateGlobalTransform();
-	writeStream.write((char*)&globalMatrix, sizeof(fbxsdk::FbxDouble4) * 4);
+	writeStream.write((char*)globalMatrix.Buffer(), sizeof(fbxsdk::FbxDouble4) * 4);
 
 
 
@@ -276,6 +276,8 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 				fbxUV = elementUV->GetDirectArray().GetAt(iUVIndex);
 				m_TextureBuffer[fbxCornerIndex].m_UV[0] = (float)fbxUV[0];
 				m_TextureBuffer[fbxCornerIndex].m_UV[1] = (float)fbxUV[1];
+				m_VertBuffer[fbxCornerIndex].m_Diffuse[0] = (float)fbxUV[0];
+				m_VertBuffer[fbxCornerIndex].m_Diffuse[1] = (float)fbxUV[1];
 			}
 
 #pragma endregion

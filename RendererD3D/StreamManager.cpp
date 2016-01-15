@@ -40,7 +40,7 @@ namespace RendererD3D
 		unsigned int* indices = nullptr;
 
 		Gstream* RawBufferPtr = nullptr;
-		loaderTest.LoadAWBXCombinedMesh(("..\\Assets\\FBXs\\" + _filename).c_str(), renderShape.numofVertices, (void**)&RawBufferPtr, (void**)&TstreamRawBufferPtr, renderShape.numofIndices, &indices);
+		loaderTest.LoadAWBXCombinedMesh(("..\\..\\Assets\\FBXs\\" + _filename).c_str(), renderShape.numofVertices, (void**)&RawBufferPtr, (void**)&TstreamRawBufferPtr, renderShape.numofIndices, &indices);
 		numofGstream += renderShape.numofVertices;
 
 
