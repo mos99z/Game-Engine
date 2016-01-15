@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <fstream>
 
 namespace fbxsdk
 {
@@ -26,8 +27,7 @@ struct BinaryFileHeaderData
 struct MeshHeader
 {
 	DataType m_DataType = MeshData;
-	int16_t m_MeshNameSize;
-	int8_t* m_MeshName;
+	//unsigned int m_MeshDataByteSize;
 };
 
 struct VertexHeader
@@ -61,6 +61,14 @@ struct __declspec(align(16)) TBuffer
 	float m_Tangent[4]{0,0,1,1};
 };
 
+struct Vertex
+{
+	VBuffer m_vertexData;
+	TBuffer m_textureData;
+
+	bool operator==(const Vertex& _rhs);
+};
+
 class FBXLoaderManager
 {
 private:
@@ -73,8 +81,15 @@ private:
 	fbxsdk::FbxGeometryConverter* mp_FbxGeoConverter;
 	std::wstring ms_FbxFileName;
 	std::wstring ms_AWBXFileName;
+	std::wstring ms_ActualFileName;
+
+	std::ofstream writeStream;
 
 	int m_DepthLevel;
+	unsigned int m_VBufferByteSize;
+	unsigned int m_TBufferByteSize;
+	float m_numNodes;
+	float m_nodesProcessed;
 
 	// Private Functions 
 	void Uninitilize();

@@ -1,11 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
+#define FLIP_UV_Y false
 
 #include "FBXConverterManager.h"
 #include <fbxsdk.h>
-#include <fstream>
 #include <comdef.h>
+#include <vector>
 
-static std::ofstream writeStream;
 
 FBXLoaderManager::FBXLoaderManager()
 {
@@ -14,6 +14,9 @@ FBXLoaderManager::FBXLoaderManager()
 	mp_FbxImporter = nullptr;
 	mp_FbxScene = nullptr;
 	mp_FbxRootNode = nullptr;
+
+	m_VBufferByteSize = sizeof(VBuffer);
+	m_TBufferByteSize = sizeof(TBuffer);
 }
 
 FBXLoaderManager::~FBXLoaderManager()
@@ -91,6 +94,9 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	mp_FbxImporter->Destroy();
 
 	mp_FbxRootNode = mp_FbxScene->GetRootNode();
+	m_numNodes = (float)mp_FbxScene->GetNodeCount();
+	m_nodesProcessed = 1.0f;
+
 	if (mp_FbxRootNode)
 	{
 		if (writeStream.is_open())
@@ -99,6 +105,8 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 		writeStream.open(ms_AWBXFileName.c_str(), std::ios_base::binary | std::ios_base::trunc);
 		if (writeStream.is_open())
 		{
+
+
 			writeStream.write("AWBX", 4);
 
 			int numChildren = mp_FbxRootNode->GetChildCount();
@@ -160,23 +168,30 @@ void FBXLoaderManager::HandleNode(FbxNode* _node)
 		HandleNode(_node->GetChild(child));
 
 	m_DepthLevel--;
+	m_nodesProcessed++;
+
+	std::wprintf(L"%ls  %.2f %% \n", ms_ActualFileName.c_str(), (m_nodesProcessed / m_numNodes) * 100.0f);
 }
 
 void FBXLoaderManager::ParseOutFileName()
 {
 	int letterCount = 0;
+	int startindex = 0;
 	int deleteAt = 0;
 	size_t stringSize = ms_AWBXFileName.size();
 	while (stringSize > letterCount)
 	{
 		if (ms_AWBXFileName.at(letterCount) == L'.')
 			deleteAt = letterCount;
+		if (ms_AWBXFileName.at(letterCount) == L'\\')
+			startindex = letterCount;
 		letterCount++;
 	}
 
 	if (deleteAt > 0)
 	{
 		ms_AWBXFileName.erase(deleteAt);
+		ms_ActualFileName = (ms_AWBXFileName.c_str() + startindex + 1);
 		ms_AWBXFileName.append(L".AWBX");
 	}
 }
@@ -195,18 +210,13 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 	fbxsdk::FbxAMatrix globalMatrix = _node->EvaluateGlobalTransform();
 	writeStream.write((char*)&globalMatrix, sizeof(fbxsdk::FbxDouble4) * 4);
 
-
-
-	unsigned int m_numVerts = nodeMesh->GetControlPointsCount();
-	VBuffer* m_VertBuffer = new VBuffer[m_numVerts];
-	TBuffer* m_TextureBuffer = new TBuffer[m_numVerts];
+	std::vector<Vertex> uniqueVerticies;
+	unsigned int m_numUniqueVerts = 0;
 
 	unsigned int m_numIndexes = nodeMesh->GetPolygonVertexCount();
 	unsigned int* m_IndexBuffer = new unsigned int[m_numIndexes];
-	memcpy_s(m_IndexBuffer, m_numIndexes * sizeof(unsigned int), nodeMesh->GetPolygonVertices(), m_numIndexes  * sizeof(unsigned int));
 
 	auto versBuffer = nodeMesh->GetControlPoints();
-
 
 	// For each polygon in the input mesh
 	int nodeMeshPolyCount = nodeMesh->GetPolygonCount();
@@ -218,13 +228,14 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 		for (unsigned iPolygonVertex = 0; iPolygonVertex < 3; iPolygonVertex++)
 		{
 			int fbxCornerIndex = nodeMesh->GetPolygonVertex(iPolygon, iPolygonVertex);
+			Vertex newVertex;
 
 #pragma region Get Verticies
 
 			fbxsdk::FbxVector4 fbxVertex = versBuffer[fbxCornerIndex];
-			m_VertBuffer[fbxCornerIndex].m_Position[0] = -(float)fbxVertex[0];
-			m_VertBuffer[fbxCornerIndex].m_Position[1] = (float)fbxVertex[1];
-			m_VertBuffer[fbxCornerIndex].m_Position[2] = (float)fbxVertex[2];
+			newVertex.m_vertexData.m_Position[0] = -(float)fbxVertex[0];
+			newVertex.m_vertexData.m_Position[1] = (float)fbxVertex[1];
+			newVertex.m_vertexData.m_Position[2] = (float)fbxVertex[2];
 
 #pragma endregion
 
@@ -233,9 +244,9 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 			fbxsdk::FbxVector4 fbxNormal;
 			nodeMesh->GetPolygonVertexNormal(iPolygon, iPolygonVertex, fbxNormal);
 			fbxNormal.Normalize();
-			m_VertBuffer[fbxCornerIndex].m_Normal[0] = (float)fbxNormal[0];
-			m_VertBuffer[fbxCornerIndex].m_Normal[1] = (float)fbxNormal[1];
-			m_VertBuffer[fbxCornerIndex].m_Normal[2] = (float)fbxNormal[2];
+			newVertex.m_vertexData.m_Normal[0] = (float)fbxNormal[0];
+			newVertex.m_vertexData.m_Normal[1] = (float)fbxNormal[1];
+			newVertex.m_vertexData.m_Normal[2] = (float)fbxNormal[2];
 
 #pragma endregion
 
@@ -274,8 +285,11 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 				default: break;
 				}
 				fbxUV = elementUV->GetDirectArray().GetAt(iUVIndex);
-				m_TextureBuffer[fbxCornerIndex].m_UV[0] = (float)fbxUV[0];
-				m_TextureBuffer[fbxCornerIndex].m_UV[1] = (float)fbxUV[1];
+				newVertex.m_textureData.m_UV[0] = (float)fbxUV[0];
+				newVertex.m_textureData.m_UV[1] = (float)fbxUV[1];
+
+				if (FLIP_UV_Y)
+					newVertex.m_textureData.m_UV[1] = 1.0f - (float)fbxUV[1];
 			}
 
 #pragma endregion
@@ -297,7 +311,7 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 						break;
 					case FbxGeometryElement::eIndexToDirect:
 						tangentIndex = elementTangent->GetIndexArray().GetAt(currVert);
-					break;
+						break;
 					default: break;
 					}
 				}
@@ -307,30 +321,56 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 					{
 					case FbxGeometryElement::eIndexToDirect:
 						tangentIndex = elementTangent->GetIndexArray().GetAt(fbxCornerIndex);
-					break;
+						break;
 					default: break;
 					}
 				}
 				Tangent = elementTangent->GetDirectArray().GetAt(tangentIndex);
-				m_TextureBuffer[fbxCornerIndex].m_Tangent[0] = (float)Tangent[0];
-				m_TextureBuffer[fbxCornerIndex].m_Tangent[1] = (float)Tangent[1];
-				m_TextureBuffer[fbxCornerIndex].m_Tangent[2] = (float)Tangent[2];
-				m_TextureBuffer[fbxCornerIndex].m_Tangent[3] = (float)Tangent[3];
+				newVertex.m_textureData.m_Tangent[0] = (float)Tangent[0];
+				newVertex.m_textureData.m_Tangent[1] = (float)Tangent[1];
+				newVertex.m_textureData.m_Tangent[2] = (float)Tangent[2];
+				newVertex.m_textureData.m_Tangent[3] = (float)Tangent[3];
 			}
 
 #pragma endregion
+
+			bool unique = true;
+			for (unsigned int uniqueVert = 0; uniqueVert < m_numUniqueVerts; uniqueVert++)
+			{
+				if (uniqueVerticies[uniqueVert] == newVertex)
+				{
+					m_IndexBuffer[currVert] = uniqueVert;
+					unique = false;
+					break;
+				}
+			}
+
+			if (unique)
+			{
+				uniqueVerticies.push_back(newVertex);
+				m_IndexBuffer[currVert] = m_numUniqueVerts;
+				m_numUniqueVerts++;
+			}
 
 			currVert++;
 		}//End each Vert
 	}//End Each Poly
 
+	VBuffer* m_VertBuffer = new VBuffer[m_numUniqueVerts];
+	TBuffer* m_TextureBuffer = new TBuffer[m_numUniqueVerts];
+
+	for (unsigned int currVert = 0; currVert < m_numUniqueVerts; currVert++)
+	{
+		memcpy(&m_VertBuffer[currVert], &uniqueVerticies[currVert].m_vertexData, m_VBufferByteSize);
+		memcpy(&m_TextureBuffer[currVert], &uniqueVerticies[currVert].m_textureData, m_TBufferByteSize);
+	}
 
 #pragma region Write out Data Buffers
 
 #pragma region Vertex Data
 
 	VertexHeader newVertHeader;
-	newVertHeader.m_DataByteSize = m_numVerts * sizeof(VBuffer);
+	newVertHeader.m_DataByteSize = m_numUniqueVerts * m_VBufferByteSize;
 	writeStream.write((char*)&newVertHeader.m_DataType, sizeof(DataType));
 	writeStream.write((char*)&newVertHeader.m_DataByteSize, sizeof(unsigned int));
 	writeStream.write((char*)m_VertBuffer, newVertHeader.m_DataByteSize);
@@ -356,7 +396,7 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 #pragma region Texture Data
 
 	TextureHeader newTextureHeader;
-	newTextureHeader.m_DataByteSize = m_numVerts * sizeof(TBuffer);
+	newTextureHeader.m_DataByteSize = m_numUniqueVerts * m_TBufferByteSize;
 	writeStream.write((char*)&newTextureHeader.m_DataType, sizeof(DataType));
 	writeStream.write((char*)&newTextureHeader.m_DataByteSize, sizeof(unsigned int));
 	writeStream.write((char*)m_TextureBuffer, newTextureHeader.m_DataByteSize);
@@ -368,4 +408,26 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 
 #pragma endregion
 
+}
+
+bool Vertex::operator==(const Vertex& _rhs)
+{
+	if (this->m_vertexData.m_Position[0] != _rhs.m_vertexData.m_Position[0] ||
+		this->m_vertexData.m_Position[1] != _rhs.m_vertexData.m_Position[1] ||
+		this->m_vertexData.m_Position[2] != _rhs.m_vertexData.m_Position[2] ||
+		this->m_textureData.m_UV[0] != _rhs.m_textureData.m_UV[0] ||
+		this->m_textureData.m_UV[1] != _rhs.m_textureData.m_UV[1] ||
+		this->m_vertexData.m_Normal[0] != _rhs.m_vertexData.m_Normal[0] ||
+		this->m_vertexData.m_Normal[1] != _rhs.m_vertexData.m_Normal[1] ||
+		this->m_vertexData.m_Normal[2] != _rhs.m_vertexData.m_Normal[2] ||
+		this->m_textureData.m_Tangent[0] != _rhs.m_textureData.m_Tangent[0] ||
+		this->m_textureData.m_Tangent[1] != _rhs.m_textureData.m_Tangent[1] ||
+		this->m_textureData.m_Tangent[2] != _rhs.m_textureData.m_Tangent[2] ||
+		this->m_textureData.m_Tangent[3] != _rhs.m_textureData.m_Tangent[3] ||
+		this->m_vertexData.m_Diffuse[0] != _rhs.m_vertexData.m_Diffuse[0] ||
+		this->m_vertexData.m_Diffuse[1] != _rhs.m_vertexData.m_Diffuse[1] ||
+		this->m_vertexData.m_Diffuse[2] != _rhs.m_vertexData.m_Diffuse[2] ||
+		this->m_vertexData.m_Diffuse[3] != _rhs.m_vertexData.m_Diffuse[3])
+		return false;
+	return true;
 }
