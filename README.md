@@ -1,2 +1,2 @@
 # Game-Engine
-Start of a game engine.
+Life is to short to write an engine for each game 

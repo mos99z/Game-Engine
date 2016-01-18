@@ -10,6 +10,7 @@ namespace RendererD3D
 {
 	class RenderContext :public RenderNode
 	{
+		static bool wireFrame;
 	public:
 		RenderSet renderSet;
 		RENDERCONTEXTDLL RenderContext();
@@ -17,6 +18,7 @@ namespace RendererD3D
 		RENDERCONTEXTDLL inline RenderSet& GetSet() { return renderSet; }
 
 		static void Draw(RenderNode &node);
+		RENDERCONTEXTDLL static void ToggleWireFrame();
 	};
 
 }

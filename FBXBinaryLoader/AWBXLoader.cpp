@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define AWBXLOADERDLL_EXPORTS
+#define MATRIXSIZE 16
 
 #include "AWBXLoader.h"
 #include <fstream>
@@ -12,65 +13,139 @@ namespace AWBX
 
 	AWBXLoader::AWBXLoader()
 	{
+		m_UIntSize = sizeof(unsigned int);
+		m_DoubleSize = sizeof(double);
+		m_VBufferSize = sizeof(VBuffer);
+		m_TBufferSize = sizeof(TBuffer);
+		m_MatrixByteSize = MATRIXSIZE * m_DoubleSize;
 	}
 
 	AWBXLoader::~AWBXLoader()
 	{
 	}
 
-	bool AWBXLoader::LoadAWBXMeshes(char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData)
+	void AWBXLoader::DeleteAllocatedMemory()
 	{
+		size_t numAllocatedVertBuffers = m_VertexData.size();
+		for (size_t vertDataBuffer = 0; vertDataBuffer < numAllocatedVertBuffers; vertDataBuffer++)
+		{
+			delete[] m_VertexData[vertDataBuffer];
+		}
+
+		size_t numAllocatedIndexBuffers = m_IndexData.size();
+		for (size_t IndexDataBuffer = 0; IndexDataBuffer < numAllocatedIndexBuffers; IndexDataBuffer++)
+		{
+			delete[] m_IndexData[IndexDataBuffer];
+		}
+
+		size_t numAllocatedMatrixBuffers = m_Matricies.size();
+		for (size_t MatrixDataBuffer = 0; MatrixDataBuffer < numAllocatedMatrixBuffers; MatrixDataBuffer++)
+		{
+			delete[] m_Matricies[MatrixDataBuffer];
+		}
+
+		size_t numAllocatedTextureBuffers = m_TextureData.size();
+		for (size_t TextureDataBuffer = 0; TextureDataBuffer < numAllocatedTextureBuffers; TextureDataBuffer++)
+		{
+			delete[] m_TextureData[TextureDataBuffer];
+		}
+	}
+
+	bool AWBXLoader::LoadAWBXMeshes(const char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, void*** OUT_TextureData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData, double*** OUT_matrixArray)
+	{
+		m_SingleMesh = false;
+
 		if (OpenFile(IN_AWBXFilePath))
 		{
 			if (!ParseFile())
+			{
+				DeleteAllocatedMemory();
 				return false;
+			}
 
 			OUT_numMeshes = m_currNumMeshes;
 			*OUT_NumVerts = new unsigned int[OUT_numMeshes];
 			*OUT_VertexData = new void*[OUT_numMeshes];
-
+			*OUT_TextureData = new void*[OUT_numMeshes];
 			*OUT_NumIndexes = new unsigned int[OUT_numMeshes];
 			*OUT_IndexData = new unsigned int*[OUT_numMeshes];
 
+			if (OUT_matrixArray)
+				*OUT_matrixArray = new double*[OUT_numMeshes];
+
+			unsigned int vertexByteSize;
+			unsigned int textureByteSize;
+			unsigned int indexByteSize;
 			for (int mesh = 0; mesh < OUT_numMeshes; mesh++)
 			{
 				(*OUT_NumVerts)[mesh] = m_VertexSizes[mesh];
 				(*OUT_VertexData)[mesh] = new VBuffer[m_VertexSizes[mesh]];
-				memcpy_s((*OUT_VertexData)[mesh], m_VertexSizes[mesh] * sizeof(VBuffer), m_VertexData[mesh], m_VertexSizes[mesh] * sizeof(VBuffer));
+				vertexByteSize = m_VertexSizes[mesh] * m_VBufferSize;
+				memcpy_s((*OUT_VertexData)[mesh], vertexByteSize, m_VertexData[mesh], vertexByteSize);
+
+				(*OUT_TextureData)[mesh] = new TBuffer[m_VertexSizes[mesh]];
+				textureByteSize = m_VertexSizes[mesh] * m_TBufferSize;
+				memcpy_s((*OUT_TextureData)[mesh], textureByteSize, m_TextureData[mesh], textureByteSize);
 
 				(*OUT_NumIndexes)[mesh] = m_IndexSizes[mesh];
 				(*OUT_IndexData)[mesh] = new unsigned int[m_IndexSizes[mesh]];
-				memcpy_s((*OUT_IndexData)[mesh], m_IndexSizes[mesh] * sizeof(unsigned int), m_IndexData[mesh], m_IndexSizes[mesh] * sizeof(unsigned int));
+				indexByteSize = m_IndexSizes[mesh] * m_UIntSize;
+				memcpy_s((*OUT_IndexData)[mesh], indexByteSize, m_IndexData[mesh], indexByteSize);
+
+				if (OUT_matrixArray)
+				{
+					(*OUT_matrixArray)[mesh] = new double[MATRIXSIZE];
+					memcpy_s((*OUT_matrixArray)[mesh], m_MatrixByteSize, m_Matricies[mesh], m_MatrixByteSize);
+				}
+				else
+				{
+					delete[] m_Matricies[mesh];
+				}
 			}
-
 		}
-
 		return true;
 	}
 
-	bool AWBXLoader::LoadAWBXMesh(char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData)
+	bool AWBXLoader::LoadAWBXCombinedMesh(const char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, void** OUT_TextureData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData)
 	{
 		m_totalVertexes = 0;
 		m_totalIndexes = 0;
+		m_SingleMesh = true;
 
 		if (OpenFile(IN_AWBXFilePath))
 		{
 			if (!ParseFile())
+			{
+				DeleteAllocatedMemory();
 				return false;
+			}
 
 			OUT_NumVerts = m_totalVertexes;
 			*OUT_VertexData = new VBuffer[OUT_NumVerts];
+			*OUT_TextureData = new TBuffer[OUT_NumVerts];
 			OUT_NumIndexes = m_totalIndexes;
 			*OUT_IndexData = new unsigned int[OUT_NumIndexes];
 
 			unsigned int vertOffset = 0;
 			unsigned int indexOffset = 0;
+			unsigned int textureOffset = 0;
+
+			unsigned int vertexByteSize;
+			unsigned int textureByteSize;
+			unsigned int indexByteSize;
 			for (int mesh = 0; mesh < m_currNumMeshes; mesh++)
 			{
-	
-				memcpy_s((char*)(*OUT_VertexData) + vertOffset, m_VertexSizes[mesh] * sizeof(VBuffer), (char*)m_VertexData[mesh], m_VertexSizes[mesh] * sizeof(VBuffer));
-				vertOffset += m_VertexSizes[mesh] * sizeof(VBuffer);
-				memcpy_s((*OUT_IndexData) + indexOffset, m_IndexSizes[mesh] * sizeof(unsigned int), m_IndexData[mesh], (int)m_IndexSizes[mesh] * sizeof(unsigned int));
+
+				vertexByteSize = m_VertexSizes[mesh] * m_VBufferSize;
+				memcpy_s((char*)(*OUT_VertexData) + vertOffset, vertexByteSize, (char*)m_VertexData[mesh], vertexByteSize);
+				vertOffset += m_VertexSizes[mesh] * m_VBufferSize;
+
+				textureByteSize = m_VertexSizes[mesh] * m_TBufferSize;
+				memcpy_s((char*)(*OUT_TextureData) + textureOffset, textureByteSize, (char*)m_TextureData[mesh], textureByteSize);
+				textureOffset += m_VertexSizes[mesh] * m_TBufferSize;
+
+				indexByteSize = m_IndexSizes[mesh] * m_UIntSize;
+				memcpy_s((*OUT_IndexData) + indexOffset, indexByteSize, m_IndexData[mesh], indexByteSize);
 				indexOffset += m_IndexSizes[mesh];
 			}
 		}
@@ -80,7 +155,7 @@ namespace AWBX
 		return true;
 	}
 
-	bool AWBXLoader::OpenFile(char* _filePath)
+	bool AWBXLoader::OpenFile(const char* _filePath)
 	{
 		ReadStream.open(_filePath, std::ios_base::binary);
 		m_currNumMeshes = 0;
@@ -103,6 +178,19 @@ namespace AWBX
 #endif
 				return false;
 			}
+
+			//if (!m_SingleMesh)
+			//{
+			//	double* worldMatrix = new double[MATRIXSIZE];
+			//	ReadStream.read((char*)worldMatrix, m_MatrixByteSize);
+			//	m_Matricies.push_back(worldMatrix);
+			//}
+			//else
+			//{
+			//	double buffer[MATRIXSIZE];
+			//	ReadStream.read((char*)buffer, m_MatrixByteSize);
+			//}
+
 		}
 		else
 		{
@@ -144,7 +232,7 @@ namespace AWBX
 			}
 			case AWBXLoader::Texture:
 			{
-
+				HandleTextureBuffer();
 				break;
 			}
 			case AWBXLoader::MeshData:
@@ -209,19 +297,35 @@ namespace AWBX
 
 	void AWBXLoader::HandleMeshHeader()
 	{
+		/*
 		int16_t meshNameSize;
 		int8_t* meshName;
-
 		ReadStream.read((char*)&meshNameSize, sizeof(int16_t));
 		meshName = new int8_t[meshNameSize];
 		ReadStream.read((char*)meshName, meshNameSize);
+
+		//temp
+		delete[] meshName;
+		*/
+
+		if (!m_SingleMesh)
+		{
+			double* localMatrix = new double[MATRIXSIZE];
+			ReadStream.read((char*)localMatrix, m_MatrixByteSize);
+			m_Matricies.push_back(localMatrix);
+		}
+		else
+		{
+			double buffer[MATRIXSIZE];
+			ReadStream.read((char*)buffer, m_MatrixByteSize);
+		}
 	}
 
 	void AWBXLoader::HandleVertexBuffer()
 	{
 		unsigned int vertDataSize;
-		ReadStream.read((char*)&vertDataSize, sizeof(unsigned int));
-		unsigned int numVerts = vertDataSize / sizeof(VBuffer);
+		ReadStream.read((char*)&vertDataSize, m_UIntSize);
+		unsigned int numVerts = vertDataSize / m_VBufferSize;
 		m_totalVertexes += numVerts;
 		VBuffer* vertexData = new VBuffer[numVerts];
 		ReadStream.read((char*)vertexData, vertDataSize);
@@ -233,8 +337,8 @@ namespace AWBX
 	void AWBXLoader::HandleIndexBuffer()
 	{
 		unsigned int IndexDataSize;
-		ReadStream.read((char*)&IndexDataSize, sizeof(unsigned int));
-		unsigned int numIndexes = IndexDataSize / sizeof(unsigned int);
+		ReadStream.read((char*)&IndexDataSize, m_UIntSize);
+		unsigned int numIndexes = IndexDataSize / m_UIntSize;
 		m_totalIndexes += numIndexes;
 		unsigned int* IndexData = new unsigned int[numIndexes];
 		ReadStream.read((char*)IndexData, IndexDataSize);
@@ -242,4 +346,16 @@ namespace AWBX
 		m_IndexSizes.push_back(numIndexes);
 		m_IndexData.push_back(IndexData);
 	}
+
+	void AWBXLoader::HandleTextureBuffer()
+	{
+		unsigned int textureDataByteSize;
+		ReadStream.read((char*)&textureDataByteSize, m_UIntSize);
+		unsigned int TBufferArraySize = textureDataByteSize / m_TBufferSize;
+		TBuffer* textureData = new TBuffer[TBufferArraySize];
+		ReadStream.read((char*)textureData, textureDataByteSize);
+
+		m_TextureData.push_back(textureData);
+	}
+
 }

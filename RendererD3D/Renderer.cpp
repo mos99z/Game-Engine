@@ -12,7 +12,6 @@
 #include "IndexBufferManager.h"
 #include <DDSTextureLoader.h>
 #include "StreamManager.h"
-#include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
 {
 
@@ -20,6 +19,24 @@ namespace RendererD3D
 	ID3D11DeviceContext* Renderer::theContextPtr = nullptr;
 	IDXGISwapChain* Renderer::theSwapChainPtr = nullptr;
 	ID3D11RenderTargetView* Renderer::theRenderTargetViewPtr = nullptr;
+
+
+
+	ID3D11RenderTargetView* Renderer::depthRTVPtr = nullptr;
+	ID3D11RenderTargetView* Renderer::diffuseRTVPtr = nullptr;
+	ID3D11RenderTargetView* Renderer::normalRTVPtr = nullptr;
+	ID3D11RenderTargetView* Renderer::specRTVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::depthSRVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::diffuseSRVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::normalSRVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::specSRVPtr = nullptr;
+	ID3D11Texture2D* Renderer::depthResourcePtr;
+	ID3D11Texture2D* Renderer::diffuseResourcePtr;
+	ID3D11Texture2D* Renderer::normalResourcePtr;
+	ID3D11Texture2D* Renderer::specResourcePtr;
+
+
+
 	ID3D11Texture2D* Renderer::theBackBufferPtr = nullptr;
 	ID3D11Texture2D* Renderer::theDepthStencilBufferPtr = nullptr;
 	ID3D11DepthStencilView* Renderer::theDepthStencilViewPtr = nullptr;
@@ -41,6 +58,8 @@ namespace RendererD3D
 	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
 	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
 	StreamManager* Renderer::streamManagerPtr = nullptr;
+	std::vector<RenderShape>  Renderer::renderShapes;
+	Camera Renderer::camera;
 	Renderer& Renderer::GetRef()
 	{
 		static Renderer renderer;
@@ -62,6 +81,7 @@ namespace RendererD3D
 		swapchain_DESC.BufferDesc.Width = resolutionWidth;
 		swapchain_DESC.OutputWindow = hWnd;
 		swapchain_DESC.SampleDesc.Count = 1;
+		swapchain_DESC.SampleDesc.Quality = 0;//D3D11_STANDARD_MULTISAMPLE_PATTERN;
 		swapchain_DESC.Windowed = true;
 
 
@@ -87,13 +107,16 @@ namespace RendererD3D
 		theDevicePtr->CreateRenderTargetView(theBackBufferPtr, nullptr, &theRenderTargetViewPtr);
 		ReleaseCOM(theBackBufferPtr);
 
+
+
 		D3D11_TEXTURE2D_DESC ZBufferdesc;
 		ZeroMemory(&ZBufferdesc, sizeof(ZBufferdesc));
 		ZBufferdesc.Width = resolutionWidth;
 		ZBufferdesc.Height = resolutionHeight;
 		ZBufferdesc.MipLevels = 1;
 		ZBufferdesc.ArraySize = 1;
-		ZBufferdesc.SampleDesc.Count = 1;
+		ZBufferdesc.SampleDesc.Count = swapchain_DESC.SampleDesc.Count;
+		ZBufferdesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
 		ZBufferdesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 		ZBufferdesc.Usage = D3D11_USAGE_DEFAULT;
 		ZBufferdesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
@@ -103,12 +126,58 @@ namespace RendererD3D
 
 
 		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDESC = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2D, DXGI_FORMAT_D24_UNORM_S8_UINT);
-
 		theDevicePtr->CreateDepthStencilView(theDepthStencilBufferPtr, &depthStencilViewDESC, &theDepthStencilViewPtr);
+		//Gbuffers
+		//DepthSRV
+		D3D11_SHADER_RESOURCE_VIEW_DESC GBufferDesc;
+		ZeroMemory(&GBufferDesc, sizeof(GBufferDesc));
+		GBufferDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+		GBufferDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		GBufferDesc.Texture2D.MipLevels = 1;
+		theDevicePtr->CreateShaderResourceView(theDepthStencilBufferPtr, &GBufferDesc, &depthSRVPtr);
+		
+		//DiffuseSRV
+		D3D11_TEXTURE2D_DESC BufferDesc;
+		ZeroMemory(&BufferDesc, sizeof(BufferDesc));
+		BufferDesc.Width = resolutionWidth;
+		BufferDesc.Height = resolutionHeight;
+		BufferDesc.MipLevels = 1;
+		BufferDesc.ArraySize = 1;
+		BufferDesc.SampleDesc.Count = swapchain_DESC.SampleDesc.Count;
+		BufferDesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
+		BufferDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		BufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		BufferDesc.BindFlags =  D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		BufferDesc.CPUAccessFlags = 0;
+		BufferDesc.MiscFlags = 0;
 
 
-		theContextPtr->OMSetRenderTargets(1, &theRenderTargetViewPtr, theDepthStencilViewPtr);
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &depthResourcePtr);
+		theDevicePtr->CreateRenderTargetView(depthResourcePtr, nullptr, &depthRTVPtr);
 
+		BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &diffuseResourcePtr);
+		GBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateShaderResourceView(diffuseResourcePtr, &GBufferDesc, &diffuseSRVPtr);
+		theDevicePtr->CreateRenderTargetView(diffuseResourcePtr, nullptr, &diffuseRTVPtr);
+		//NormalSRV
+		BufferDesc.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &normalResourcePtr);
+		GBufferDesc.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+		theDevicePtr->CreateShaderResourceView(normalResourcePtr, &GBufferDesc, &normalSRVPtr);
+		theDevicePtr->CreateRenderTargetView(normalResourcePtr, nullptr, &normalRTVPtr);
+		//SpecSRV
+		BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &specResourcePtr);
+		GBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateShaderResourceView(specResourcePtr, &GBufferDesc, &specSRVPtr);
+		theDevicePtr->CreateRenderTargetView(specResourcePtr, nullptr, &specRTVPtr);
+
+
+
+		
+		ID3D11RenderTargetView* RTVs[5] = { depthRTVPtr ,diffuseRTVPtr ,normalRTVPtr,specRTVPtr,theRenderTargetViewPtr };
+		theContextPtr->OMSetRenderTargets(5, RTVs, theDepthStencilViewPtr);
 		ZeroMemory(&theScreenViewport, sizeof(theScreenViewport));
 		theScreenViewport.MaxDepth = 1.0f;
 		theScreenViewport.MinDepth = 0.0f;
@@ -117,8 +186,8 @@ namespace RendererD3D
 		theScreenViewport.Width = (float)resolutionWidth;
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
-
-
+		
+		//Load Shaders
 		shaderManagerPtr = &ShaderManager::GetRef();
 		//Build Constant Buffer
 		D3D11_BUFFER_DESC bd;
@@ -146,99 +215,59 @@ namespace RendererD3D
 		theDevicePtr->CreateSamplerState(&desc, &anisoWrapSampler);
 		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
 
-		//Build simple camera stuffs
-		proj = DirectX::XMMatrixPerspectiveFovLH(70.0f * DirectX::XM_PI / 180.0f , 16.0f / 9.0f, 0.01f, 1000.0f);
-		float3 eyepos = { 0.0f, 100.0f, 300.0f};
-		float3 eyedir = { 0.0f, 50.0f, 0.0f};
-		float3 updir = { 0.0f,1.0f,0.0f };
-		viewMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eyepos), DirectX::XMLoadFloat3(&eyedir), DirectX::XMLoadFloat3(&updir));
+
 
 
 		cubeContextPtr = new RenderContext;
-		cubeShapePtr = new RenderShape;
 		cubeMaterialPtr = new RenderMaterial;
+		renderShapes.push_back(RenderShape());
+		renderShapes.push_back(RenderShape());
+		renderShapes.push_back(RenderShape());
+
+
+
+		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixIdentity());
+		DirectX::XMStoreFloat4x4(&renderShapes[1].worldMatrix, DirectX::XMMatrixIdentity());
+		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixIdentity());
 
 
 		//Get stream manager class
 		streamManagerPtr = &StreamManager::GetRef();
 		//Set Vertex buffer
-		VERIN_POSNORDIFF cubeVertices[] =
-		{
-			//Tri
-			/*{ float3(0.0f, 0.5f, 0.0f), float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
-			{ float3(0.45f, -0.5f,  0.0f), float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
-			{ float3(-0.45f,  -0.5f, 0.0f), float3(0.0f, 1.0f, 0.0f) , float4(0.0f, 1.0f, 0.0f,1.0f) },*/
-			{ float3(-0.5f, -0.5f, -0.5f),float3(0.0f, 1.0f, 0.0f) , float4(1.0f, 0.0f, 0.0f,1.0f) },
-			{ float3(-0.5f, -0.5f,  0.5f), float3(1.0f, 1.0f, 0.0f) , float4(0.0f, 0.0f, 1.0f,1.0f) },
-			{ float3(-0.5f,  0.5f, -0.5f), float3(1.0f, 0.0f, 1.0f), float4(0.0f, 1.0f, 0.0f,1.0f) },
-			{ float3(-0.5f,  0.5f,  0.5f),float3(0.0f, 0.0f, 1.0f) , float4(0.0f, 1.0f, 1.0f,1.0f) },
-			{ float3(0.5f, -0.5f, -0.5f),   float3(0.0f, 1.0f, 1.0f), float4(1.0f, 0.0f, 0.0f,1.0f) },
-			{ float3(0.5f, -0.5f,  0.5f),  float3(1.0f, 1.0f, 1.0f) , float4(1.0f, 0.0f, 1.0f,1.0f) },
-			{ float3(0.5f,  0.5f, -0.5f),  float3(0.0f, 0.0f, 0.0f) , float4(1.0f, 1.0f, 0.0f,1.0f) },
-			{ float3(0.5f,  0.5f,  0.5f),  float3(1.0f, 0.0f, 0.0f) , float4(1.0f, 1.0f, 1.0f,1.0f) },
-		};
-
-		const UINT vertexBufferSize = sizeof(cubeVertices);
-		
-		streamManagerPtr->AddGStream(*cubeShapePtr);
-		D3D11_BUFFER_DESC bufferDesc;
-		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		bufferDesc.ByteWidth = streamManagerPtr->numofGstream * sizeof (Gstream);
-		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		bufferDesc.CPUAccessFlags = 0;
-		bufferDesc.MiscFlags = 0;
-		D3D11_SUBRESOURCE_DATA InitData;
-		InitData.pSysMem = streamManagerPtr->GstreamRawBufferPtr;
-		InitData.SysMemPitch = 0;
-		InitData.SysMemSlicePitch = 0;
-		theDevicePtr->CreateBuffer(&bufferDesc, &InitData, &vertexBuffer);
-
-		UINT stripe = sizeof(VERIN_POSNORDIFF);
-		UINT offset = 0;
-		theContextPtr->IASetVertexBuffers(0, 1, &vertexBuffer, &stripe, &offset);
 
 
-		//Set index buffer 
-		
-		unsigned int cubeIndices[] =
-		{
-			0, 2, 1, // -x
-			1, 2, 3,
+		//streamManagerPtr->AddGStream(std::string("Leopard_2A6.AWBX"), renderShapes[0]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[0]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[1]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[2]);
+		//streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
 
-			4, 5, 6, // +x
-			5, 7, 6,
 
-			0, 1, 5, // -y
-			0, 5, 4,
+		//Set VertexBuffer
+		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
+		UINT offset[2] = {0,0};
+		ID3D11Buffer* buffers[2] = { streamManagerPtr->GstreamBufferPtr ,streamManagerPtr->TstreamBufferPtr };
+		theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
 
-			2, 6, 7, // +y
-			2, 7, 3,
-
-			0, 4, 6, // -z
-			0, 6, 2,
-
-			1, 3, 7, // +z
-			1, 7, 5,
-		};
-		/*cubeShapePtr->numofIndices = 36;
-		cubeShapePtr->startIndex = IndexBufferManager::GetRef().AddIndices(cubeIndices, cubeShapePtr->numofIndices);*/
+		//Set IndexBuffer 
 		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
 
-		//Set Inputlayout
-		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_POSNORDIFF]);
+		//Set InputLayout
+		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_PosNorDiffUVTan]);
 
-		
+
 
 		rSetPtr->AddNode(cubeContextPtr);
 		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
-		cubeMaterialPtr->renderSet.AddNode(cubeShapePtr);
-		//cubeShapePtr->numofVertices = 8;
-	
-		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, DirectX::XMMatrixIdentity() * DirectX::XMMatrixScaling(0.1f, 0.1f, 0.1f));
-		;
+
+		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+
+
+
+
 		//Load texture for cube 
-		
-		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"texture.dds", nullptr, &cubeSRV);
+
+		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"Teddy_D.dds", nullptr, &cubeSRV);
 		theContextPtr->PSSetShaderResources(0, 1, &cubeSRV);
 
 	}
@@ -282,23 +311,43 @@ namespace RendererD3D
 		ReleaseCOM(theDepthStencilBufferPtr);
 		ReleaseCOM(theContextPtr);
 
-		//CComPtr<ID3D11Debug> pDebug;
-		//theDevicePtr->QueryInterface(IID_PPV_ARGS(&pDebug));
-		//if (pDebug != nullptr)
-		//{
-		//	pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-		//	pDebug = nullptr;
-		//}
-		ReleaseCOM(theDevicePtr);
 
+		ReleaseCOM(depthRTVPtr);
+		ReleaseCOM(diffuseRTVPtr);
+		ReleaseCOM(normalRTVPtr);
+		ReleaseCOM(specRTVPtr);
+		ReleaseCOM(depthSRVPtr);
+		ReleaseCOM(diffuseSRVPtr);
+		ReleaseCOM(normalSRVPtr);
+		ReleaseCOM(specSRVPtr);
+		ReleaseCOM(depthResourcePtr);
+		ReleaseCOM(diffuseResourcePtr);
+		ReleaseCOM(normalResourcePtr);
+		ReleaseCOM(specResourcePtr);
+
+
+
+
+		/*CComPtr<ID3D11Debug> pDebug;
+		theDevicePtr->QueryInterface(IID_PPV_ARGS(&pDebug));
+		if (pDebug != nullptr)
+		{
+			pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+			pDebug = nullptr;
+		}*/
+		ReleaseCOM(theDevicePtr);
 
 
 
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
+		camera.UpdateView();
+		viewMatrix = camera.GetView();
 		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&cubeShapePtr->worldMatrix, (DirectX::XMMatrixRotationY(rotSpeed)));
+		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f)* DirectX::XMMatrixRotationY(rotSpeed));
+		DirectX::XMStoreFloat4x4(&renderShapes[1].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationY(rotSpeed));
+		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationX(-90) * DirectX::XMMatrixRotationY(rotSpeed));
 		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
@@ -306,6 +355,12 @@ namespace RendererD3D
 			item->RenderProcess();
 			item = item->GetNext();
 		}
+
+		//theContextPtr->IASetVertexBuffers(0, 0, NULL, NULL,NULL);
+		//theContextPtr->IASetInputLayout(NULL);
+		//theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[1], 0, 0);
+		//theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[1], 0, 0);
+		//theContextPtr->Draw(3, 0);
 	}
 
 	RenderSet& Renderer::GetSet()
@@ -363,7 +418,7 @@ namespace RendererD3D
 	}
 	void Renderer::SetPerObjectData(float4x4& _world)
 	{
-		DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(viewMatrix, proj);
+		DirectX::XMMATRIX vp = DirectX::XMMatrixMultiply(camera.GetView(), camera.GetProj());
 		thePerObjectData.gWorld = _world;
 		DirectX::XMStoreFloat4x4(&thePerObjectData.gMVP, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&_world), vp));
 
@@ -376,20 +431,20 @@ namespace RendererD3D
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 
-	void Renderer::ChangeRS()
+	void Renderer::SwitchTo0()
 	{
-		static bool line = false;
-		if (!line)
-		{
-			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_LINE]);
-			line = !line;
-		}
-		else
-		{
-			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_Default]);
-			line = !line;
-		}
-		
+		cubeMaterialPtr->renderSet.ClearSet();
+		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+	}
+	void Renderer::SwitchTo1()
+	{
+		cubeMaterialPtr->renderSet.ClearSet();
+		cubeMaterialPtr->renderSet.AddNode(&renderShapes[1]);
+	}
+	void Renderer::SwitchTo2()
+	{
+		cubeMaterialPtr->renderSet.ClearSet();
+		cubeMaterialPtr->renderSet.AddNode(&renderShapes[2]);
 	}
 
 }

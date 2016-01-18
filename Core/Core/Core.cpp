@@ -5,6 +5,8 @@
 #include "Core.h"
 #include <Renderer.h>
 #include <InputManager.h>
+#include <Camera.h>
+#include <RenderContext.h>
 
 
 HWND ghd;
@@ -64,8 +66,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	render.Initialize(ghd, 1600, 1024);
 
 	Input::InputManager inputManager;
-	inputManager.SetKeyPressed(Input::IM_K, RendererD3D::Renderer::ChangeRS);
-
+	inputManager.SetKeyPressed(Input::IM_K, RendererD3D::RenderContext::ToggleWireFrame);
+	inputManager.SetKeyPressed(Input::IM_1, RendererD3D::Renderer::SwitchTo0);
+	inputManager.SetKeyPressed(Input::IM_2, RendererD3D::Renderer::SwitchTo1);
+	inputManager.SetKeyPressed(Input::IM_3, RendererD3D::Renderer::SwitchTo2);
 	// Main message loop:
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gGameEnd)
 	{
@@ -77,6 +81,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		inputManager.Update();
 		Render();
+
 		//Update();
 		
 
