@@ -28,8 +28,8 @@ namespace RendererD3D
 	class StreamManager
 	{
 	public:
-		Gstream* GstreamRawBufferPtr = nullptr;
 		static ID3D11Buffer* GstreamBufferPtr;
+		static ID3D11Buffer* TstreamBufferPtr;
 		UINT numofGstream = 0;
 		Tstream* TstreamRawBufferPtr = nullptr;
 		UINT numofTstream = 0;

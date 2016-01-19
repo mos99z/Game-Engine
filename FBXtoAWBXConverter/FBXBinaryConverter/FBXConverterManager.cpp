@@ -252,7 +252,7 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 #pragma region Get Verticies
 
 			fbxsdk::FbxVector4 fbxVertex = versBuffer[fbxCornerIndex];
-			newVertex.m_vertexData.m_Position[0] = -(float)fbxVertex[0];
+			newVertex.m_vertexData.m_Position[0] = (float)fbxVertex[0];
 			newVertex.m_vertexData.m_Position[1] = (float)fbxVertex[1];
 			newVertex.m_vertexData.m_Position[2] = (float)fbxVertex[2];
 
@@ -265,7 +265,7 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 			fbxNormal.Normalize();
 			newVertex.m_vertexData.m_Normal[0] = (float)fbxNormal[0];
 			newVertex.m_vertexData.m_Normal[1] = (float)fbxNormal[1];
-			newVertex.m_vertexData.m_Normal[2] = -(float)fbxNormal[2];
+			newVertex.m_vertexData.m_Normal[2] = (float)fbxNormal[2];
 
 #pragma endregion
 
@@ -306,7 +306,6 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 				fbxUV = elementUV->GetDirectArray().GetAt(iUVIndex);
 				newVertex.m_textureData.m_UV[0] = (float)fbxUV[0];
 				newVertex.m_textureData.m_UV[1] = (float)fbxUV[1];
-
 				if (FLIP_UV_Y)
 					newVertex.m_textureData.m_UV[1] = 1.0f - (float)fbxUV[1];
 			}
