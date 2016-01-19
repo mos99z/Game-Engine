@@ -13,7 +13,7 @@
 
 namespace Input 
 {
-	 enum Keys
+	enum Keys
 	{
 		IM_0 = 0x30,
 		IM_1,
@@ -64,12 +64,11 @@ namespace Input
 		IM_QUOTE,
 	};
 
-	 enum KeyStates {HELD = 1, RELEASED, PRESSED};
-
 	struct Key
 	{
-		KeyStates currState;
-		KeyStates prevState;
+		bool pressed;
+		bool held;
+		bool released;
 		void (*KeyPressed) ();
 		void (*KeyHeld) ();
 		void (*KeyReleased) ();
@@ -97,22 +96,16 @@ namespace Input
 			INPUTMANAGERDLL void SetKeyHeld(int keycode, void(*function)());
 			INPUTMANAGERDLL void SetKeyReleased(int keycode, void(*function)());
 			INPUTMANAGERDLL void RemoveKey(int keycode);
-			//INPUTMANAGERDLL void SlowUpdate();
 
 		private:
 			std::unordered_map<int, Key*> keyboard;
 			//int timer = TIMER_WAIT;
 
-			void ReleaseAll();
+			void DisableAll();
 			void NullAllFunctionPointers();
 			void UpdateKeyboard();
-			//void SlowUpdateKeyboard();
 			void KeyUpdates();
-			void PressKey(int keycode);
-			void ReleaseKey(int keycode);
 			void Clear();
-			KeyStates GetKeyState(int keycode);
-			KeyStates GetPreviousKeyState(int keycode);
 	};
 }
 

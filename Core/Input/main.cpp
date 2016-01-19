@@ -3,6 +3,7 @@
 
 void PrintAMessage();
 void Clear();
+void ReleaseA();
 void ChangeA();
 void left();
 void right();
@@ -19,8 +20,8 @@ int main(int argc, char** argv)
 
 	button.keyCode = Input::IM_A;
 	button.KeyPressed = PrintAMessage;
-	button.KeyHeld = Clear;
-	button.KeyReleased = nullptr;
+	button.KeyHeld = nullptr;
+	button.KeyReleased = ReleaseA;
 	board.push_back(button);
 
 	button.keyCode = Input::IM_S;
@@ -30,8 +31,8 @@ int main(int argc, char** argv)
 	board.push_back(button);
 
 	button.keyCode = VK_LEFT;
-	button.KeyPressed = left;
-	button.KeyHeld = nullptr;
+	button.KeyPressed = nullptr;
+	button.KeyHeld = left;
 	button.KeyReleased = nullptr;
 	board.push_back(button);
 
@@ -72,9 +73,14 @@ void PrintAMessage()
 	std::cout << "A pressed ";
 }
 
+void ReleaseA()
+{
+	std::cout << "A released ";
+}
+
 void Clear()
 {
-	system("cls");
+	//system("cls");
 	std::cout << "Cleared ";
 }
 
