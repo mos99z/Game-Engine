@@ -51,12 +51,28 @@ struct _regAlign Material
 	float specIntensity;
 };
 
+
+/*
+SV_TARGET0 : depth,
+SV_TARGET1 : diffuse
+SV_TARGET2 : normal
+SV_TARGET3 : spec
+SV_TARGET4 : backBuffer
+*/
 struct _regAlign PS_GBUFFER_OUT
 {
-	float4 ColorSpecInt SEMANTIC(SV_TARGET1);
-	float4 Normal		SEMANTIC(SV_TARGET4);
+	float4 ColorSpecInt SEMANTIC(SV_TARGET4);
+	float4 Normal		SEMANTIC(SV_TARGET2);
 	float4 SpecPow		SEMANTIC(SV_TARGET3);
 };
 
+struct _regAlign SURFACE_DATA
+{
+	float LinearDepth;
+	float3 Color;
+	float3 Normal;
+	float SpecInt;
+	float SpecPow;
+};
 
 #endif //INPUTLAYOUT_HLSLI

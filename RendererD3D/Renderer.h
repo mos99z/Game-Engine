@@ -39,7 +39,15 @@ namespace RendererD3D
 		RENDERERDLL_API static D3D11_VIEWPORT theScreenViewport;
 		static ID3D11Buffer* vertexBuffer;
 		static cbPerObject thePerObjectData;
+		static cbPerCamera thePerCameraData;
+		static ID3D11Buffer *thePerCameraCBuffer;
 		static ID3D11Buffer *thePerObjectCBuffer;
+		static ID3D11Buffer *thePerDirLightCBuffer;
+
+
+		//Samplers
+		static ID3D11SamplerState* pointSampler;
+		static ID3D11SamplerState* anisoClampSampler;
 		static ID3D11SamplerState* anisoWrapSampler;
 
 		//Gbuffer
@@ -103,8 +111,7 @@ namespace RendererD3D
 		RENDERERDLL_API static void SwitchTo2();
 
 	private:
-		static DirectX::XMMATRIX viewMatrix;
-		static DirectX::XMMATRIX proj;
+
 		static UINT theRenderCounter;
 		static UINT resolutionWidth;
 		static UINT resolutionHeight;
