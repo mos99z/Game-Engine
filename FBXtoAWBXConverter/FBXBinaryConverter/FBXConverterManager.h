@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <Windows.h>
 
 namespace fbxsdk
 {
@@ -53,12 +54,14 @@ struct __declspec(align(16)) VBuffer
 	float m_Position[3]{ 0,0,0 };
 	float m_Normal[3]{ 0,1,0 };
 	float m_Diffuse[4]{ 1,0,1,1 };
+	float empty[2]{ 0,0 };
 };
 
 struct __declspec(align(16)) TBuffer
 {
 	float m_UV[2]{ 0.5f, 0.5f };
 	float m_Tangent[4]{0,0,1,1};
+	float empty[2]{ 0,0 };
 };
 
 struct Vertex
@@ -85,11 +88,16 @@ private:
 
 	std::ofstream writeStream;
 
+	CONSOLE_SCREEN_BUFFER_INFO m_ConsoleBufferInfo;
+	HANDLE m_ConsoleHandle;
+	COORD m_MainProgress;
+	COORD m_SecondaryProgress;
+
 	int m_DepthLevel;
 	unsigned int m_VBufferByteSize;
 	unsigned int m_TBufferByteSize;
-	float m_numNodes;
-	float m_nodesProcessed;
+	int m_numNodes;
+	int m_nodesProcessed;
 
 	// Private Functions 
 	void Uninitilize();
