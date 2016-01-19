@@ -3,25 +3,12 @@
 
 #include "stdafx.h"
 #include "Core.h"
-#include <Renderer.h>
-#include <InputManager.h>
-#include <Camera.h>
-#include <RenderContext.h>
+#include "GameEngine.h"
 
 
 HWND ghd;
-RendererD3D::Renderer render = RendererD3D::Renderer::GetRef();
-bool gGameEnd = false;
 
-
-void Render()
-{
-	FLOAT clearColor[4]{ 0.0f,0.0f,0.0f,1.0f };
-	render.ClearRenderTarget(clearColor);
-	render.ClearDepthAndStencilTarget();
-	render.Render(render.GetSet());
-	render.Present();
-}
+GameEngine gameEngine;
 
 #define MAX_LOADSTRING 100
 char bitFlags = 0;
@@ -63,15 +50,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-	render.Initialize(ghd, 1600, 1024);
 
-	Input::InputManager inputManager;
-	inputManager.SetKeyPressed(Input::IM_K, RendererD3D::RenderContext::ToggleWireFrame);
-	inputManager.SetKeyPressed(Input::IM_1, RendererD3D::Renderer::SwitchTo0);
-	inputManager.SetKeyPressed(Input::IM_2, RendererD3D::Renderer::SwitchTo1);
-	inputManager.SetKeyPressed(Input::IM_3, RendererD3D::Renderer::SwitchTo2);
+	//Init Game Engine 
+	gameEngine.Initialize(ghd);
+
 	// Main message loop:
-	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gGameEnd)
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gameEngine.IsOver())
 	{
 
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -84,14 +68,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			render.camera.Walk(0.1f);
 			render.camera.UpdateView();
 		}*/
-		inputManager.Update();
-		Render();
-
-		//Update();
-		
+		gameEngine.Update();
+		gameEngine.Render();
 
 	}
-	render.Shutdown();
+	gameEngine.ShutDown();
 	return (int)msg.wParam;
 }
 
@@ -209,7 +190,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			UINT width = LOWORD(lParam);
 			UINT height = HIWORD(lParam);
-			render.SetResolution(width, height);
+			gameEngine.SetResolution(width, height);
 			break;
 		}
 		default:
@@ -226,7 +207,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_DESTROY:
-		gGameEnd = true;
+		gameEngine.GameOver();
 		PostQuitMessage(0);
 		break;
 	default:

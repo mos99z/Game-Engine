@@ -109,6 +109,10 @@ namespace RendererD3D
 		RENDERERDLL_API static void SwitchTo0();
 		RENDERERDLL_API static void SwitchTo1();
 		RENDERERDLL_API static void SwitchTo2();
+		RENDERERDLL_API static void WalkForward();
+		RENDERERDLL_API static void WalkBackward();
+		RENDERERDLL_API static void StafeLeft();
+		RENDERERDLL_API static void StafeRight();
 
 	private:
 

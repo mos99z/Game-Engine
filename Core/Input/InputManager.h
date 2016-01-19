@@ -2,9 +2,9 @@
 #include "stdafx.h"
 
 #ifdef INPUTMANAGERDLL_EXPORTS
-#define INPUTMANAGERDLL// __declspec(dllexport) 
+#define INPUTMANAGERDLL  __declspec(dllexport) 
 #else
-#define INPUTMANAGERDLL //__declspec(dllimport) 
+#define INPUTMANAGERDLL  __declspec(dllimport) 
 #endif
 
 

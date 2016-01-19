@@ -45,8 +45,8 @@ namespace RendererD3D
 	UINT Renderer::resolutionHeight = 0;
 	UINT Renderer::theRenderCounter = 1;
 	cbPerObject Renderer::thePerObjectData;
-	ID3D11Buffer* Renderer::thePerObjectCBuffer = nullptr;
 	cbPerCamera Renderer::thePerCameraData;
+	ID3D11Buffer* Renderer::thePerObjectCBuffer = nullptr;
 	ID3D11Buffer* Renderer::thePerCameraCBuffer = nullptr;
 	ID3D11Buffer* Renderer::thePerDirLightCBuffer = nullptr;
 
@@ -341,9 +341,12 @@ namespace RendererD3D
 		shaderManagerPtr->DeleteInstance();
 		IndexBufferManager::DeleteInstance();
 		ReleaseCOM(cubeSRV);
+		ReleaseCOM(pointSampler);
 		ReleaseCOM(anisoWrapSampler);
+		ReleaseCOM(anisoClampSampler);
 		ReleaseCOM(vertexBuffer);
 		ReleaseCOM(thePerObjectCBuffer);
+		ReleaseCOM(thePerCameraCBuffer);
 		ReleaseCOM(thePerDirLightCBuffer);
 		ReleaseCOM(theSwapChainPtr);
 		ReleaseCOM(theRenderTargetViewPtr);
@@ -511,6 +514,25 @@ namespace RendererD3D
 		cubeMaterialPtr->renderSet.ClearSet();
 		cubeMaterialPtr->renderSet.AddNode(&renderShapes[2]);
 	}
+
+
+	void Renderer::WalkForward()
+	{
+		camera.WalkForward();
+	}
+	void Renderer::WalkBackward()
+	{
+		camera.WalkBackward();
+	}
+	void Renderer::StafeLeft()
+	{
+		camera.StafeLeft();
+	}
+	void Renderer::StafeRight()
+	{
+		camera.StafeRight();
+	}
+
 
 }
 
