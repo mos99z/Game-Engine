@@ -20,6 +20,11 @@ float4x4	gViewProj;
 /// The current cameras current inverse view-projection matrix
 float4x4	gInvViewProj;
 
+
+float4 PerspectiveValues;
+float4x4 ViewInv;
+
+
 /// The position of the camera, or eye.
 float3 gCameraPos;
 /// The distance of the far clip plane
@@ -44,7 +49,7 @@ CONSTANT_BUFFER_END
 
 //Light buffers
 CONSTANT_BUFFER_BEGIN(cbDirLight, b2)
-float3 lightPos;
+float4 lightPos;
 float4 DLightColor;
 
 #ifdef __cplusplus
@@ -52,3 +57,7 @@ const static int REGISTER_SLOT = 2;
 #endif
 CONSTANT_BUFFER_END
 #endif //CONSTANT_BUFFERS_H
+
+
+
+

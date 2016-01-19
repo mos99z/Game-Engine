@@ -79,6 +79,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+		/*if (GetAsyncKeyState(87))
+		{
+			render.camera.Walk(0.1f);
+			render.camera.UpdateView();
+		}*/
 		inputManager.Update();
 		Render();
 

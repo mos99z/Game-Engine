@@ -45,9 +45,11 @@ namespace RendererD3D
 	UINT Renderer::resolutionHeight = 0;
 	UINT Renderer::theRenderCounter = 1;
 	cbPerObject Renderer::thePerObjectData;
-	ID3D11Buffer* Renderer::thePerObjectCBuffer;
-	DirectX::XMMATRIX Renderer::viewMatrix;
-	DirectX::XMMATRIX Renderer::proj;
+	ID3D11Buffer* Renderer::thePerObjectCBuffer = nullptr;
+	cbPerCamera Renderer::thePerCameraData;
+	ID3D11Buffer* Renderer::thePerCameraCBuffer = nullptr;
+	ID3D11Buffer* Renderer::thePerDirLightCBuffer = nullptr;
+
 	ID3D11Buffer* Renderer::vertexBuffer = nullptr;
 
 	RenderContext*		Renderer::cubeContextPtr = nullptr;
@@ -55,11 +57,19 @@ namespace RendererD3D
 	RenderMaterial*	Renderer::cubeMaterialPtr = nullptr;
 	RenderSet* Renderer::rSetPtr = new RenderSet;
 	ShaderManager* Renderer::shaderManagerPtr = nullptr;
+
+	//Samplers
+	ID3D11SamplerState* Renderer::pointSampler = nullptr;
+	ID3D11SamplerState* Renderer::anisoClampSampler = nullptr;
 	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
+
+
 	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
 	StreamManager* Renderer::streamManagerPtr = nullptr;
 	std::vector<RenderShape>  Renderer::renderShapes;
 	Camera Renderer::camera;
+
+
 	Renderer& Renderer::GetRef()
 	{
 		static Renderer renderer;
@@ -135,7 +145,7 @@ namespace RendererD3D
 		GBufferDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		GBufferDesc.Texture2D.MipLevels = 1;
 		theDevicePtr->CreateShaderResourceView(theDepthStencilBufferPtr, &GBufferDesc, &depthSRVPtr);
-		
+
 		//DiffuseSRV
 		D3D11_TEXTURE2D_DESC BufferDesc;
 		ZeroMemory(&BufferDesc, sizeof(BufferDesc));
@@ -147,7 +157,7 @@ namespace RendererD3D
 		BufferDesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
 		BufferDesc.Format = DXGI_FORMAT_R32_FLOAT;
 		BufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		BufferDesc.BindFlags =  D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		BufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 		BufferDesc.CPUAccessFlags = 0;
 		BufferDesc.MiscFlags = 0;
 
@@ -175,7 +185,7 @@ namespace RendererD3D
 
 
 
-		
+
 		ID3D11RenderTargetView* RTVs[5] = { depthRTVPtr ,diffuseRTVPtr ,normalRTVPtr,specRTVPtr,theRenderTargetViewPtr };
 		theContextPtr->OMSetRenderTargets(5, RTVs, theDepthStencilViewPtr);
 		ZeroMemory(&theScreenViewport, sizeof(theScreenViewport));
@@ -186,7 +196,7 @@ namespace RendererD3D
 		theScreenViewport.Width = (float)resolutionWidth;
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
-		
+
 		//Load Shaders
 		shaderManagerPtr = &ShaderManager::GetRef();
 		//Build Constant Buffer
@@ -198,9 +208,31 @@ namespace RendererD3D
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerObjectCBuffer);
 
-		//Set sampler
 
+		bd.ByteWidth = sizeof(cbPerCamera);
+		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerCameraCBuffer);
+
+		//Build Light Constant Buffer
+		bd.ByteWidth = sizeof(cbDirLight);
+		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerDirLightCBuffer);
+
+
+		cbDirLight DirLight;
+		DirLight.DLightColor = float4{ 1.0f,0.0f,0.0f,1.0f };
+		DirLight.lightPos = float4{ 0.0f, 100.0f,0.0f,1.0f };
+		D3D11_MAPPED_SUBRESOURCE lightDataMap;
+		theContextPtr->Map(thePerDirLightCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &lightDataMap);
+		memcpy(lightDataMap.pData, &DirLight, sizeof(cbDirLight));
+		theContextPtr->Unmap(thePerDirLightCBuffer, 0);
+
+		theContextPtr->VSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);
+		theContextPtr->PSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);
+
+
+
+		//Set sampler
 		D3D11_SAMPLER_DESC desc;
+		ZeroMemory(&desc, sizeof(desc));
 		//anisoWrapSampler
 		desc.Filter = D3D11_FILTER_ANISOTROPIC;
 		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -213,10 +245,17 @@ namespace RendererD3D
 		desc.MinLOD = -FLT_MAX;
 		desc.MaxLOD = FLT_MAX;
 		theDevicePtr->CreateSamplerState(&desc, &anisoWrapSampler);
-		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
+		theContextPtr->PSSetSamplers(1, 1, &anisoWrapSampler);
 
+		desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		theDevicePtr->CreateSamplerState(&desc, &anisoClampSampler);
+		theContextPtr->PSSetSamplers(2, 1, &anisoClampSampler);
 
-
+		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		theDevicePtr->CreateSamplerState(&desc, &pointSampler);
+		theContextPtr->PSSetSamplers(0, 1, &pointSampler);
 
 		cubeContextPtr = new RenderContext;
 		cubeMaterialPtr = new RenderMaterial;
@@ -245,7 +284,7 @@ namespace RendererD3D
 
 		//Set VertexBuffer
 		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
-		UINT offset[2] = {0,0};
+		UINT offset[2] = { 0,0 };
 		ID3D11Buffer* buffers[2] = { streamManagerPtr->GstreamBufferPtr ,streamManagerPtr->TstreamBufferPtr };
 		theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
 
@@ -305,6 +344,7 @@ namespace RendererD3D
 		ReleaseCOM(anisoWrapSampler);
 		ReleaseCOM(vertexBuffer);
 		ReleaseCOM(thePerObjectCBuffer);
+		ReleaseCOM(thePerDirLightCBuffer);
 		ReleaseCOM(theSwapChainPtr);
 		ReleaseCOM(theRenderTargetViewPtr);
 		ReleaseCOM(theDepthStencilViewPtr);
@@ -343,11 +383,36 @@ namespace RendererD3D
 	void  Renderer::Render(RenderSet &set)
 	{
 		camera.UpdateView();
-		viewMatrix = camera.GetView();
+		//Build Camera Constant Buffer
+		thePerCameraData.gCameraDir = camera.GetForward();
+		thePerCameraData.gCameraPos = camera.GetPosition();
+		float4x4 proj, viewInv;
+		DirectX::XMStoreFloat4x4(&proj, camera.GetProj());
+		DirectX::XMStoreFloat4x4(&proj, camera.GetView());
+		DirectX::XMStoreFloat4x4(&viewInv, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&viewInv)));
+		thePerCameraData.PerspectiveValues.x = 1.0f / proj._11;
+		thePerCameraData.PerspectiveValues.y = 1.0f / proj._22;
+		thePerCameraData.PerspectiveValues.z = proj._43;
+		thePerCameraData.PerspectiveValues.w = proj._33;
+		thePerCameraData.ViewInv = viewInv;
+		D3D11_MAPPED_SUBRESOURCE cameraDataMap;
+		theContextPtr->Map(thePerCameraCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &cameraDataMap);
+		memcpy(cameraDataMap.pData, &thePerCameraData, sizeof(cbPerCamera));
+		theContextPtr->Unmap(thePerCameraCBuffer, 0);
+		theContextPtr->VSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
+		theContextPtr->PSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
+
+
+
+
+
 		static float rotSpeed = 0.001f;
 		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f)* DirectX::XMMatrixRotationY(rotSpeed));
+		renderShapes[0].worldMatrix._41 = 0.0f;
+		renderShapes[0].worldMatrix._42 = 100.0f;
+		renderShapes[0].worldMatrix._43 = 0.0f;
 		DirectX::XMStoreFloat4x4(&renderShapes[1].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationY(rotSpeed));
-		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationX(-90) * DirectX::XMMatrixRotationY(rotSpeed));
+		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationX(-90.0f / 180.0f * DirectX::XM_PI) * DirectX::XMMatrixRotationY(rotSpeed));
 		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
