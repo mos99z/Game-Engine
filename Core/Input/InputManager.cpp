@@ -116,9 +116,9 @@ namespace Input
 		else
 		{
 			Key* temp = new Key();
-			key->second->held = false;
-			key->second->released = false;
-			key->second->pressed = false;
+			temp->held = false;
+			temp->released = false;
+			temp->pressed = false;
 			temp->KeyPressed = nullptr;
 			temp->KeyHeld = nullptr;
 			temp->KeyReleased = function;
