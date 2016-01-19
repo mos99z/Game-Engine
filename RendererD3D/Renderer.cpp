@@ -12,7 +12,6 @@
 #include "IndexBufferManager.h"
 #include <DDSTextureLoader.h>
 #include "StreamManager.h"
-#include "Shaders\InputLayout.hlsli"
 namespace RendererD3D
 {
 
@@ -20,6 +19,24 @@ namespace RendererD3D
 	ID3D11DeviceContext* Renderer::theContextPtr = nullptr;
 	IDXGISwapChain* Renderer::theSwapChainPtr = nullptr;
 	ID3D11RenderTargetView* Renderer::theRenderTargetViewPtr = nullptr;
+
+
+
+	ID3D11RenderTargetView* Renderer::depthRTVPtr = nullptr;
+	ID3D11RenderTargetView* Renderer::diffuseRTVPtr = nullptr;
+	ID3D11RenderTargetView* Renderer::normalRTVPtr = nullptr;
+	ID3D11RenderTargetView* Renderer::specRTVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::depthSRVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::diffuseSRVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::normalSRVPtr = nullptr;
+	ID3D11ShaderResourceView* Renderer::specSRVPtr = nullptr;
+	ID3D11Texture2D* Renderer::depthResourcePtr;
+	ID3D11Texture2D* Renderer::diffuseResourcePtr;
+	ID3D11Texture2D* Renderer::normalResourcePtr;
+	ID3D11Texture2D* Renderer::specResourcePtr;
+
+
+
 	ID3D11Texture2D* Renderer::theBackBufferPtr = nullptr;
 	ID3D11Texture2D* Renderer::theDepthStencilBufferPtr = nullptr;
 	ID3D11DepthStencilView* Renderer::theDepthStencilViewPtr = nullptr;
@@ -63,8 +80,8 @@ namespace RendererD3D
 		swapchain_DESC.BufferDesc.Height = resolutionHeight;
 		swapchain_DESC.BufferDesc.Width = resolutionWidth;
 		swapchain_DESC.OutputWindow = hWnd;
-		swapchain_DESC.SampleDesc.Count = 4;
-		swapchain_DESC.SampleDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
+		swapchain_DESC.SampleDesc.Count = 1;
+		swapchain_DESC.SampleDesc.Quality = 0;//D3D11_STANDARD_MULTISAMPLE_PATTERN;
 		swapchain_DESC.Windowed = true;
 
 
@@ -108,11 +125,59 @@ namespace RendererD3D
 		theDevicePtr->CreateTexture2D(&ZBufferdesc, 0, &theDepthStencilBufferPtr);
 
 
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDESC = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2DMS, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDESC = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2D, DXGI_FORMAT_D24_UNORM_S8_UINT);
 		theDevicePtr->CreateDepthStencilView(theDepthStencilBufferPtr, &depthStencilViewDESC, &theDepthStencilViewPtr);
+		//Gbuffers
+		//DepthSRV
+		D3D11_SHADER_RESOURCE_VIEW_DESC GBufferDesc;
+		ZeroMemory(&GBufferDesc, sizeof(GBufferDesc));
+		GBufferDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+		GBufferDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		GBufferDesc.Texture2D.MipLevels = 1;
+		theDevicePtr->CreateShaderResourceView(theDepthStencilBufferPtr, &GBufferDesc, &depthSRVPtr);
+		
+		//DiffuseSRV
+		D3D11_TEXTURE2D_DESC BufferDesc;
+		ZeroMemory(&BufferDesc, sizeof(BufferDesc));
+		BufferDesc.Width = resolutionWidth;
+		BufferDesc.Height = resolutionHeight;
+		BufferDesc.MipLevels = 1;
+		BufferDesc.ArraySize = 1;
+		BufferDesc.SampleDesc.Count = swapchain_DESC.SampleDesc.Count;
+		BufferDesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
+		BufferDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		BufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		BufferDesc.BindFlags =  D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		BufferDesc.CPUAccessFlags = 0;
+		BufferDesc.MiscFlags = 0;
 
 
-		theContextPtr->OMSetRenderTargets(1, &theRenderTargetViewPtr, theDepthStencilViewPtr);
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &depthResourcePtr);
+		theDevicePtr->CreateRenderTargetView(depthResourcePtr, nullptr, &depthRTVPtr);
+
+		BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &diffuseResourcePtr);
+		GBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateShaderResourceView(diffuseResourcePtr, &GBufferDesc, &diffuseSRVPtr);
+		theDevicePtr->CreateRenderTargetView(diffuseResourcePtr, nullptr, &diffuseRTVPtr);
+		//NormalSRV
+		BufferDesc.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &normalResourcePtr);
+		GBufferDesc.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+		theDevicePtr->CreateShaderResourceView(normalResourcePtr, &GBufferDesc, &normalSRVPtr);
+		theDevicePtr->CreateRenderTargetView(normalResourcePtr, nullptr, &normalRTVPtr);
+		//SpecSRV
+		BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &specResourcePtr);
+		GBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		theDevicePtr->CreateShaderResourceView(specResourcePtr, &GBufferDesc, &specSRVPtr);
+		theDevicePtr->CreateRenderTargetView(specResourcePtr, nullptr, &specRTVPtr);
+
+
+
+		
+		ID3D11RenderTargetView* RTVs[5] = { depthRTVPtr ,diffuseRTVPtr ,normalRTVPtr,specRTVPtr,theRenderTargetViewPtr };
+		theContextPtr->OMSetRenderTargets(5, RTVs, theDepthStencilViewPtr);
 		ZeroMemory(&theScreenViewport, sizeof(theScreenViewport));
 		theScreenViewport.MaxDepth = 1.0f;
 		theScreenViewport.MinDepth = 0.0f;
@@ -121,7 +186,7 @@ namespace RendererD3D
 		theScreenViewport.Width = (float)resolutionWidth;
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
-
+		
 		//Load Shaders
 		shaderManagerPtr = &ShaderManager::GetRef();
 		//Build Constant Buffer
@@ -149,7 +214,7 @@ namespace RendererD3D
 		desc.MaxLOD = FLT_MAX;
 		theDevicePtr->CreateSamplerState(&desc, &anisoWrapSampler);
 		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
-		
+
 
 
 
@@ -159,47 +224,50 @@ namespace RendererD3D
 		renderShapes.push_back(RenderShape());
 		renderShapes.push_back(RenderShape());
 
-		
+
 
 		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixIdentity());
 		DirectX::XMStoreFloat4x4(&renderShapes[1].worldMatrix, DirectX::XMMatrixIdentity());
 		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixIdentity());
-		
+
 
 		//Get stream manager class
 		streamManagerPtr = &StreamManager::GetRef();
 		//Set Vertex buffer
 
-		
-		streamManagerPtr->AddGStream(std::string("Leopard_2A6.AWBX"), renderShapes[0]);
+
+		//streamManagerPtr->AddGStream(std::string("Leopard_2A6.AWBX"), renderShapes[0]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[0]);
 		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[1]);
-		streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[2]);
+		//streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
 
 
 		//Set VertexBuffer
-		UINT stripe = sizeof(VERIN_POSNORDIFF);
-		UINT offset = 0;
-		theContextPtr->IASetVertexBuffers(0, 1, &streamManagerPtr->GstreamBufferPtr, &stripe, &offset);
+		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
+		UINT offset[2] = {0,0};
+		ID3D11Buffer* buffers[2] = { streamManagerPtr->GstreamBufferPtr ,streamManagerPtr->TstreamBufferPtr };
+		theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
 
 		//Set IndexBuffer 
 		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
 
 		//Set InputLayout
-		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_POSNORDIFF]);
+		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_PosNorDiffUVTan]);
 
-		
+
 
 		rSetPtr->AddNode(cubeContextPtr);
 		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
-		
+
 		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
 
-	
-		
+
+
 
 		//Load texture for cube 
-		
-		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"texture.dds", nullptr, &cubeSRV);
+
+		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"Teddy_D.dds", nullptr, &cubeSRV);
 		theContextPtr->PSSetShaderResources(0, 1, &cubeSRV);
 
 	}
@@ -243,13 +311,30 @@ namespace RendererD3D
 		ReleaseCOM(theDepthStencilBufferPtr);
 		ReleaseCOM(theContextPtr);
 
-		//CComPtr<ID3D11Debug> pDebug;
-		//theDevicePtr->QueryInterface(IID_PPV_ARGS(&pDebug));
-		//if (pDebug != nullptr)
-		//{
-		//	pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-		//	pDebug = nullptr;
-		//}
+
+		ReleaseCOM(depthRTVPtr);
+		ReleaseCOM(diffuseRTVPtr);
+		ReleaseCOM(normalRTVPtr);
+		ReleaseCOM(specRTVPtr);
+		ReleaseCOM(depthSRVPtr);
+		ReleaseCOM(diffuseSRVPtr);
+		ReleaseCOM(normalSRVPtr);
+		ReleaseCOM(specSRVPtr);
+		ReleaseCOM(depthResourcePtr);
+		ReleaseCOM(diffuseResourcePtr);
+		ReleaseCOM(normalResourcePtr);
+		ReleaseCOM(specResourcePtr);
+
+
+
+
+		/*CComPtr<ID3D11Debug> pDebug;
+		theDevicePtr->QueryInterface(IID_PPV_ARGS(&pDebug));
+		if (pDebug != nullptr)
+		{
+			pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+			pDebug = nullptr;
+		}*/
 		ReleaseCOM(theDevicePtr);
 
 
@@ -260,7 +345,7 @@ namespace RendererD3D
 		camera.UpdateView();
 		viewMatrix = camera.GetView();
 		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixScaling(0.05f,0.05f,0.05f)* DirectX::XMMatrixRotationY(rotSpeed));
+		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f)* DirectX::XMMatrixRotationY(rotSpeed));
 		DirectX::XMStoreFloat4x4(&renderShapes[1].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationY(rotSpeed));
 		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationX(-90) * DirectX::XMMatrixRotationY(rotSpeed));
 		rotSpeed += 0.0001f;
@@ -270,6 +355,12 @@ namespace RendererD3D
 			item->RenderProcess();
 			item = item->GetNext();
 		}
+
+		//theContextPtr->IASetVertexBuffers(0, 0, NULL, NULL,NULL);
+		//theContextPtr->IASetInputLayout(NULL);
+		//theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[1], 0, 0);
+		//theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[1], 0, 0);
+		//theContextPtr->Draw(3, 0);
 	}
 
 	RenderSet& Renderer::GetSet()

@@ -1,28 +1,74 @@
 #include "InputManager.h"
+#include <iostream>
 
 namespace Input
 {
 	InputManager::InputManager()
 	{
-		UpdateKeyboard();
-		NullAllFunctionPointers();
-		ReleaseAll();
+		
 	}
 
 	InputManager::~InputManager()
 	{
+		Clear();
 		keyboard.clear();
 	}
+
+	void InputManager::Clear()
+	{
+		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
+		for (; key != keyboard.end(); key++)
+			delete key->second;
+	}
+
+	void InputManager::LoadKeyBoard(std::vector<RawKey> board)
+	{
+		Clear();
+		keyboard.clear();
+		for (size_t i = 0; i < board.size(); i++)
+		{
+			Key* temp = new Key();
+			temp->KeyPressed = board[i].KeyPressed;
+			temp->KeyHeld = board[i].KeyHeld;
+			temp->KeyReleased = board[i].KeyReleased;
+			keyboard[board[i].keyCode] = temp;
+		}
+
+		ReleaseAll();
+	}
+
+	//SLOW UPDATE
+	/*void InputManager::SlowUpdate()
+	{
+		SlowUpdateKeyboard();
+		KeyUpdates();
+	}*/
 
 	void InputManager::Update()
 	{
 		UpdateKeyboard();
 		KeyUpdates();
 	}
-
+	
 	void InputManager::UpdateKeyboard()
+	{
+		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
+		for (; key != keyboard.end(); key++)
+		{
+			if (GetAsyncKeyState(key->first) & 0x1)
+			{
+				PressKey(key->first);
+				//Sleep(200);
+			}
+			else
+				ReleaseKey(key->first);
+		}
+	}
+
+	//SLOW UPDATE KEYBOARD
+	/*void InputManager::SlowUpdateKeyboard()
 	{		
-		if (timer < TIMER_WAIT)
+		if (timer < SLOW_TIMER_WAIT)
 		{
 			timer++;
 			ReleaseAll();
@@ -490,86 +536,139 @@ namespace Input
 			PressKey(VK_SNAPSHOT);
 		else
 			ReleaseKey(VK_SNAPSHOT);
-	}
+	}*/
 
 	void InputManager::PressKey(int keycode)
 	{
-		keyboard[keycode].prevState = keyboard[keycode].currState;
-		if (keyboard[keycode].currState == PRESSED)
-			keyboard[keycode].currState = HELD;
+		if (keyboard[keycode]->prevState != RELEASED)
+			keyboard[keycode]->currState = HELD;
 		else
-			keyboard[keycode].currState = PRESSED;
+			keyboard[keycode]->currState = PRESSED;
+		keyboard[keycode]->prevState = keyboard[keycode]->currState;
 	}
 
 	void InputManager::ReleaseKey(int keycode)
 	{
-		keyboard[keycode].prevState = keyboard[keycode].currState;
-		keyboard[keycode].currState = RELEASED;
+		keyboard[keycode]->prevState = keyboard[keycode]->currState;
+		keyboard[keycode]->currState = RELEASED;
 	}
 
 	KeyStates InputManager::GetKeyState(int keycode)
 	{
-		std::unordered_map<int, Key>::iterator key = keyboard.find(keycode);
+		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
 
 		if (key != keyboard.end())
-			return key->second.currState;
+			return key->second->currState;
 
 		return RELEASED;
 	}
 
 	KeyStates InputManager::GetPreviousKeyState(int keycode)
 	{
-		std::unordered_map<int, Key>::iterator key = keyboard.find(keycode);
+		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
 
 		if (key != keyboard.end())
-			return key->second.prevState;
+			return key->second->prevState;
 
 		return RELEASED;
 	}
 
 	void InputManager::ReleaseAll()
 	{
-		std::unordered_map<int, Key>::iterator key = keyboard.begin();
+		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
 		for (; key != keyboard.end(); key++)
 		{
-			key->second.prevState = key->second.currState;
-			key->second.currState = RELEASED;
+			key->second->prevState = key->second->currState;
+			key->second->currState = RELEASED;
 		}
 	}
 
 	void InputManager::SetKeyPressed(int keycode, void(*function)())
 	{
-		keyboard[keycode].KeyPressed = function;
+		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
+
+		if (key != keyboard.end())
+			keyboard[keycode]->KeyPressed = function;
+
+		else
+		{
+			Key* temp = new Key();
+			temp->prevState = RELEASED;
+			temp->currState = RELEASED;
+			temp->KeyPressed = function;
+			temp->KeyHeld = nullptr;
+			temp->KeyReleased = nullptr;
+			keyboard[keycode] = temp;
+		}
 	}
 
 	void InputManager::SetKeyHeld(int keycode, void(*function)())
 	{
-		keyboard[keycode].KeyHeld = function;
+		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
+
+		if (key != keyboard.end())
+			keyboard[keycode]->KeyHeld = function;
+
+		else
+		{
+			Key* temp = new Key();
+			temp->prevState = RELEASED;
+			temp->currState = RELEASED;
+			temp->KeyPressed = nullptr;
+			temp->KeyHeld = function;
+			temp->KeyReleased = nullptr;
+			keyboard[keycode] = temp;
+		}
 	}
 
 	void InputManager::SetKeyReleased(int keycode, void(*function)())
 	{
-		keyboard[keycode].KeyReleased = function;
+		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
+
+		if (key != keyboard.end())
+			keyboard[keycode]->KeyReleased = function;
+
+		else
+		{
+			Key* temp = new Key();
+			temp->prevState = RELEASED;
+			temp->currState = RELEASED;
+			temp->KeyPressed = nullptr;
+			temp->KeyHeld = nullptr;
+			temp->KeyReleased = function;
+			keyboard[keycode] = temp;
+		}
+	}
+
+	void InputManager::RemoveKey(int keycode)
+	{
+		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
+
+		if (key != keyboard.end())
+		{
+			delete key->second;
+			keyboard.erase(keycode);
+		}
 	}
 
 	void InputManager::KeyUpdates()
 	{
-		std::unordered_map<int, Key>::iterator key = keyboard.begin();
+		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
 		for (; key != keyboard.end(); key++)
 		{
-			switch (key->second.currState)
+			switch (key->second->currState)
 			{
 				case PRESSED:
-					if (key->second.KeyPressed != nullptr)
-						key->second.KeyPressed();
+					if (key->second->KeyPressed != nullptr)
+						key->second->KeyPressed();
 					break;
 				case HELD:
-					if (key->second.KeyHeld != nullptr)
-						key->second.KeyHeld();
+					if (key->second->KeyHeld != nullptr)
+						key->second->KeyHeld();
 					break;
 				case RELEASED:
-					if (key->second.KeyReleased != nullptr)
-						key->second.KeyReleased();					
+					if (key->second->KeyReleased != nullptr)
+						key->second->KeyReleased();					
 					break;
 			}
 		}
@@ -577,12 +676,12 @@ namespace Input
 
 	void InputManager::NullAllFunctionPointers()
 	{
-		std::unordered_map<int, Key>::iterator key = keyboard.begin();
+		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
 		for (; key != keyboard.end(); key++)
 		{
-			key->second.KeyPressed = nullptr;
-			key->second.KeyHeld = nullptr;
-			key->second.KeyReleased = nullptr;
+			key->second->KeyPressed = nullptr;
+			key->second->KeyHeld = nullptr;
+			key->second->KeyReleased = nullptr;
 		}
 	}
 }
