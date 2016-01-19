@@ -1,11 +1,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define FLIP_UV_Y false
+#define PROGRESSTEXT false
 
 #include "FBXConverterManager.h"
 #include <fbxsdk.h>
 #include <comdef.h>
 #include <vector>
 
+unsigned int m_VertexByteSize = sizeof(Vertex);
 
 FBXLoaderManager::FBXLoaderManager()
 {
@@ -17,6 +19,10 @@ FBXLoaderManager::FBXLoaderManager()
 
 	m_VBufferByteSize = sizeof(VBuffer);
 	m_TBufferByteSize = sizeof(TBuffer);
+
+	m_ConsoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	m_MainProgress = { 0,0 };
+	m_SecondaryProgress = { 0,1 };
 }
 
 FBXLoaderManager::~FBXLoaderManager()
@@ -85,6 +91,8 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	delete[] deleteMe;
 
 	mp_FbxScene = FbxScene::Create(mp_FbxManager, "For_External_Programs");
+	FbxAxisSystem changeHandedness(FbxAxisSystem::eDirectX);
+	changeHandedness.ConvertScene(mp_FbxScene);
 
 #if _DEBUG
 	_ASSERT_EXPR(mp_FbxScene, L"FBXLoader - FbxScene failed to create!");
@@ -94,8 +102,11 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	mp_FbxImporter->Destroy();
 
 	mp_FbxRootNode = mp_FbxScene->GetRootNode();
-	m_numNodes = (float)mp_FbxScene->GetNodeCount();
-	m_nodesProcessed = 1.0f;
+
+#if PROGRESSTEXT
+	m_numNodes = mp_FbxScene->GetNodeCount();
+	m_nodesProcessed = 1;
+#endif
 
 	if (mp_FbxRootNode)
 	{
@@ -168,9 +179,11 @@ void FBXLoaderManager::HandleNode(FbxNode* _node)
 		HandleNode(_node->GetChild(child));
 
 	m_DepthLevel--;
+#if PROGRESSTEXT
+	SetConsoleCursorPosition(m_ConsoleHandle, m_MainProgress);
+	std::wprintf(L"Processing filename %ls  Node %i of %i      ", ms_ActualFileName.c_str(), m_nodesProcessed, m_numNodes);
 	m_nodesProcessed++;
-
-	std::wprintf(L"%ls  %.2f %% \n", ms_ActualFileName.c_str(), (m_nodesProcessed / m_numNodes) * 100.0f);
+#endif
 }
 
 void FBXLoaderManager::ParseOutFileName()
@@ -227,13 +240,19 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 		// For each vertex in the polygon
 		for (unsigned iPolygonVertex = 0; iPolygonVertex < 3; iPolygonVertex++)
 		{
+
+#if PROGRESSTEXT
+			SetConsoleCursorPosition(m_ConsoleHandle, m_SecondaryProgress);
+			std::wprintf(L"Processing Poly %i of %i Polygons          ", iPolygon, nodeMeshPolyCount);
+#endif
+
 			int fbxCornerIndex = nodeMesh->GetPolygonVertex(iPolygon, iPolygonVertex);
 			Vertex newVertex;
 
 #pragma region Get Verticies
 
 			fbxsdk::FbxVector4 fbxVertex = versBuffer[fbxCornerIndex];
-			newVertex.m_vertexData.m_Position[0] = -(float)fbxVertex[0];
+			newVertex.m_vertexData.m_Position[0] = (float)fbxVertex[0];
 			newVertex.m_vertexData.m_Position[1] = (float)fbxVertex[1];
 			newVertex.m_vertexData.m_Position[2] = (float)fbxVertex[2];
 
@@ -352,8 +371,8 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 			}
 
 			currVert++;
-		}//End each Vert
-	}//End Each Poly
+	}//End each Vert
+}//End Each Poly
 
 	VBuffer* m_VertBuffer = new VBuffer[m_numUniqueVerts];
 	TBuffer* m_TextureBuffer = new TBuffer[m_numUniqueVerts];
@@ -411,6 +430,8 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 
 bool Vertex::operator==(const Vertex& _rhs)
 {
+	//return !memcmp(this, &_rhs, m_VertexByteSize);
+
 	if (this->m_vertexData.m_Position[0] != _rhs.m_vertexData.m_Position[0] ||
 		this->m_vertexData.m_Position[1] != _rhs.m_vertexData.m_Position[1] ||
 		this->m_vertexData.m_Position[2] != _rhs.m_vertexData.m_Position[2] ||

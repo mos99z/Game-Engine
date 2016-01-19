@@ -2,20 +2,18 @@
 #include "stdafx.h"
 
 #ifdef INPUTMANAGERDLL_EXPORTS
-#define INPUTMANAGERDLL __declspec(dllexport) 
+#define INPUTMANAGERDLL// __declspec(dllexport) 
 #else
-#define INPUTMANAGERDLL __declspec(dllimport) 
+#define INPUTMANAGERDLL //__declspec(dllimport) 
 #endif
 
 
-
-
 #include <unordered_map>
-#define TIMER_WAIT 500
+//#define SLOW_TIMER_WAIT 500
 
 namespace Input 
 {
-	 enum Keys
+	enum Keys
 	{
 		IM_0 = 0x30,
 		IM_1,
@@ -66,15 +64,22 @@ namespace Input
 		IM_QUOTE,
 	};
 
-	 enum KeyStates {PRESSED, HELD, RELEASED};
-
 	struct Key
 	{
-		KeyStates currState;
-		KeyStates prevState;
-		void(*KeyPressed)();
-		void(*KeyHeld)();
-		void(*KeyReleased)();
+		bool pressed;
+		bool held;
+		bool released;
+		void (*KeyPressed) ();
+		void (*KeyHeld) ();
+		void (*KeyReleased) ();
+	};
+
+	struct RawKey
+	{
+		int keyCode;
+		void(*KeyPressed) ();
+		void(*KeyHeld) ();
+		void(*KeyReleased) ();
 	};
 
 	class InputManager
@@ -83,24 +88,24 @@ namespace Input
 			INPUTMANAGERDLL InputManager();
 			INPUTMANAGERDLL ~InputManager();
 
+			INPUTMANAGERDLL void LoadKeyBoard(std::vector<RawKey> board);
+
 			INPUTMANAGERDLL void Update();
 
-			INPUTMANAGERDLL void UpdateKeyboard();
-			INPUTMANAGERDLL void PressKey(int keycode);
-			INPUTMANAGERDLL void ReleaseKey(int keycode);
-			INPUTMANAGERDLL KeyStates GetKeyState(int keycode);
-			INPUTMANAGERDLL KeyStates GetPreviousKeyState(int keycode);
 			INPUTMANAGERDLL void SetKeyPressed(int keycode, void(*function)());
 			INPUTMANAGERDLL void SetKeyHeld(int keycode, void(*function)());
 			INPUTMANAGERDLL void SetKeyReleased(int keycode, void(*function)());
-			INPUTMANAGERDLL void KeyUpdates();
+			INPUTMANAGERDLL void RemoveKey(int keycode);
 
 		private:
-			std::unordered_map<int, Key> keyboard;
-			int timer = TIMER_WAIT;
+			std::unordered_map<int, Key*> keyboard;
+			//int timer = TIMER_WAIT;
 
-			void ReleaseAll();
+			void DisableAll();
 			void NullAllFunctionPointers();
+			void UpdateKeyboard();
+			void KeyUpdates();
+			void Clear();
 	};
 }
 
