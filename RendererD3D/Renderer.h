@@ -121,7 +121,6 @@ namespace RendererD3D
 		static UINT resolutionHeight;
 		static ID3D11ShaderResourceView *theDepthStencilSRVPtr;
 		static ShaderManager* shaderManagerPtr;
-		static ID3D11ShaderResourceView* cubeSRV;
 		static StreamManager* streamManagerPtr;
 		static std::vector<RenderShape> renderShapes;
 

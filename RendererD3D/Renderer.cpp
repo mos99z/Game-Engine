@@ -64,7 +64,7 @@ namespace RendererD3D
 	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
 
 
-	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
+
 	StreamManager* Renderer::streamManagerPtr = nullptr;
 	std::vector<RenderShape>  Renderer::renderShapes;
 	Camera Renderer::camera;
@@ -300,14 +300,10 @@ namespace RendererD3D
 		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
 
 		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+		cubeMaterialPtr->AddMaterial(L"Teddy_D.dds");
 
 
 
-
-		//Load texture for cube 
-
-		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"Teddy_D.dds", nullptr, &cubeSRV);
-		theContextPtr->PSSetShaderResources(0, 1, &cubeSRV);
 
 	}
 
@@ -340,7 +336,6 @@ namespace RendererD3D
 		streamManagerPtr->DeleteInstance();
 		shaderManagerPtr->DeleteInstance();
 		IndexBufferManager::DeleteInstance();
-		ReleaseCOM(cubeSRV);
 		ReleaseCOM(pointSampler);
 		ReleaseCOM(anisoWrapSampler);
 		ReleaseCOM(anisoClampSampler);
@@ -385,6 +380,7 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
+		
 		camera.UpdateView();
 		//Build Camera Constant Buffer
 		thePerCameraData.gCameraDir = camera.GetForward();
@@ -424,11 +420,10 @@ namespace RendererD3D
 			item = item->GetNext();
 		}
 
-		//theContextPtr->IASetVertexBuffers(0, 0, NULL, NULL,NULL);
-		//theContextPtr->IASetInputLayout(NULL);
-		//theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[1], 0, 0);
-		//theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[1], 0, 0);
-		//theContextPtr->Draw(3, 0);
+
+
+
+		theRenderCounter++;
 	}
 
 	RenderSet& Renderer::GetSet()
@@ -439,6 +434,7 @@ namespace RendererD3D
 
 	void Renderer::Render(RenderSet &set, RenderFunc renderFuncOverride)
 	{
+		theRenderCounter++;
 	}
 
 	void  Renderer::ResizeBuffers()
@@ -518,6 +514,8 @@ namespace RendererD3D
 
 	void Renderer::WalkForward()
 	{
+		static int count = 0;
+		count++;
 		camera.WalkForward();
 	}
 	void Renderer::WalkBackward()
