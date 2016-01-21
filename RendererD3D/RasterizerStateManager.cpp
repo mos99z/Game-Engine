@@ -46,6 +46,8 @@ namespace  RendererD3D
 
 		desc.CullMode = D3D11_CULL_NONE;
 		Renderer::theDevicePtr->CreateRasterizerState(&desc, &rasterStates[RS_NOCULL].p);
+		desc.CullMode = D3D11_CULL_BACK;
+		Renderer::theDevicePtr->CreateRasterizerState(&desc, &rasterStates[RS_BACKCULL].p);
 	}
 
 

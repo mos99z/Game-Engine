@@ -65,9 +65,9 @@ float4 main(VEROUT_PosUV input) : SV_TARGET0
 	
 	// Calculate the ambient and directional light contributions
 	float4 finalColor = mat.diffuseColor;
-	finalColor.xyz *= HemisphericAmbient(float3(0.0f, 0.0f, 0.0f), float3(0.3f, 0.3f, 0.3f), normalize(mat.normal), float4(1.0f, 1.0f, 1.0f, 1.0f));
+	finalColor.xyz *= HemisphericAmbient(float3(0.1f, 0.1f, 0.1f), float3(0.3f, 0.3f, 0.3f), normalize(mat.normal), float4(1.0f, 1.0f, 1.0f, 1.0f));
 	finalColor.xyz += CalcDirColor(position.xyz, lightPos.xyz, DLightColor, gCameraPos, mat);
 
 	
-	return finalColor;
+	return saturate(finalColor);
 }
