@@ -31,9 +31,10 @@ void  GameEngine::Initialize(HWND _windowHWND)
 	inputManager.SetKeyPressed(Input::IM_2, RendererD3D::Renderer::SwitchTo1);
 	inputManager.SetKeyPressed(Input::IM_3, RendererD3D::Renderer::SwitchTo2);
 	//inputManager.SetKeyHeld(Input::IM_W,RendererD3D::Renderer::WalkForward);
-	inputManager.SetKeyHeld(Input::IM_S,RendererD3D::Renderer::WalkBackward);
-	inputManager.SetKeyHeld(Input::IM_A,RendererD3D::Renderer::StafeLeft);
-	inputManager.SetKeyHeld(Input::IM_D,RendererD3D::Renderer::StafeRight);
+	//inputManager.SetKeyHeld(Input::IM_S, RendererD3D::Renderer::WalkBackward);
+	//inputManager.SetKeyHeld(Input::IM_A, RendererD3D::Renderer::StafeLeft);
+	//inputManager.SetKeyHeld(Input::IM_D, RendererD3D::Renderer::StafeRight);
+	ShowCursor(false);
 }
 
 void GameEngine::Update()
@@ -41,6 +42,38 @@ void GameEngine::Update()
 	using namespace std::chrono;
 	auto beginTick = high_resolution_clock::now();
 	inputManager.Update();
+
+	RECT clientWindow;
+	GetWindowRect(mainGameWindowHWND, &clientWindow);
+	POINT center;
+	center.x = (clientWindow.right + clientWindow.left) /2;
+	center.y = (clientWindow.bottom + clientWindow.top) /2;
+	
+	if (GetAsyncKeyState(VK_RBUTTON))
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		renderer.camera.Pitch(-(cursorPos.y - center.y)*0.15f);
+		renderer.camera.RotateY((cursorPos.x - center.x)*0.15f);
+		SetCursorPos(center.x, center.y);
+	}
+	if (GetAsyncKeyState('W'))
+	{
+		RendererD3D::Renderer::WalkForward();
+	}
+	if (GetAsyncKeyState('A'))
+	{
+		RendererD3D::Renderer::StafeLeft();
+	}
+	if (GetAsyncKeyState('S'))
+	{
+		RendererD3D::Renderer::WalkBackward();
+	}
+	if (GetAsyncKeyState('D'))
+	{
+		RendererD3D::Renderer::StafeRight();
+	}
+
 	renderer.camera.UpdateView();
 	renderer.camera.SetDeltaTime(deltaTime);
 	auto endTick = high_resolution_clock::now();

@@ -166,14 +166,17 @@
     <FxCompile Include="ComputeShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\FullScreenTri_PS.hlsl">
-      <Filter>Shaders\PixelShaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\FullScreenTri_VS.hlsl">
+    <FxCompile Include="Shaders\GBufferPacking_VS.hlsl">
       <Filter>Shaders\VertexShaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\DeferredDir_PS.hlsl">
+    <FxCompile Include="Shaders\GBufferPacking_PS.hlsl">
       <Filter>Shaders\PixelShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GBufferUnpacking_PS.hlsl">
+      <Filter>Shaders\PixelShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GBufferUnpacking_VS.hlsl">
+      <Filter>Shaders\VertexShaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

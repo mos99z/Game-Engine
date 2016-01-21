@@ -20,4 +20,9 @@ namespace RendererD3D
 		Renderer::SetPerObjectData(nodeShape.worldMatrix);
 		Renderer::theContextPtr->DrawIndexed(nodeShape.numofIndices,nodeShape.startIndex, nodeShape.startVertex);
 	}
+	 void  RenderShape::GBufferUnpacking(RenderNode &node)
+	{
+		RenderShape& nodeShape = (RenderShape&)node;
+		Renderer::theContextPtr->Draw(4, 0);
+	}
 }

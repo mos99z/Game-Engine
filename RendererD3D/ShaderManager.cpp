@@ -74,14 +74,32 @@ namespace  RendererD3D
 	}
 	void 	ShaderManager::CreateVertexShaders()
 	{
-		ID3D11VertexShader* VertexShaderPtr = nullptr;
-		LoadVertexShaderFromFile(&VertexShaderPtr, "ShaderObj\\Default_VS.cso");
-		VertexShaders.push_back(VertexShaderPtr);
+		ID3D11VertexShader* Default_VS = nullptr;
+		LoadVertexShaderFromFile(&Default_VS, "ShaderObj\\Default_VS.cso");
+		VertexShaders.push_back(Default_VS);
+
+		ID3D11VertexShader* GBufferPacking_VS = nullptr;
+		LoadVertexShaderFromFile(&GBufferPacking_VS, "ShaderObj\\GBufferPacking_VS.cso");
+		VertexShaders.push_back(std::move(GBufferPacking_VS));
+
+		ID3D11VertexShader* GBufferUnpacking_VS = nullptr;
+		LoadVertexShaderFromFile(&GBufferUnpacking_VS, "ShaderObj\\GBufferUnpacking_VS.cso");
+		VertexShaders.push_back(std::move(GBufferUnpacking_VS));
+
+
 	}
 	void 	ShaderManager::CreatePixelShaders()
 	{
-		ID3D11PixelShader* PixelShaderPtr = nullptr;
-		LoadPixelShaderFromFile(&PixelShaderPtr, "ShaderObj\\Default_PS.cso");
-		PixelShaders.push_back(PixelShaderPtr);
+		ID3D11PixelShader* Default_PS = nullptr;
+		LoadPixelShaderFromFile(&Default_PS, "ShaderObj\\Default_PS.cso");
+		PixelShaders.push_back(std::move(Default_PS));
+
+		ID3D11PixelShader* GBufferPacking_PS = nullptr;
+		LoadPixelShaderFromFile(&GBufferPacking_PS, "ShaderObj\\GBufferPacking_PS.cso");
+		PixelShaders.push_back(std::move(GBufferPacking_PS));
+
+		ID3D11PixelShader* GBufferUnpacking_PS = nullptr;
+		LoadPixelShaderFromFile(&GBufferUnpacking_PS, "ShaderObj\\GBufferUnpacking_PS.cso");
+		PixelShaders.push_back(std::move(GBufferUnpacking_PS));
 	}
 }

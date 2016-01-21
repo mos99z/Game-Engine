@@ -101,9 +101,12 @@ namespace RendererD3D
 		static void SetPerObjectData(float4x4& _world);
 
 
-		static RenderContext*		cubeContextPtr;
-		static RenderShape*		cubeShapePtr;
-		static RenderMaterial*	cubeMaterialPtr;
+		static RenderContext*	GBufferPackingContextPtr;
+		static RenderMaterial*	GBufferPackingMaterialPtr;
+
+		static RenderContext*	GBufferUnPackingContextPtr;
+		static RenderShape*		GBufferUnPackingShapePtr;
+		static RenderMaterial*	GBufferUnPackingMaterialPtr;
 		static RenderSet* rSetPtr;
 		RENDERERDLL_API  RenderSet& GetSet();
 		RENDERERDLL_API static void SwitchTo0();

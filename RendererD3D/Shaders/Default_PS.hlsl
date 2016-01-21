@@ -6,7 +6,7 @@
 
 
 
-PS_GBUFFER_OUT main(VEROUT_PosNorDiffUVTan input)
+float4 main(VEROUT_PosNorDiffUVTan input)  : SV_TARGET0
 {
 	float3 DiffuseColor = saturate(float4(HemisphericAmbient(float3(0.0f, 0.0f, 0.0f), float3(0.3f, 0.3f, 0.3f), normalize(input.normal), float4(1.0f, 1.0f, 1.0f, 1.0f)), 1) +
 		map.Sample(anisoWrapSampler, float2(input.texcoord.x, 1.0f - input.texcoord.y))).xyz;
@@ -22,8 +22,7 @@ PS_GBUFFER_OUT main(VEROUT_PosNorDiffUVTan input)
 
 
 
-	return PackGBuffer(DiffuseColor, normalize(Normal), SpecIntensity,SpecPower);
-	//return float4(HemisphericAmbient(float3(0.0f,0.0f,0.0f),float3(1.0f,0.2f,0.2f),normalize(input.normal),float4(1.0f,1.0f,1.0f,1.0f)),1);
+	return float4(DiffuseColor,1);
 	//return input.color;
 	//return map.Sample(anisoWrapSampler, input.color.xy);
 	//return input.pos.z / input.pos.w;

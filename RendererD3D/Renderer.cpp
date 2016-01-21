@@ -52,9 +52,12 @@ namespace RendererD3D
 
 	ID3D11Buffer* Renderer::vertexBuffer = nullptr;
 
-	RenderContext*		Renderer::cubeContextPtr = nullptr;
-	RenderShape*		Renderer::cubeShapePtr = nullptr;
-	RenderMaterial*	Renderer::cubeMaterialPtr = nullptr;
+	RenderContext*		Renderer::GBufferPackingContextPtr = nullptr;
+	RenderMaterial*	Renderer::GBufferPackingMaterialPtr = nullptr;
+	RenderContext*	Renderer::GBufferUnPackingContextPtr = nullptr;
+	RenderShape* Renderer::GBufferUnPackingShapePtr = nullptr;
+	RenderMaterial*Renderer::GBufferUnPackingMaterialPtr = nullptr;
+
 	RenderSet* Renderer::rSetPtr = new RenderSet;
 	ShaderManager* Renderer::shaderManagerPtr = nullptr;
 
@@ -186,8 +189,8 @@ namespace RendererD3D
 
 
 
-		ID3D11RenderTargetView* RTVs[5] = { depthRTVPtr ,diffuseRTVPtr ,normalRTVPtr,specRTVPtr,theRenderTargetViewPtr };
-		theContextPtr->OMSetRenderTargets(5, RTVs, theDepthStencilViewPtr);
+
+
 		ZeroMemory(&theScreenViewport, sizeof(theScreenViewport));
 		theScreenViewport.MaxDepth = 1.0f;
 		theScreenViewport.MinDepth = 0.0f;
@@ -257,8 +260,18 @@ namespace RendererD3D
 		theDevicePtr->CreateSamplerState(&desc, &pointSampler);
 		theContextPtr->PSSetSamplers(0, 1, &pointSampler);
 
-		cubeContextPtr = new RenderContext;
-		cubeMaterialPtr = new RenderMaterial;
+		GBufferPackingContextPtr = new RenderContext;
+		GBufferPackingContextPtr->RenderFunc = RenderContext::GBufferPacking;
+		GBufferPackingMaterialPtr = new RenderMaterial;
+
+
+		GBufferUnPackingContextPtr = new RenderContext;
+		GBufferUnPackingContextPtr->RenderFunc = RenderContext::GBufferUnpacking;
+		GBufferUnPackingShapePtr = new RenderShape;
+		GBufferUnPackingMaterialPtr = new RenderMaterial;
+		GBufferUnPackingMaterialPtr->RenderFunc = RenderMaterial::GBufferUnpacking;
+		GBufferUnPackingShapePtr->RenderFunc = RenderShape::GBufferUnpacking;
+
 		renderShapes.push_back(RenderShape());
 		renderShapes.push_back(RenderShape());
 		renderShapes.push_back(RenderShape());
@@ -282,26 +295,19 @@ namespace RendererD3D
 		//streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
 
 
-		//Set VertexBuffer
-		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
-		UINT offset[2] = { 0,0 };
-		ID3D11Buffer* buffers[2] = { streamManagerPtr->GstreamBufferPtr ,streamManagerPtr->TstreamBufferPtr };
-		theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
-
-		//Set IndexBuffer 
-		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
-
-		//Set InputLayout
-		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_PosNorDiffUVTan]);
 
 
+		rSetPtr->AddNode(GBufferUnPackingContextPtr);
+		GBufferUnPackingContextPtr->renderSet.AddNode(GBufferUnPackingMaterialPtr);
+		GBufferUnPackingMaterialPtr->renderSet.AddNode(GBufferUnPackingShapePtr);
 
-		rSetPtr->AddNode(cubeContextPtr);
-		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
+		rSetPtr->AddNode(GBufferPackingContextPtr);
+	
+		GBufferPackingContextPtr->renderSet.AddNode(GBufferPackingMaterialPtr);
+		GBufferPackingMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+		GBufferPackingMaterialPtr->AddMaterial(L"Teddy_D.dds");
 
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
-		cubeMaterialPtr->AddMaterial(L"Teddy_D.dds");
-
+		
 
 
 
@@ -326,12 +332,11 @@ namespace RendererD3D
 		RasterizerStateManager::DeleteInstance();
 		DepthStencilStateManager::DeleteInstance();
 		BlendStateManager::DeleteInstance();
-		cubeContextPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.ClearSet();
+		GBufferPackingContextPtr->renderSet.ClearSet();
+		GBufferPackingMaterialPtr->renderSet.ClearSet();
 		rSetPtr->ClearSet();
-		delete cubeContextPtr;
-		delete cubeShapePtr;
-		delete cubeMaterialPtr;
+		delete GBufferPackingContextPtr;
+		delete GBufferPackingMaterialPtr;
 		delete rSetPtr;
 		streamManagerPtr->DeleteInstance();
 		shaderManagerPtr->DeleteInstance();
@@ -380,7 +385,7 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
-		
+
 		camera.UpdateView();
 		//Build Camera Constant Buffer
 		thePerCameraData.gCameraDir = camera.GetForward();
@@ -406,12 +411,7 @@ namespace RendererD3D
 
 
 		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f)* DirectX::XMMatrixRotationY(rotSpeed));
-		renderShapes[0].worldMatrix._41 = 0.0f;
-		renderShapes[0].worldMatrix._42 = 100.0f;
-		renderShapes[0].worldMatrix._43 = 0.0f;
-		DirectX::XMStoreFloat4x4(&renderShapes[1].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationY(rotSpeed));
-		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationX(-90.0f / 180.0f * DirectX::XM_PI) * DirectX::XMMatrixRotationY(rotSpeed));
+		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixRotationY(rotSpeed));
 		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
@@ -497,18 +497,14 @@ namespace RendererD3D
 
 	void Renderer::SwitchTo0()
 	{
-		cubeMaterialPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+
 	}
 	void Renderer::SwitchTo1()
 	{
-		cubeMaterialPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[1]);
+
 	}
 	void Renderer::SwitchTo2()
 	{
-		cubeMaterialPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[2]);
 	}
 
 

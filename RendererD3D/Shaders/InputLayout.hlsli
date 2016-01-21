@@ -61,9 +61,15 @@ SV_TARGET4 : backBuffer
 */
 struct _regAlign PS_GBUFFER_OUT
 {
-	float4 ColorSpecInt SEMANTIC(SV_TARGET4);
-	float4 Normal		SEMANTIC(SV_TARGET2);
-	float4 SpecPow		SEMANTIC(SV_TARGET3);
+	float4 ColorSpecInt SEMANTIC(SV_TARGET0);
+	float4 Normal		SEMANTIC(SV_TARGET1);
+	float4 SpecPow		SEMANTIC(SV_TARGET2);
+};
+
+struct _regAlign VEROUT_PosUV
+{
+	float4 Position   : SV_Position;
+	float2 UV      : TEXCOORD0;
 };
 
 struct _regAlign SURFACE_DATA

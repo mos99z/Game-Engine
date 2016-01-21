@@ -26,6 +26,7 @@ namespace  RendererD3D
 		RENDERSHAPEDLL ~RenderShape();
 	
 		static void Draw(RenderNode &node);
+		static void GBufferUnpacking(RenderNode &node);
 	};
 
 }

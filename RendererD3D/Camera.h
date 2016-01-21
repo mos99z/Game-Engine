@@ -17,7 +17,7 @@ namespace RendererD3D
 		XMFLOAT3 position;
 		XMMATRIX view;
 		XMMATRIX proj;
-		float mSpeed = 100000.0f;
+		float mSpeed = 100.0f;
 		float deltaTime = 1.0f / 60.0f;
 	public:
 		Camera();

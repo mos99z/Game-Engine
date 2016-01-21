@@ -49,10 +49,15 @@ namespace RendererD3D
 		}
 		Renderer::theContextPtr->PSSetShaderResources(0, (UINT)SRVs.size(), SRVs.data());
 		Renderer::Render(nodeMaterial.renderSet);
-		Renderer::theContextPtr->PSSetShaderResources(0, (UINT)SRVs.size(), SRVs.data());
+
+		ID3D11ShaderResourceView* srvs[4]
+		{
+			nullptr, nullptr, nullptr, nullptr
+		};
+		Renderer::theContextPtr->PSSetShaderResources(0, (UINT)SRVs.size(), srvs);
 	}
 
-	void RenderMaterial::DeferredShadingDraw(RenderNode &node)
+	void RenderMaterial::GBufferUnpacking(RenderNode &node)
 	{
 		RenderMaterial& nodeMaterial = (RenderMaterial&)node;
 		ID3D11ShaderResourceView* SRVs[4]
@@ -64,6 +69,10 @@ namespace RendererD3D
 		};
 		Renderer::theContextPtr->PSSetShaderResources(1, 4, SRVs);
 		Renderer::Render(nodeMaterial.renderSet);
-		Renderer::theContextPtr->PSSetShaderResources(1, 4, nullptr);
+		ID3D11ShaderResourceView* srvs[4]
+		{ 
+			nullptr, nullptr, nullptr, nullptr
+		};
+		Renderer::theContextPtr->PSSetShaderResources(1, 4, srvs);
 	}
 }

@@ -34,6 +34,6 @@ namespace RendererD3D
 		RENDERMATERIALDLL inline RenderSet& GetSet() { return renderSet; }
 		void AddMaterial(std::wstring _texturePath, unsigned int _textureType = 0);
 		RENDERMATERIALDLL static void Draw(RenderNode &node);
-		RENDERMATERIALDLL static void DeferredShadingDraw(RenderNode &node);
+		RENDERMATERIALDLL static void GBufferUnpacking(RenderNode &node);
 	};
 }

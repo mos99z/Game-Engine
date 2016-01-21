@@ -13,11 +13,11 @@ namespace  RendererD3D
 	public:
 		enum eVertexShaders
 		{
-			DEFAULT_VS,
+			DEFAULT_VS,GBUFFERPACKING_VS, GBUFFERUNPACKING_VS,VS_COUNT
 		};
 		enum ePixelShaders
 		{
-			DEFAULT_PS,
+			DEFAULT_PS, GBUFFERPACKING_PS, GBUFFERUNPACKING_PS,PS_COUNT
 		};
 		~ShaderManager() {}
 		static ShaderManager& GetRef();
