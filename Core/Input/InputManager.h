@@ -13,6 +13,8 @@
 
 namespace Input 
 {
+	enum States {DISABLED, PRESSED, HELD, RELEASED};
+
 	enum Keys
 	{
 		IM_0 = 0x30,
@@ -66,9 +68,8 @@ namespace Input
 
 	struct Key
 	{
-		bool pressed;
-		bool held;
-		bool released;
+		int prevState;
+		int currState;
 		void (*KeyPressed) ();
 		void (*KeyHeld) ();
 		void (*KeyReleased) ();
