@@ -48,10 +48,21 @@ namespace Input
 		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
 		for (; key != keyboard.end(); key++)
 		{
-			bool state = GetAsyncKeyState(key->first);
-			key->second->pressed = !key->second->held && state;
-			key->second->released = key->second->held && !key->second->pressed;
-			key->second->held = state;
+			if (GetAsyncKeyState(key->first))
+			{
+				key->second->prevState = key->second->currState;
+				key->second->currState = PRESSED;
+				if (key->second->prevState == PRESSED || key->second->prevState == HELD)
+					key->second->currState = HELD;
+			}
+
+			else
+			{
+				key->second->prevState = key->second->currState;
+				key->second->currState = RELEASED;
+				if (key->second->prevState == RELEASED || key->second->prevState == DISABLED)
+					key->second->currState = DISABLED;
+			}
 		}
 	}
 
@@ -60,9 +71,8 @@ namespace Input
 		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
 		for (; key != keyboard.end(); key++)
 		{
-			key->second->held = false;
-			key->second->released = false;
-			key->second->pressed = false;
+			key->second->prevState = DISABLED;
+			key->second->currState = DISABLED;
 		}
 	}
 
@@ -76,9 +86,8 @@ namespace Input
 		else
 		{
 			Key* temp = new Key();
-			temp->held = false;
-			temp->released = false;
-			temp->pressed = false;
+			temp->prevState = DISABLED;
+			temp->currState = DISABLED;
 			temp->KeyPressed = function;
 			temp->KeyHeld = nullptr;
 			temp->KeyReleased = nullptr;
@@ -96,9 +105,8 @@ namespace Input
 		else
 		{
 			Key* temp = new Key();
-			temp->held = false;
-			temp->released = false;
-			temp->pressed = false;
+			temp->prevState = DISABLED;
+			temp->currState = DISABLED;
 			temp->KeyPressed = nullptr;
 			temp->KeyHeld = function;
 			temp->KeyReleased = nullptr;
@@ -116,9 +124,8 @@ namespace Input
 		else
 		{
 			Key* temp = new Key();
-			temp->held = false;
-			temp->released = false;
-			temp->pressed = false;
+			temp->prevState = DISABLED;
+			temp->currState = DISABLED;
 			temp->KeyPressed = nullptr;
 			temp->KeyHeld = nullptr;
 			temp->KeyReleased = function;
@@ -142,17 +149,23 @@ namespace Input
 		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
 		for (; key != keyboard.end(); key++)
 		{
-			if (key->second->pressed)
+			switch (key->second->currState)
+			{
+			case PRESSED:
 				if (key->second->KeyPressed != nullptr)
 					key->second->KeyPressed();
-
-			else if (key->second->held)
+				break;
+			case HELD:
 				if (key->second->KeyHeld != nullptr)
 					key->second->KeyHeld();
-
-			else if (key->second->released)
+				break;
+			case RELEASED:
 				if (key->second->KeyReleased != nullptr)
 					key->second->KeyReleased();
+				break;
+			default:
+				break;
+			}					
 		}
 	}
 

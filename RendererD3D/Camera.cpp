@@ -100,6 +100,4 @@ namespace RendererD3D
 		UpdateView();
 	}
 
-
-
 }
