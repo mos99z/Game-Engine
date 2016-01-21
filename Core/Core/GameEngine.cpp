@@ -22,7 +22,7 @@ void  GameEngine::Initialize(HWND _windowHWND)
 	temp.keyCode = Input::IM_W;
 	temp.KeyHeld = RendererD3D::Renderer::WalkForward;
 	temp.KeyPressed = nullptr;
-	temp.KeyReleased = RendererD3D::Renderer::WalkForward;
+	temp.KeyReleased = nullptr;
 	std::vector<Input::RawKey> vec;
 	vec.push_back(temp);
 	inputManager.LoadKeyBoard(vec);
