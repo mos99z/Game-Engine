@@ -68,7 +68,14 @@ namespace RendererD3D
 		Renderer::theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[ShaderManager::GBUFFERPACKING_VS], 0, 0);
 		Renderer::theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[ShaderManager::GBUFFERPACKING_PS], 0, 0);
 		Renderer::theContextPtr->OMSetDepthStencilState(DepthStencilStateManager::GetRef().dsStates[DepthStencilStateManager::DSS_Default], 0);
-		Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_Default]);
+		if (wireFrame)
+		{
+			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_LINE]);
+		}
+		else
+		{
+			Renderer::theContextPtr->RSSetState(RasterizerStateManager::GetRef().rasterStates[RasterizerStateManager::RS_Default]);
+		}
 		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		Renderer::Render(nodeContext.renderSet);
 	}
@@ -78,7 +85,11 @@ namespace RendererD3D
 		RenderContext& nodeContext = (RenderContext&)node;
 		Renderer::theContextPtr->OMSetRenderTargets(1, &Renderer::theRenderTargetViewPtr, nullptr);
 		Renderer::theContextPtr->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
-		Renderer::theContextPtr->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+		UINT stripe[2] = { 0,0 };
+		UINT offset[2] = { 0,0 };
+		ID3D11Buffer* buffers[2] = { nullptr ,nullptr };
+		Renderer::theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
+
 		Renderer::theContextPtr->IASetInputLayout(nullptr);
 		Renderer::theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[ShaderManager::GBUFFERUNPACKING_VS], 0, 0);
 		Renderer::theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[ShaderManager::GBUFFERUNPACKING_PS], 0, 0);

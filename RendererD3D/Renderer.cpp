@@ -285,14 +285,9 @@ namespace RendererD3D
 
 		//Get stream manager class
 		streamManagerPtr = &StreamManager::GetRef();
-		//Set Vertex buffer
-
-
-		//streamManagerPtr->AddGStream(std::string("Leopard_2A6.AWBX"), renderShapes[0]);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[0]);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[1]);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[2]);
-		//streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[0].renderMesh);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[1].renderMesh);
+		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[2].renderMesh);
 
 
 
@@ -495,23 +490,9 @@ namespace RendererD3D
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 
-	void Renderer::SwitchTo0()
-	{
-
-	}
-	void Renderer::SwitchTo1()
-	{
-
-	}
-	void Renderer::SwitchTo2()
-	{
-	}
-
 
 	void Renderer::WalkForward()
 	{
-		static int count = 0;
-		count++;
 		camera.WalkForward();
 	}
 	void Renderer::WalkBackward()

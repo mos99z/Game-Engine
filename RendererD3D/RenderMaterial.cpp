@@ -48,13 +48,11 @@ namespace RendererD3D
 			SRVs.push_back(i.get().SRV);
 		}
 		Renderer::theContextPtr->PSSetShaderResources(0, (UINT)SRVs.size(), SRVs.data());
-		Renderer::Render(nodeMaterial.renderSet);
 
-		ID3D11ShaderResourceView* srvs[4]
-		{
-			nullptr, nullptr, nullptr, nullptr
-		};
-		Renderer::theContextPtr->PSSetShaderResources(0, (UINT)SRVs.size(), srvs);
+		Renderer::Render(nodeMaterial.renderSet);
+		//Unbind SRVs
+		ID3D11ShaderResourceView* nullSRVs[D3D11_COMMONSHADER_INPUT_RESOURCE_REGISTER_COUNT]{ nullptr };
+		Renderer::theContextPtr->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_REGISTER_COUNT, nullSRVs);
 	}
 
 	void RenderMaterial::GBufferUnpacking(RenderNode &node)
@@ -69,10 +67,9 @@ namespace RendererD3D
 		};
 		Renderer::theContextPtr->PSSetShaderResources(1, 4, SRVs);
 		Renderer::Render(nodeMaterial.renderSet);
-		ID3D11ShaderResourceView* srvs[4]
-		{ 
-			nullptr, nullptr, nullptr, nullptr
-		};
-		Renderer::theContextPtr->PSSetShaderResources(1, 4, srvs);
+
+		//Unbind SRVs
+		ID3D11ShaderResourceView* nullSRVs[D3D11_COMMONSHADER_INPUT_RESOURCE_REGISTER_COUNT]{ nullptr };
+		Renderer::theContextPtr->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_REGISTER_COUNT, nullSRVs);
 	}
 }

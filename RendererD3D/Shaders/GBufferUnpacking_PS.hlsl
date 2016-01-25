@@ -7,11 +7,9 @@
 float3 CalcWorldPos(float2 csPos, float linearDepth)
 {
 	float4 position;
-
 	position.xy = csPos.xy * PerspectiveValues.xy * linearDepth;
 	position.z = linearDepth;
 	position.w = 1.0;
-
 	return mul(position, ViewInv).xyz;
 }
 
@@ -20,6 +18,8 @@ float ConvertDepthToLinear(float depth)
 	float linearDepth = PerspectiveValues.z / (depth + PerspectiveValues.w);
 	return linearDepth;
 }
+
+static const float2 g_SpecPowerRange = { 0.1, 250.0 };
 
 SURFACE_DATA UnpackGBuffer(float2 location)
 {

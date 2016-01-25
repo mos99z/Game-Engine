@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "StreamManager.h"
 #include "RenderShape.h"
+#include "RenderMesh.h"
 #include "IndexBufferManager.h"
 #include <AWBXLoader.h>
 namespace RendererD3D
@@ -8,6 +9,9 @@ namespace RendererD3D
 	StreamManager*  StreamManager::instancePtr = nullptr;
 	ID3D11Buffer* StreamManager::GstreamBufferPtr = nullptr;
 	ID3D11Buffer* StreamManager::TstreamBufferPtr = nullptr;
+	std::unordered_map<std::string, Model> StreamManager::AllModels;
+
+
 	StreamManager& StreamManager::GetRef()
 	{
 		if (!instancePtr)
@@ -32,20 +36,34 @@ namespace RendererD3D
 
 	StreamManager::~StreamManager()
 	{
-		
+
 		delete[] TstreamRawBufferPtr;
 	}
 
-	void StreamManager::AddGStream(std::string& _filename, RenderShape& renderShape)
+	void StreamManager::AddGStream(std::string& _filename, RenderMesh& nodeMesh)
 	{
-		AWBX::AWBXLoader loaderTest;
-		unsigned int* indices = nullptr;
+		if (AllModels.count(_filename))
+		{
+			nodeMesh.SetNumberOfIndices(AllModels[_filename].numOfIndices);
+			nodeMesh.SetNumberOfVertices(AllModels[_filename].numOfVertices);
+			nodeMesh.SetStartIndex(AllModels[_filename].stratIndex);
+			nodeMesh.SetStartVertex(AllModels[_filename].stratVertex);
+			return;
+		}
 
+
+		AWBX::AWBXLoader loaderTest;
+
+
+		unsigned int* indices = nullptr;
 		Gstream* RawGBufferPtr = nullptr;
 		Tstream* RawTBufferPtr = nullptr;
-		loaderTest.LoadAWBXCombinedMesh(("..\\..\\Assets\\FBXs\\" + _filename).c_str(), renderShape.numofVertices, (void**)&RawGBufferPtr, (void**)&RawTBufferPtr, renderShape.numofIndices, &indices);
-		numofGstream += renderShape.numofVertices;
-		numofTstream += renderShape.numofVertices;
+		unsigned int numofVertices = 0;
+		unsigned int numofIndices = 0;
+
+		loaderTest.LoadAWBXCombinedMesh(("..\\..\\Assets\\FBXs\\" + _filename).c_str(), numofVertices, (void**)&RawGBufferPtr, (void**)&RawTBufferPtr, numofIndices, &indices);
+
+		
 
 
 		UINT startVertex = 0;
@@ -57,10 +75,10 @@ namespace RendererD3D
 		{
 			GstreamBufferPtr->GetDesc(&vertexBuffer_DESC);
 			unsigned int oldBufferSize = vertexBuffer_DESC.ByteWidth;
-			vertexBuffer_DESC.ByteWidth += renderShape.numofVertices* sizeof(Gstream);
+			vertexBuffer_DESC.ByteWidth += numofVertices * sizeof(Gstream);
 			vertexBufferData.pSysMem = new Gstream[vertexBuffer_DESC.ByteWidth];
 			memcpy((char *)(vertexBufferData.pSysMem) + oldBufferSize,
-				RawGBufferPtr, sizeof(Gstream) * renderShape.numofVertices);
+				RawGBufferPtr, sizeof(Gstream) * numofVertices);
 			ID3D11Buffer* tempVertexBufferPtr = nullptr;
 			Renderer::theDevicePtr->CreateBuffer(&vertexBuffer_DESC, &vertexBufferData, &tempVertexBufferPtr);
 			Renderer::theContextPtr->CopySubresourceRegion(tempVertexBufferPtr, 0, 0, 0, 0, GstreamBufferPtr, 0, 0);
@@ -73,7 +91,7 @@ namespace RendererD3D
 		{
 			vertexBuffer_DESC.Usage = D3D11_USAGE_DEFAULT;
 			vertexBuffer_DESC.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			vertexBuffer_DESC.ByteWidth = renderShape.numofVertices* sizeof(Gstream);
+			vertexBuffer_DESC.ByteWidth = numofVertices* sizeof(Gstream);
 			vertexBufferData.pSysMem = RawGBufferPtr;
 			Renderer::theDevicePtr->CreateBuffer(&vertexBuffer_DESC, &vertexBufferData, &GstreamBufferPtr);
 		}
@@ -84,35 +102,40 @@ namespace RendererD3D
 		{
 			TstreamBufferPtr->GetDesc(&vertexBuffer_DESC);
 			unsigned int oldBufferSize = vertexBuffer_DESC.ByteWidth;
-			vertexBuffer_DESC.ByteWidth += renderShape.numofVertices* sizeof(Tstream);
+			vertexBuffer_DESC.ByteWidth += numofVertices* sizeof(Tstream);
 			vertexBufferData.pSysMem = new Tstream[vertexBuffer_DESC.ByteWidth];
 			memcpy((char *)(vertexBufferData.pSysMem) + oldBufferSize,
-				RawTBufferPtr, sizeof(Tstream) * renderShape.numofVertices);
+				RawTBufferPtr, sizeof(Tstream) * numofVertices);
 			ID3D11Buffer* tempVertexBufferPtr = nullptr;
 			Renderer::theDevicePtr->CreateBuffer(&vertexBuffer_DESC, &vertexBufferData, &tempVertexBufferPtr);
 			Renderer::theContextPtr->CopySubresourceRegion(tempVertexBufferPtr, 0, 0, 0, 0, TstreamBufferPtr, 0, 0);
 			ReleaseCOM(TstreamBufferPtr);
 			TstreamBufferPtr = tempVertexBufferPtr;
-			//startVertex = oldBufferSize / sizeof(Tstream);
 			delete[] vertexBufferData.pSysMem;
 		}
 		else
 		{
 			vertexBuffer_DESC.Usage = D3D11_USAGE_DEFAULT;
 			vertexBuffer_DESC.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			vertexBuffer_DESC.ByteWidth = renderShape.numofVertices* sizeof(Tstream);
+			vertexBuffer_DESC.ByteWidth = numofVertices* sizeof(Tstream);
 			vertexBufferData.pSysMem = RawTBufferPtr;
 			Renderer::theDevicePtr->CreateBuffer(&vertexBuffer_DESC, &vertexBufferData, &TstreamBufferPtr);
 		}
+		nodeMesh.SetNumberOfVertices(numofVertices);
+		nodeMesh.SetNumberOfIndices(numofIndices);
+		nodeMesh.SetStartVertex(startVertex);
+		nodeMesh.SetStartIndex(IndexBufferManager::GetRef().AddIndices(indices, nodeMesh.NumberOfIndices()));
 
+		AllModels[_filename].numOfIndices = nodeMesh.NumberOfIndices();
+		AllModels[_filename].numOfVertices = nodeMesh.NumberOfVertices();
+		AllModels[_filename].stratIndex = nodeMesh.StartIndex();
+		AllModels[_filename].stratVertex = nodeMesh.StartVertex();
 
-		renderShape.startVertex = startVertex;
+		numofGstream += nodeMesh.NumberOfVertices();
+		numofTstream += nodeMesh.NumberOfVertices();
+
 		delete[] RawGBufferPtr;
 		delete[] RawTBufferPtr;
-
-
-
-		renderShape.startIndex = IndexBufferManager::GetRef().AddIndices(indices, renderShape.numofIndices);
 		delete[] indices;
 
 	}

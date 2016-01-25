@@ -24,18 +24,30 @@ namespace RendererD3D
 	{
 		DirectX::XMFLOAT4X4 worldMatrix;
 	};
+	
+	struct Model
+	{
+		unsigned int numOfVertices = 0;
+		unsigned int numOfIndices = 0;
+		unsigned int stratVertex = 0;
+		unsigned int stratIndex = 0;
+	};
+
+	class RenderMesh;
 
 	class StreamManager
 	{
+		
 	public:
 		static ID3D11Buffer* GstreamBufferPtr;
 		static ID3D11Buffer* TstreamBufferPtr;
-		UINT numofGstream = 0;
 		Tstream* TstreamRawBufferPtr = nullptr;
-		UINT numofTstream = 0;
 		/*std::vector<Astream> AstreamRawBuffer;
 		std::vector<Istream> IstreamRawBuffer;*/
 		static StreamManager*  instancePtr;
+		static std::unordered_map<std::string, Model> AllModels;
+		UINT numofGstream = 0;
+		UINT numofTstream = 0;
 	public:
 		StreamManager();
 		~StreamManager();
@@ -43,7 +55,7 @@ namespace RendererD3D
 		static void DeleteInstance();
 
 
-		void AddGStream(std::string& _filename,  RenderShape& renderShape);
+		void AddGStream(std::string& _filename, RenderMesh& nodeMesh);
 
 	};
 

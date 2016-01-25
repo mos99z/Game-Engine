@@ -32,6 +32,7 @@ namespace  RendererD3D
 		desc.DepthBiasClamp = 0.0f;
 		desc.DepthClipEnable = TRUE;
 		desc.ScissorEnable = FALSE;
+
 	
 		desc.MultisampleEnable = FALSE;
 		desc.AntialiasedLineEnable = FALSE;

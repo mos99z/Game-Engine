@@ -27,9 +27,6 @@ void  GameEngine::Initialize(HWND _windowHWND)
 	//vec.push_back(temp);
 	//inputManager.LoadKeyBoard(vec);
 	inputManager.SetKeyPressed(Input::IM_K, RendererD3D::RenderContext::ToggleWireFrame);
-	inputManager.SetKeyPressed(Input::IM_1, RendererD3D::Renderer::SwitchTo0);
-	inputManager.SetKeyPressed(Input::IM_2, RendererD3D::Renderer::SwitchTo1);
-	inputManager.SetKeyPressed(Input::IM_3, RendererD3D::Renderer::SwitchTo2);
 	inputManager.SetKeyHeld(Input::IM_W,RendererD3D::Renderer::WalkForward);
 	inputManager.SetKeyHeld(Input::IM_S, RendererD3D::Renderer::WalkBackward);
 	inputManager.SetKeyHeld(Input::IM_A, RendererD3D::Renderer::StafeLeft);

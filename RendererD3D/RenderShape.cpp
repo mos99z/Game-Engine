@@ -6,19 +6,22 @@ namespace RendererD3D
 {
 	RenderShape::RenderShape()
 	{
-		RenderFunc = RenderShape::Draw;
+		RenderFunc = RenderShape::DrawIndexed;
 	}
+
+
 
 
 	RenderShape::~RenderShape()
 	{
 	}
 
-	void  RenderShape::Draw(RenderNode &node)
+	void  RenderShape::DrawIndexed(RenderNode &node)
 	{
 		RenderShape& nodeShape = (RenderShape&)node;
+		RenderMesh& nodeMesh = nodeShape.renderMesh;
 		Renderer::SetPerObjectData(nodeShape.worldMatrix);
-		Renderer::theContextPtr->DrawIndexed(nodeShape.numofIndices,nodeShape.startIndex, nodeShape.startVertex);
+		Renderer::theContextPtr->DrawIndexed(nodeMesh.NumberOfIndices(), nodeMesh.StartIndex(), nodeMesh.StartVertex());
 	}
 	 void  RenderShape::GBufferUnpacking(RenderNode &node)
 	{
