@@ -285,9 +285,9 @@ namespace RendererD3D
 
 		//Get stream manager class
 		streamManagerPtr = &StreamManager::GetRef();
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[0].renderMesh);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[1].renderMesh);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[2].renderMesh);
+		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[0].renderMesh);
+		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[1].renderMesh);
+		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[2].renderMesh);
 
 
 
