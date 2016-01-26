@@ -24,7 +24,7 @@ namespace RendererD3D
 	class InputLayoutManager;
 	class ShaderManager;
 	class StreamManager;
-
+	 
 
 	/*!
 	Renderer Class is the core of the rendering system.
