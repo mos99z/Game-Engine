@@ -9,6 +9,7 @@
 
 
 #include <unordered_map>
+#include "MessageManager.h"
 //#define SLOW_TIMER_WAIT 500
 
 namespace Input 
@@ -70,17 +71,23 @@ namespace Input
 	{
 		int prevState;
 		int currState;
-		void (*KeyPressed) ();
-		void (*KeyHeld) ();
-		void (*KeyReleased) ();
+		//void (*KeyPressed) ();
+		//void (*KeyHeld) ();
+		//void (*KeyReleased) ();
+		Messages KeyPressed;
+		Messages KeyHeld;
+		Messages KeyReleased;
 	};
 
 	struct RawKey
 	{
 		int keyCode;
-		void(*KeyPressed) ();
-		void(*KeyHeld) ();
-		void(*KeyReleased) ();
+		//void (*KeyPressed) ();
+		//void (*KeyHeld) ();
+		//void (*KeyReleased) ();
+		Messages KeyPressed;
+		Messages KeyHeld;
+		Messages KeyReleased;
 	};
 
 	class InputManager
@@ -93,9 +100,9 @@ namespace Input
 
 			INPUTMANAGERDLL void Update();
 
-			INPUTMANAGERDLL void SetKeyPressed(int keycode, void(*function)());
-			INPUTMANAGERDLL void SetKeyHeld(int keycode, void(*function)());
-			INPUTMANAGERDLL void SetKeyReleased(int keycode, void(*function)());
+			INPUTMANAGERDLL void SetKeyPressed(int keycode, Messages mess);//void(*function)());
+			INPUTMANAGERDLL void SetKeyHeld(int keycode, Messages mess);//void(*function)());
+			INPUTMANAGERDLL void SetKeyReleased(int keycode, Messages mess);//void(*function)());
 			INPUTMANAGERDLL void RemoveKey(int keycode);
 
 		private:
