@@ -1,7 +1,7 @@
 #ifndef CONSTANT_BUFFERS_H
 #define CONSTANT_BUFFERS_H
-
 #include "SharedDefines.h"
+
 
 
 CONSTANT_BUFFER_BEGIN(cbPerObject, b0)
@@ -56,6 +56,16 @@ float4 DLightColor;
 const static int REGISTER_SLOT = 2;
 #endif
 CONSTANT_BUFFER_END
+
+
+//Light buffers
+CONSTANT_BUFFER_BEGIN(cbBones, b3)
+float4x4 bones[60];
+#ifdef __cplusplus
+const static int REGISTER_SLOT = 3;
+#endif
+CONSTANT_BUFFER_END
+
 #endif //CONSTANT_BUFFERS_H
 
 

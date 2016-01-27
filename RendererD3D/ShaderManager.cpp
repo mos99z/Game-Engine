@@ -82,9 +82,14 @@ namespace  RendererD3D
 		LoadVertexShaderFromFile(&GBufferPacking_VS, "ShaderObj\\GBufferPacking_VS.cso");
 		VertexShaders.push_back(std::move(GBufferPacking_VS));
 
+		ID3D11VertexShader* GBufferPackingANIMATION_VS = nullptr;
+		LoadVertexShaderFromFile(&GBufferPackingANIMATION_VS, "ShaderObj\\GBufferPackingAnimation_VS.cso");
+		VertexShaders.push_back(std::move(GBufferPackingANIMATION_VS));
+
 		ID3D11VertexShader* GBufferUnpacking_VS = nullptr;
 		LoadVertexShaderFromFile(&GBufferUnpacking_VS, "ShaderObj\\GBufferUnpacking_VS.cso");
 		VertexShaders.push_back(std::move(GBufferUnpacking_VS));
+
 
 
 	}

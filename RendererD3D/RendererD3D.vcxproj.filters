@@ -93,6 +93,15 @@
     <ClInclude Include="DirectionalLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ABone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AKeyframe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationClip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -146,6 +155,15 @@
     <ClCompile Include="DirectionalLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ABone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AKeyframe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationClip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Vertex_POSNORDIFF.hlsl">
@@ -176,6 +194,9 @@
       <Filter>Shaders\PixelShaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\GBufferUnpacking_VS.hlsl">
+      <Filter>Shaders\VertexShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GBufferPackingAnimation_VS.hlsl">
       <Filter>Shaders\VertexShaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -14,7 +14,7 @@ VEROUT_PosNorDiffUVTan main(VERIN_PosNorDiffUVTan input)
 	VEROUT_PosNorDiffUVTan output = (VEROUT_PosNorDiffUVTan)0;
 	output.position = mul(float4(input.position,1), gMVP);
 	input.normal.z = input.normal.z;
-	output.normal = mul(float4(input.normal, 0), gWorld);
+	output.normal = mul(float4(input.normal, 0), gWorld).xyz;
 	//float y = -output.normal.y;
 	//output.normal.y = output.normal.x;
 	//output.normal.x = y;
