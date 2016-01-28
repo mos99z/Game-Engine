@@ -14,6 +14,13 @@ namespace  RendererD3D
 
 		dssDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 		Renderer::theDevicePtr->CreateDepthStencilState(&dssDesc, &dsStates[DSS_LessEqual].p);
+
+		dssDesc.DepthFunc = D3D11_COMPARISON_GREATER;
+		dssDesc.StencilEnable = TRUE;
+		dssDesc.FrontFace.StencilPassOp =
+			dssDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+		dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		Renderer::theDevicePtr->CreateDepthStencilState(&dssDesc, &dsStates[DSS_DEFERRED].p);
 		
 	}
 	

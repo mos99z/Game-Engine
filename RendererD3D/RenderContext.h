@@ -1,11 +1,15 @@
 #pragma once
-#ifdef RENDERCONTEXTDLL_EXPORTS
-#define  RENDERCONTEXTDLL __declspec(dllexport) 
-#else
-#define  RENDERCONTEXTDLL __declspec(dllimport) 
-#endif
 #include "RenderNode.h"
 #include "RenderSet.h"
+
+#ifdef RENDERCONTEXTDLL_EXPORTS
+#define  RENDERCONTEXTDLL __declspec(dllexport)
+#else
+#define  RENDERCONTEXTDLL __declspec(dllimport)
+#endif
+
+
+
 namespace RendererD3D
 {
 	class RenderContext :public RenderNode

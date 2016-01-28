@@ -64,8 +64,8 @@ float4 main(VEROUT_PosUV input) : SV_TARGET0
 	float3 position = CalcWorldPos(input.UV, data.LinearDepth);
 	
 	// Calculate the ambient and directional light contributions
-	float4 finalColor = mat.diffuseColor;
-	finalColor.xyz *= HemisphericAmbient(float3(0.1f, 0.1f, 0.1f), float3(0.3f, 0.3f, 0.3f), normalize(mat.normal), float4(1.0f, 1.0f, 1.0f, 1.0f));
+    float4 finalColor = mat.diffuseColor;
+	finalColor.xyz *= HemisphericAmbient(float3(0.1f, 0.1f, 0.1f), float3(0.5f, 0.5f, 0.5f), normalize(mat.normal), float4(1.0f, 1.0f, 1.0f, 1.0f));
 	finalColor.xyz += CalcDirColor(position.xyz, lightPos.xyz, DLightColor, gCameraPos, mat);
 
 	

@@ -38,7 +38,13 @@ namespace RendererD3D
 		UINT keyframeIndex = FindKeyframeIndex(_time);
 		if (keyframeIndex == 0 || keyframeIndex == numOfkeyframes - 1)
 		{
-			return keyframes[keyframeIndex].Bones()[_boneIndex].GetTransform();
+			auto T = keyframes[keyframeIndex].Bones()[_boneIndex].Translation();
+			auto R = keyframes[keyframeIndex].Bones()[_boneIndex].RotationQuat();
+			auto S = keyframes[keyframeIndex].Bones()[_boneIndex].Scale();
+			auto transformMat = XMMatrixAffineTransformation(XMLoadFloat3(&S), XMVectorZero(), XMLoadFloat4(&R), XMLoadFloat3(&T));
+			float4x4 transform;
+			XMStoreFloat4x4(&transform, transformMat);
+			return transform;
 		}
 		else
 		{

@@ -5,10 +5,10 @@ namespace RendererD3D
 
 	class ABone
 	{
-		float3 translation;
-		float4 rotationQuat;
 		float3 scale;
-		float4x4 transform;
+		float4 rotationQuat;
+		float3 translation;
+
 
 	public:
 		ABone();
@@ -18,6 +18,6 @@ namespace RendererD3D
 		inline float3 Translation() const { return translation; }
 		inline float4 RotationQuat() const { return rotationQuat; }
 		inline float3 Scale() const { return scale; }
-		float4x4 GetTransform() const;
+
 	};
 }

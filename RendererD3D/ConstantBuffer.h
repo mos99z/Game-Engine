@@ -60,7 +60,7 @@ CONSTANT_BUFFER_END
 
 //Light buffers
 CONSTANT_BUFFER_BEGIN(cbBones, b3)
-float4x4 bones[60];
+float4x4 gBones[60];
 #ifdef __cplusplus
 const static int REGISTER_SLOT = 3;
 #endif

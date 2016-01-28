@@ -404,7 +404,7 @@ namespace AWBX
 		m_DM_TimeStamps = new float[m_Animation->m_NumKeyFrames];
 		ReadStream.read((char*)m_DM_TimeStamps, m_Animation->m_NumKeyFrames * m_FloatSize);
 		m_KeyFramesBoneLists = new Bone[m_Animation->m_NumKeyFrames * m_numBones];
-		ReadStream.read((char*)&m_KeyFramesBoneLists, m_BoneSize * m_Animation->m_NumKeyFrames * m_numBones);
+		ReadStream.read((char*)m_KeyFramesBoneLists, m_BoneSize * m_Animation->m_NumKeyFrames * m_numBones);
 
 		m_Animation->m_KeyFrames = new KeyFrameBuffer[m_Animation->m_NumKeyFrames];
 

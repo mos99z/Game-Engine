@@ -60,7 +60,7 @@ void GameEngine::Update()
 
 void GameEngine::Render()
 {
-	renderer.ClearRenderTarget(clearColor);
+	renderer.ClearRenderTargets(clearColor);
 	renderer.ClearDepthAndStencilTarget();
 	renderer.Render(renderer.GetSet());
 	renderer.Present();

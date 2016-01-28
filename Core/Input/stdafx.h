@@ -15,3 +15,4 @@
 #include <time.h>
 
 #define INPUTMANAGERDLL_EXPORTS
+#define MESSAGEMANAGERDLL_EXPORTS
