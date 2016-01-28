@@ -10,10 +10,10 @@ namespace RendererD3D
 	ABone::ABone(float3 _translation, float4 _rotationQuat, float3 _scale) : translation(_translation), 
 		rotationQuat(_rotationQuat), scale(_scale)
 	{
-		using namespace DirectX;
+		//using namespace DirectX;
 
-		auto transformMat = XMMatrixAffineTransformation(XMLoadFloat3(&scale), XMVectorZero(), XMLoadFloat4(&rotationQuat), XMLoadFloat3(&translation));
-		XMStoreFloat4x4(&transform, transformMat);
+		//auto transformMat = XMMatrixAffineTransformation(XMLoadFloat3(&scale), XMVectorZero(), XMLoadFloat4(&rotationQuat), XMLoadFloat3(&translation));
+		//XMStoreFloat4x4(&transform, transformMat);
 	}
 
 	ABone::~ABone()
@@ -21,9 +21,9 @@ namespace RendererD3D
 	}
 
 
-	float4x4 ABone::GetTransform() const
-	{
-		
-		return transform;
-	}
+	//float4x4 ABone::GetTransform() const
+	//{
+	//	
+	//	return transform;
+	//}
 }

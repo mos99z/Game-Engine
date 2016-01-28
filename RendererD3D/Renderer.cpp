@@ -22,7 +22,6 @@ namespace RendererD3D
 
 
 
-	ID3D11RenderTargetView* Renderer::depthRTVPtr = nullptr;
 	ID3D11RenderTargetView* Renderer::diffuseRTVPtr = nullptr;
 	ID3D11RenderTargetView* Renderer::normalRTVPtr = nullptr;
 	ID3D11RenderTargetView* Renderer::specRTVPtr = nullptr;
@@ -30,10 +29,7 @@ namespace RendererD3D
 	ID3D11ShaderResourceView* Renderer::diffuseSRVPtr = nullptr;
 	ID3D11ShaderResourceView* Renderer::normalSRVPtr = nullptr;
 	ID3D11ShaderResourceView* Renderer::specSRVPtr = nullptr;
-	ID3D11Texture2D* Renderer::depthResourcePtr;
-	ID3D11Texture2D* Renderer::diffuseResourcePtr;
-	ID3D11Texture2D* Renderer::normalResourcePtr;
-	ID3D11Texture2D* Renderer::specResourcePtr;
+
 
 
 
@@ -140,7 +136,12 @@ namespace RendererD3D
 
 		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDESC = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2D, DXGI_FORMAT_D24_UNORM_S8_UINT);
 		theDevicePtr->CreateDepthStencilView(theDepthStencilBufferPtr, &depthStencilViewDESC, &theDepthStencilViewPtr);
-		//Gbuffers
+		//GBuffer SRVs
+
+		ID3D11Texture2D* diffuseResourcePtr;
+		ID3D11Texture2D* normalResourcePtr;
+		ID3D11Texture2D* specResourcePtr;
+
 		//DepthSRV
 		D3D11_SHADER_RESOURCE_VIEW_DESC GBufferDesc;
 		ZeroMemory(&GBufferDesc, sizeof(GBufferDesc));
@@ -165,9 +166,6 @@ namespace RendererD3D
 		BufferDesc.MiscFlags = 0;
 
 
-		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &depthResourcePtr);
-		theDevicePtr->CreateRenderTargetView(depthResourcePtr, nullptr, &depthRTVPtr);
-
 		BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		theDevicePtr->CreateTexture2D(&BufferDesc, 0, &diffuseResourcePtr);
 		GBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -187,10 +185,12 @@ namespace RendererD3D
 		theDevicePtr->CreateRenderTargetView(specResourcePtr, nullptr, &specRTVPtr);
 
 
+		ReleaseCOM(diffuseResourcePtr);
+		ReleaseCOM(normalResourcePtr);
+		ReleaseCOM(specResourcePtr);
 
 
-
-
+		//View port setup
 		ZeroMemory(&theScreenViewport, sizeof(theScreenViewport));
 		theScreenViewport.MaxDepth = 1.0f;
 		theScreenViewport.MinDepth = 0.0f;
@@ -283,7 +283,7 @@ namespace RendererD3D
 		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixIdentity());
 
 
-		//Get stream manager class
+		//Load models
 		streamManagerPtr = &StreamManager::GetRef();
 		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[0].renderMesh);
 		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[1].renderMesh);
@@ -297,12 +297,13 @@ namespace RendererD3D
 		GBufferUnPackingMaterialPtr->renderSet.AddNode(GBufferUnPackingShapePtr);
 
 		rSetPtr->AddNode(GBufferPackingContextPtr);
-	
+
 		GBufferPackingContextPtr->renderSet.AddNode(GBufferPackingMaterialPtr);
 		GBufferPackingMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+		//Load textures
 		GBufferPackingMaterialPtr->AddMaterial(L"Teddy_D.dds");
 
-		
+
 
 
 
@@ -343,14 +344,9 @@ namespace RendererD3D
 		ReleaseCOM(thePerObjectCBuffer);
 		ReleaseCOM(thePerCameraCBuffer);
 		ReleaseCOM(thePerDirLightCBuffer);
-		ReleaseCOM(theSwapChainPtr);
 		ReleaseCOM(theRenderTargetViewPtr);
 		ReleaseCOM(theDepthStencilViewPtr);
 		ReleaseCOM(theDepthStencilBufferPtr);
-		ReleaseCOM(theContextPtr);
-
-
-		ReleaseCOM(depthRTVPtr);
 		ReleaseCOM(diffuseRTVPtr);
 		ReleaseCOM(normalRTVPtr);
 		ReleaseCOM(specRTVPtr);
@@ -358,10 +354,7 @@ namespace RendererD3D
 		ReleaseCOM(diffuseSRVPtr);
 		ReleaseCOM(normalSRVPtr);
 		ReleaseCOM(specSRVPtr);
-		ReleaseCOM(depthResourcePtr);
-		ReleaseCOM(diffuseResourcePtr);
-		ReleaseCOM(normalResourcePtr);
-		ReleaseCOM(specResourcePtr);
+
 
 
 
@@ -373,6 +366,8 @@ namespace RendererD3D
 			pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 			pDebug = nullptr;
 		}*/
+		ReleaseCOM(theSwapChainPtr);
+		ReleaseCOM(theContextPtr);
 		ReleaseCOM(theDevicePtr);
 
 
