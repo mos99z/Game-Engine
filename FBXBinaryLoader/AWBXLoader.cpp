@@ -17,6 +17,9 @@ namespace AWBX
 		m_DoubleSize = sizeof(double);
 		m_VBufferSize = sizeof(VBuffer);
 		m_TBufferSize = sizeof(TBuffer);
+		m_ABufferSize = sizeof(ABuffer);
+		m_FloatSize = sizeof(float);
+		m_BoneSize = sizeof(Bone);
 		m_MatrixByteSize = MATRIXSIZE * m_DoubleSize;
 	}
 
@@ -106,11 +109,15 @@ namespace AWBX
 		return true;
 	}
 
-	bool AWBXLoader::LoadAWBXCombinedMesh(const char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, void** OUT_TextureData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData)
+	bool AWBXLoader::LoadAWBXCombinedMesh(const char* IN_AWBXFilePath,
+		unsigned int& OUT_NumVerts, void** OUT_VertexData, void** OUT_TextureData, void*& OUT_WeightData,
+		unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData,
+		void*& OUT_AnimationData)
 	{
 		m_totalVertexes = 0;
 		m_totalIndexes = 0;
 		m_SingleMesh = true;
+		m_LoadedAnimationData = false;
 
 		if (OpenFile(IN_AWBXFilePath))
 		{
@@ -119,6 +126,9 @@ namespace AWBX
 				DeleteAllocatedMemory();
 				return false;
 			}
+
+			OUT_WeightData = m_WeightData;
+			OUT_AnimationData = m_Animation;
 
 			OUT_NumVerts = m_totalVertexes;
 			*OUT_VertexData = new VBuffer[OUT_NumVerts];
@@ -143,6 +153,7 @@ namespace AWBX
 				textureByteSize = m_VertexSizes[mesh] * m_TBufferSize;
 				memcpy_s((char*)(*OUT_TextureData) + textureOffset, textureByteSize, (char*)m_TextureData[mesh], textureByteSize);
 				textureOffset += m_VertexSizes[mesh] * m_TBufferSize;
+
 
 				indexByteSize = m_IndexSizes[mesh] * m_UIntSize;
 				memcpy_s((*OUT_IndexData) + indexOffset, indexByteSize, m_IndexData[mesh], indexByteSize);
@@ -239,6 +250,16 @@ namespace AWBX
 			{
 				m_currNumMeshes++;
 				HandleMeshHeader();
+				break;
+			}
+			case AWBXLoader::WeightBufer:
+			{
+				HandleWeightBuffer();
+				break;
+			}
+			case AWBXLoader::AnimationData:
+			{
+				HandleAnimationData();
 				break;
 			}
 			default:
@@ -356,6 +377,48 @@ namespace AWBX
 		ReadStream.read((char*)textureData, textureDataByteSize);
 
 		m_TextureData.push_back(textureData);
+	}
+
+	void AWBXLoader::HandleWeightBuffer()
+	{
+		unsigned int animationDataByteSize;
+		ReadStream.read((char*)&animationDataByteSize, m_UIntSize);
+		unsigned int animationArraySize = animationDataByteSize / m_ABufferSize;
+		m_WeightData = new ABuffer[animationArraySize];
+		ReadStream.read((char*)m_WeightData, animationDataByteSize);
+	}
+
+	void AWBXLoader::HandleAnimationData()
+	{
+		if (m_LoadedAnimationData)
+		{
+#if _DEBUG
+			_ASSERT_EXPR(0, L"More than 1 set of AnimationData Found!");
+#endif
+			return;
+		}
+
+		m_Animation = new AnimationBuffer;
+		ReadStream.read((char*)&m_Animation->m_NumKeyFrames, m_UIntSize);
+		ReadStream.read((char*)&m_numBones, m_UIntSize);
+		m_DM_TimeStamps = new float[m_Animation->m_NumKeyFrames];
+		ReadStream.read((char*)m_DM_TimeStamps, m_Animation->m_NumKeyFrames * m_FloatSize);
+		m_KeyFramesBoneLists = new Bone[m_Animation->m_NumKeyFrames * m_numBones];
+		ReadStream.read((char*)&m_KeyFramesBoneLists, m_BoneSize * m_Animation->m_NumKeyFrames * m_numBones);
+
+		m_Animation->m_KeyFrames = new KeyFrameBuffer[m_Animation->m_NumKeyFrames];
+
+		for (int currKeyFrame = 0; currKeyFrame < m_Animation->m_NumKeyFrames; currKeyFrame++)
+		{
+			m_Animation->m_KeyFrames[currKeyFrame].m_bones = new Bone[m_numBones];
+			m_Animation->m_KeyFrames[currKeyFrame].m_numBones = m_numBones;
+			m_Animation->m_KeyFrames[currKeyFrame].m_TimeStamp = m_DM_TimeStamps[currKeyFrame];
+			m_Animation->m_KeyFrames[currKeyFrame].m_bones = m_KeyFramesBoneLists + (m_numBones * currKeyFrame);
+		}
+
+		delete[] m_DM_TimeStamps;
+		m_DM_TimeStamps = nullptr;
+		m_LoadedAnimationData = true;
 	}
 
 }

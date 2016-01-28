@@ -15,7 +15,7 @@ namespace AWBX
 	{
 	private:
 
-		enum DataType : int8_t { VertexBuffer, IndexBuffer, Texture, MeshData };
+		enum DataType : int8_t { VertexBuffer, IndexBuffer, Texture, MeshData, WeightBufer, AnimationData };
 
 		struct MeshHeader
 		{
@@ -49,15 +49,48 @@ namespace AWBX
 			float m_Tangent[4]{ 0,0,1,1 };
 		};
 
+		struct __declspec(align(16)) ABuffer
+		{
+			unsigned int m_JointIndex[4]{ 0,0,0,0 };
+			float m_JointWeight[4]{ 0,0,0,0 };
+		};
+
+		struct Bone
+		{
+			float m_Scaling[3];
+			float m_QuaternionRot[4];
+			float m_Translation[3];
+		};
+
+		struct KeyFrameBuffer
+		{
+			float m_TimeStamp{ 0 };
+			int m_numBones;
+			Bone* m_bones;
+		};
+
+		struct AnimationBuffer
+		{
+			int m_NumKeyFrames{ 0 };
+			KeyFrameBuffer* m_KeyFrames;
+		};
+
 		std::vector<unsigned int> m_VertexSizes;
 		std::vector<VBuffer*> m_VertexData;
 		std::vector<TBuffer*> m_TextureData;
+		ABuffer* m_WeightData;
 
 		std::vector<unsigned int> m_IndexSizes;
 		std::vector<unsigned int*> m_IndexData;
 		std::vector<double*> m_Matricies;
 
+		AnimationBuffer* m_Animation;
+		float* m_DM_TimeStamps;
+		Bone* m_KeyFramesBoneLists;
+		int m_numBones;
+
 		bool m_SingleMesh;
+		bool m_LoadedAnimationData;
 		int m_currNumMeshes;
 
 		unsigned int m_totalVertexes;
@@ -65,13 +98,18 @@ namespace AWBX
 		unsigned int m_UIntSize;
 		unsigned int m_DoubleSize;
 		unsigned int m_MatrixByteSize;
+		unsigned int m_FloatSize;
+		unsigned int m_BoneSize;
 		unsigned int m_VBufferSize;
 		unsigned int m_TBufferSize;
+		unsigned int m_ABufferSize;
 
 		void HandleMeshHeader();
 		void HandleVertexBuffer();
 		void HandleIndexBuffer();
 		void HandleTextureBuffer();
+		void HandleWeightBuffer();
+		void HandleAnimationData();
 
 		void DeleteAllocatedMemory();
 
@@ -87,6 +125,9 @@ namespace AWBX
 		///		float Normal[3]
 		///		float Diffuse[4]
 		AWBXLOADERDLL_API bool LoadAWBXMeshes(const char* IN_AWBXFilePath, int& OUT_numMeshes, unsigned int** OUT_NumVerts, void*** OUT_VertexData, void*** OUT_TextureData, unsigned int** OUT_NumIndexes, unsigned int*** OUT_IndexData, double*** OUT_matrixArray = nullptr);
-		AWBXLOADERDLL_API bool LoadAWBXCombinedMesh(const char* IN_AWBXFilePath, unsigned int& OUT_NumVerts, void** OUT_VertexData, void** OUT_TextureData, unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData);
+		AWBXLOADERDLL_API bool LoadAWBXCombinedMesh(const char* IN_AWBXFilePath, 
+			unsigned int& OUT_NumVerts, void** OUT_VertexData, void** OUT_TextureData, void*& OUT_WeightData,
+			unsigned int& OUT_NumIndexes, unsigned int** OUT_IndexData,
+			void*& OUT_AnimationData);
 	};
 }

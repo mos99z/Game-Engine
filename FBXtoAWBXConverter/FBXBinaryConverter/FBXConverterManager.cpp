@@ -1,11 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define FLIP_UV_Y false
 #define PROGRESSTEXT false
+#define MILLAT60FPS 16.6666f
+
+#define KEYFRAMEBYTESIZE(numBones) (numBones * sizeof(Bone) + sizeof(double))
 
 #include "FBXConverterManager.h"
-#include <fbxsdk.h>
-#include <comdef.h>
-#include <vector>
 
 unsigned int m_VertexByteSize = sizeof(Vertex);
 
@@ -19,6 +19,8 @@ FBXLoaderManager::FBXLoaderManager()
 
 	m_VBufferByteSize = sizeof(VBuffer);
 	m_TBufferByteSize = sizeof(TBuffer);
+	m_ABufferByteSize = sizeof(ABuffer);
+	m_BoneByteSize = sizeof(Bone);
 
 	m_ConsoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	m_MainProgress = { 0,0 };
@@ -32,16 +34,18 @@ FBXLoaderManager::~FBXLoaderManager()
 
 void FBXLoaderManager::Uninitilize()
 {
+	mv_Joints.clear();
+	m_ControlPoints.clear();
 	m_DepthLevel = 0;
+	m_FoundMesh = false;
+	m_BuiltBaseAnimation = false;
 	if (writeStream.is_open())
 		writeStream.close();
 }
 
 void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 {
-
 	Uninitilize();
-
 
 #if _DEBUG
 	_ASSERT_EXPR(_FbxFileName, L"FBXLoader - Passed In File Name Can NOT Be Null!");
@@ -102,7 +106,6 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	mp_FbxImporter->Destroy();
 
 	mp_FbxRootNode = mp_FbxScene->GetRootNode();
-
 #if PROGRESSTEXT
 	m_numNodes = mp_FbxScene->GetNodeCount();
 	m_nodesProcessed = 1;
@@ -116,11 +119,13 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 		writeStream.open(ms_AWBXFileName.c_str(), std::ios_base::binary | std::ios_base::trunc);
 		if (writeStream.is_open())
 		{
-
-
 			writeStream.write("AWBX", 4);
 
 			int numChildren = mp_FbxRootNode->GetChildCount();
+
+			for (int child = 0; child < numChildren; child++)
+				HandleSkeleton(mp_FbxRootNode->GetChild(child), 0, -1);
+
 			for (int child = 0; child < numChildren; child++)
 				HandleNode(mp_FbxRootNode->GetChild(child));
 
@@ -133,7 +138,9 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 
 void FBXLoaderManager::HandleNode(FbxNode* _node)
 {
-	m_DepthLevel++;
+	if (m_FoundMesh)
+		return;
+
 	int numNodeAttributes = _node->GetNodeAttributeCount();
 	for (int attribute = 0; attribute < numNodeAttributes; attribute++)
 	{
@@ -151,6 +158,7 @@ void FBXLoaderManager::HandleNode(FbxNode* _node)
 				mp_FbxGeoConverter->Triangulate(_node->GetNodeAttributeByIndex(attribute), false);
 			}
 			HandleMesh(_node);
+			m_FoundMesh = true;
 			break;
 		}
 		case FbxNodeAttribute::eNurbs: break;
@@ -174,7 +182,11 @@ void FBXLoaderManager::HandleNode(FbxNode* _node)
 		}
 	}
 
+	if (m_FoundMesh)
+		return;
+
 	int numChildren = _node->GetChildCount();
+	m_DepthLevel++;
 	for (int child = 0; child < numChildren; child++)
 		HandleNode(_node->GetChild(child));
 
@@ -211,6 +223,9 @@ void FBXLoaderManager::ParseOutFileName()
 
 void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 {
+	HandleControlPoints(_node);
+	HandleDeformers(_node);
+	m_Animation;
 	FbxMesh* nodeMesh = _node->GetMesh();
 
 	// Write Out Mesh Header Data
@@ -352,6 +367,20 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 
 #pragma endregion
 
+#pragma region GetAnimation Data
+
+			newVertex.m_animationData.m_JointIndex[0] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[0].m_JointIndex;
+			newVertex.m_animationData.m_JointIndex[1] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[1].m_JointIndex;
+			newVertex.m_animationData.m_JointIndex[2] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[2].m_JointIndex;
+			newVertex.m_animationData.m_JointIndex[3] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[3].m_JointIndex;
+
+			newVertex.m_animationData.m_JointWeight[0] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[0].m_JointWeight;
+			newVertex.m_animationData.m_JointWeight[1] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[1].m_JointWeight;
+			newVertex.m_animationData.m_JointWeight[2] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[2].m_JointWeight;
+			newVertex.m_animationData.m_JointWeight[3] = m_ControlPoints[fbxCornerIndex].m_BoneWeights[3].m_JointWeight;
+
+#pragma endregion
+
 			bool unique = true;
 			for (unsigned int uniqueVert = 0; uniqueVert < m_numUniqueVerts; uniqueVert++)
 			{
@@ -371,16 +400,18 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 			}
 
 			currVert++;
-	}//End each Vert
-}//End Each Poly
+		}//End each Vert
+	}//End Each Poly
 
 	VBuffer* m_VertBuffer = new VBuffer[m_numUniqueVerts];
 	TBuffer* m_TextureBuffer = new TBuffer[m_numUniqueVerts];
+	ABuffer* m_AnimationBuffer = new ABuffer[m_numUniqueVerts];
 
 	for (unsigned int currVert = 0; currVert < m_numUniqueVerts; currVert++)
 	{
 		memcpy(&m_VertBuffer[currVert], &uniqueVerticies[currVert].m_vertexData, m_VBufferByteSize);
 		memcpy(&m_TextureBuffer[currVert], &uniqueVerticies[currVert].m_textureData, m_TBufferByteSize);
+		memcpy(&m_AnimationBuffer[currVert], &uniqueVerticies[currVert].m_animationData, m_ABufferByteSize);
 	}
 
 #pragma region Write out Data Buffers
@@ -424,9 +455,257 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 
 #pragma endregion
 
+#pragma region Weight Data
+
+	WeightsHeader newWeightHeader;
+	newWeightHeader.m_DataByteSize = m_numUniqueVerts * m_ABufferByteSize;
+	writeStream.write((char*)&newWeightHeader.m_DataType, sizeof(DataType));
+	writeStream.write((char*)&newWeightHeader.m_DataByteSize, sizeof(unsigned int));
+	writeStream.write((char*)m_AnimationBuffer, newWeightHeader.m_DataByteSize);
+
+	delete[] m_AnimationBuffer;
+	m_AnimationBuffer = nullptr;
+
+#pragma endregion
+
+#pragma region Animation Data
+
+	AnimationHeader newAnimationHeader;
+	writeStream.write((char*)&newAnimationHeader.m_DataType, sizeof(DataType));
+
+	AnimationBuffer AnimationDataBuffer;
+	AnimationDataBuffer.m_NumKeyFrames = (int)m_Animation.mv_KeyFrames.size();
+	writeStream.write((char*)&AnimationDataBuffer.m_NumKeyFrames, sizeof(int));
+
+	AnimationDataBuffer.m_numBones = (int)mv_Joints.size();
+	writeStream.write((char*)&AnimationDataBuffer.m_numBones, sizeof(int));
+	unsigned int sizeOfFloat = sizeof(float);
+	for (int currKeyFrame = 0; currKeyFrame < AnimationDataBuffer.m_NumKeyFrames; currKeyFrame++)
+	{
+		writeStream.write((char*)&m_Animation.mv_KeyFrames[currKeyFrame].m_TimeStamp, sizeOfFloat);
+	}
+
+	unsigned int sizeOfBoneBuffers = sizeof(Bone) * AnimationDataBuffer.m_numBones;
+	for (int currKeyFrame = 0; currKeyFrame < AnimationDataBuffer.m_NumKeyFrames; currKeyFrame++)
+	{
+		writeStream.write((char*)&m_Animation.mv_KeyFrames[currKeyFrame].mv_bones[0], sizeOfBoneBuffers);
+	}
+
+#pragma endregion
+
 #pragma endregion
 
 }
+
+void FBXLoaderManager::HandleSkeleton(fbxsdk::FbxNode* _node, int _currIndex, int _parentIndex)
+{
+	if (_node->GetNodeAttribute() && _node->GetNodeAttribute()->GetAttributeType() && _node->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
+	{
+		Joint newJoint;
+		newJoint.ms_Name = _node->GetName();
+		newJoint.m_ParentIdex = _parentIndex;
+		mv_Joints.push_back(newJoint);
+	}
+
+	int numChildren = _node->GetChildCount();
+	for (int child = 0; child < numChildren; child++)
+		HandleSkeleton(_node->GetChild(child), (int)mv_Joints.size(), _currIndex);
+}
+
+void FBXLoaderManager::HandleControlPoints(fbxsdk::FbxNode* _node)
+{
+	FbxMesh* currMesh = _node->GetMesh();
+	unsigned int numControlPoints = currMesh->GetControlPointsCount();
+	FbxDouble4 currPosition;
+	for (unsigned int controlPoint = 0; controlPoint < numControlPoints; controlPoint++)
+	{
+		ControlPoint newControlPoint;
+		m_ControlPoints.push_back(newControlPoint);
+		currPosition = currMesh->GetControlPointAt(controlPoint);
+		newControlPoint.m_Position[0] = (float)currPosition.mData[0];
+		newControlPoint.m_Position[1] = (float)currPosition.mData[1];
+		newControlPoint.m_Position[2] = (float)currPosition.mData[2];
+	}
+}
+
+void FBXLoaderManager::HandleDeformers(fbxsdk::FbxNode* _node)
+{
+	FbxMesh* _mesh = _node->GetMesh();
+	unsigned int numDeformers = _mesh->GetDeformerCount();
+	FbxAMatrix meshTransform = FbxAMatrix(
+		_node->GetGeometricTranslation(FbxNode::eSourcePivot),
+		_node->GetGeometricRotation(FbxNode::eSourcePivot),
+		_node->GetGeometricScaling(FbxNode::eSourcePivot));
+
+	
+
+	for (unsigned int deformer = 0; deformer < numDeformers; deformer++)
+	{
+		FbxSkin* currSkin = reinterpret_cast<FbxSkin*>(_mesh->GetDeformer(deformer, FbxDeformer::eSkin));
+		if (!currSkin)
+			continue;
+
+		unsigned int numClusters = currSkin->GetClusterCount();
+
+		for (unsigned int cluster = 0; cluster < numClusters; cluster++)
+		{
+			FbxCluster* currCluster = currSkin->GetCluster(cluster);
+			std::string jointName = currCluster->GetLink()->GetName();
+			unsigned int jointIndex = GetJointIndexByName(jointName);
+			if (jointIndex == -1)
+			{
+#if _DEBUG
+				_ASSERT_EXPR(0, L"Joint name does not exsist in vector!");
+#endif
+				continue;
+			}
+
+			FbxAMatrix transform;
+			FbxAMatrix transformLink;
+			FbxAMatrix globalBindPoseInverse;
+
+			currCluster->GetTransformMatrix(transform);
+			currCluster->GetTransformLinkMatrix(transformLink);
+			globalBindPoseInverse = transformLink.Inverse() * transform * meshTransform;
+			mv_Joints[jointIndex].m_Node = currCluster->GetLink();
+			mv_Joints[jointIndex].m_GlobalBindPoseInverse = globalBindPoseInverse;
+			unsigned int numCPIndicies = currCluster->GetControlPointIndicesCount();
+			for (unsigned int cpIndex = 0; cpIndex < numCPIndicies; cpIndex++)
+			{
+				VertexWeight newBoneWeights;
+				newBoneWeights.m_JointIndex = jointIndex;
+				newBoneWeights.m_JointWeight = (float)currCluster->GetControlPointWeights()[cpIndex];
+				m_ControlPoints[currCluster->GetControlPointIndices()[cpIndex]].m_BoneWeights.push_back(newBoneWeights);
+			}
+
+			FbxAnimStack* currAniStack = mp_FbxScene->GetSrcObject<fbxsdk::FbxAnimStack>();
+			FbxString currAniName = currAniStack->GetName();
+			FbxTakeInfo* currTakeInfo = mp_FbxScene->GetTakeInfo(currAniName);
+			FbxTime aniStartTime = currTakeInfo->mLocalTimeSpan.GetStart();
+			FbxTime aniEndTime = currTakeInfo->mLocalTimeSpan.GetStop();
+			long long numAniFrames = aniEndTime.GetFrameCount(FbxTime::eFrames24) - aniStartTime.GetFrameCount(FbxTime::eFrames24) + 1;
+			FbxLongLong aniLength = aniEndTime.GetMilliSeconds();
+
+#pragma region Build Animation Shell If not already done
+
+			if (!m_BuiltBaseAnimation)
+			{
+				m_BuiltBaseAnimation = true;
+				for (float timeStamp = 0; timeStamp < aniLength; timeStamp += MILLAT60FPS)
+				{
+					KeyFrame newKeyFrame;
+					newKeyFrame.m_TimeStamp = timeStamp;
+					newKeyFrame.mv_bones.resize(mv_Joints.size());
+					m_Animation.mv_KeyFrames.push_back(newKeyFrame);
+
+				}
+				KeyFrame newKeyFrame;
+				newKeyFrame.m_TimeStamp = (float)aniLength;
+				newKeyFrame.mv_bones.resize(mv_Joints.size());
+				m_Animation.mv_KeyFrames.push_back(newKeyFrame);
+			}
+
+#pragma endregion
+
+			int currKeyFrame = 0;
+			for (float timeStamp = 0; true; timeStamp += MILLAT60FPS)
+			{
+				if (timeStamp > aniLength)
+					timeStamp =(float)aniLength;
+				Bone newBone;
+				FbxAMatrix transformOffset = _node->EvaluateGlobalTransform((FbxLongLong)timeStamp) * meshTransform;
+				FbxAMatrix globalTransform = transformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform((FbxLongLong)timeStamp);
+
+				FbxDouble* currVec = globalTransform.GetQ().Buffer();
+				newBone.m_QuaternionRot[0] = (float)currVec[0];
+				newBone.m_QuaternionRot[1] = (float)currVec[1];
+				newBone.m_QuaternionRot[2] = (float)currVec[2];
+				newBone.m_QuaternionRot[3] = (float)currVec[3];
+
+				currVec = globalTransform.GetS().Buffer();
+				newBone.m_Scaling[0] = (float)currVec[0];
+				newBone.m_Scaling[1] = (float)currVec[1];
+				newBone.m_Scaling[2] = (float)currVec[2];
+
+				currVec = globalTransform.GetT().Buffer();
+				newBone.m_Translation[0] = (float)currVec[0];
+				newBone.m_Translation[1] = (float)currVec[1];
+				newBone.m_Translation[2] = (float)currVec[2];
+
+				m_Animation.mv_KeyFrames[currKeyFrame].mv_bones[jointIndex] = newBone;
+				currKeyFrame++;
+
+				if (timeStamp == aniLength)
+					break;
+			}
+		}
+
+#pragma region Fill Out Dummy Weights
+
+		int numControlPoints = (int)m_ControlPoints.size();
+		for (int ctrPt = 0; ctrPt < numControlPoints; ctrPt++)
+		{
+			int numWeights = (int)m_ControlPoints[ctrPt].m_BoneWeights.size();
+			for (int blank = numWeights; blank < 4; blank++)
+			{
+				VertexWeight blankInfo;
+				m_ControlPoints[ctrPt].m_BoneWeights.push_back(blankInfo);
+			}
+		}
+#pragma endregion
+
+	}
+}
+
+unsigned int FBXLoaderManager::GetJointIndexByName(std::string _name)
+{
+	int numJoints = (int)mv_Joints.size();
+	for (int joint = 0; joint < numJoints; joint++)
+	{
+		if (mv_Joints[joint].ms_Name == _name)
+			return joint;
+	}
+	return -1;
+}
+
+//void FBXLoaderManager::GatherAnimationData()
+//{
+//	int numAnimationStacks = mp_FbxScene->GetSrcObjectCount<FbxAnimStack>();
+//	int numAnimationLayers = 0;
+//	FbxAnimStack* currAnimStack = nullptr;
+//	FbxAnimLayer* currAnimLayer = nullptr;
+//	FbxAnimCurve* currCurve = nullptr;
+//	FbxAnimCurveKey currKey;
+//	for (int stack = 0; stack < numAnimationStacks; stack++)
+//	{
+//		currAnimStack = mp_FbxScene->GetSrcObject<FbxAnimStack>(stack);
+//		if (currAnimStack)
+//		{
+//			numAnimationLayers = currAnimStack->GetMemberCount<FbxAnimLayer>();
+//			for (int layer = 0; layer < numAnimationLayers; layer++)
+//			{
+//				currAnimLayer = currAnimStack->GetMember<FbxAnimLayer>(layer);
+//				if (currAnimLayer)
+//				{
+//					int numCurves = currAnimLayer->GetMemberCount<FbxAnimCurve>();
+//					for (int curve = 0; curve < numCurves; curve++)
+//					{
+//						currCurve = currAnimLayer->GetMember<FbxAnimCurve>(curve);
+//						if (currCurve)
+//						{
+//							int numKeys = currCurve->KeyGetCount();
+//							for (int key = 0; key < numKeys; key++)
+//							{
+//								currKey = currCurve->KeyGet(key);
+//								currKey.SetTime(0);
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
+//}
 
 bool Vertex::operator==(const Vertex& _rhs)
 {
