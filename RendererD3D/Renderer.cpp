@@ -220,7 +220,7 @@ namespace RendererD3D
 		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerDirLightCBuffer);
 
 
-		cbDirLight DirLight;
+		/*cbDirLight DirLight;
 		DirLight.DLightColor = float4{ 1.0f,0.0f,0.0f,1.0f };
 		DirLight.lightPos = float4{ 0.0f, 100.0f,0.0f,1.0f };
 		D3D11_MAPPED_SUBRESOURCE lightDataMap;
@@ -229,7 +229,7 @@ namespace RendererD3D
 		theContextPtr->Unmap(thePerDirLightCBuffer, 0);
 
 		theContextPtr->VSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);
-		theContextPtr->PSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);
+		theContextPtr->PSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);*/
 
 
 

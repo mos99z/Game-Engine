@@ -5,6 +5,7 @@
 #include "RasterizerStateManager.h"
 #include "InputLayoutManager.h"
 #include "IndexBufferManager.h"
+#include "BlendStateManager.h"
 #include "StreamManager.h"
 #include "DepthStencilStateManager.h"
 namespace RendererD3D
