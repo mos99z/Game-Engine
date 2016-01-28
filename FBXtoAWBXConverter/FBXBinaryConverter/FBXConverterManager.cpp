@@ -70,6 +70,15 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	mp_FbxManager->SetIOSettings(mp_FbxIOSettings);
 	mp_FbxImporter = FbxImporter::Create(mp_FbxManager, "");
 
+
+	(*(mp_FbxManager->GetIOSettings())).SetBoolProp(IMP_FBX_MATERIAL, true);
+	(*(mp_FbxManager->GetIOSettings())).SetBoolProp(IMP_FBX_TEXTURE, true);
+	(*(mp_FbxManager->GetIOSettings())).SetBoolProp(IMP_FBX_LINK, true);
+	(*(mp_FbxManager->GetIOSettings())).SetBoolProp(IMP_FBX_SHAPE, true);
+	(*(mp_FbxManager->GetIOSettings())).SetBoolProp(IMP_FBX_GOBO, true);
+	(*(mp_FbxManager->GetIOSettings())).SetBoolProp(IMP_FBX_ANIMATION, true);
+	(*(mp_FbxManager->GetIOSettings())).SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
+
 #if _DEBUG
 	_ASSERT_EXPR(mp_FbxImporter, L"FBXLoader - FbxImporter failed to create!");
 #endif
@@ -106,6 +115,8 @@ void FBXLoaderManager::Initilize(const wchar_t* _FbxFileName)
 	mp_FbxImporter->Destroy();
 
 	mp_FbxRootNode = mp_FbxScene->GetRootNode();
+	auto i = mp_FbxRootNode->GetChild(1)->EvaluateGlobalTransform();
+
 #if PROGRESSTEXT
 	m_numNodes = mp_FbxScene->GetNodeCount();
 	m_nodesProcessed = 1;
@@ -265,8 +276,9 @@ void FBXLoaderManager::HandleMesh(fbxsdk::FbxNode* _node)
 			Vertex newVertex;
 
 #pragma region Get Verticies
-
+			static auto globalTransform = mp_FbxRootNode->EvaluateGlobalTransform();
 			fbxsdk::FbxVector4 fbxVertex = versBuffer[fbxCornerIndex];
+			fbxVertex = globalTransform.MultT(fbxVertex);
 			newVertex.m_vertexData.m_Position[0] = (float)fbxVertex[0];
 			newVertex.m_vertexData.m_Position[1] = (float)fbxVertex[1];
 			newVertex.m_vertexData.m_Position[2] = (float)fbxVertex[2];
@@ -515,13 +527,13 @@ void FBXLoaderManager::HandleSkeleton(fbxsdk::FbxNode* _node, int _currIndex, in
 void FBXLoaderManager::HandleControlPoints(fbxsdk::FbxNode* _node)
 {
 	FbxMesh* currMesh = _node->GetMesh();
+
 	unsigned int numControlPoints = currMesh->GetControlPointsCount();
 	FbxDouble4 currPosition;
 	for (unsigned int controlPoint = 0; controlPoint < numControlPoints; controlPoint++)
 	{
 		ControlPoint newControlPoint;
 		m_ControlPoints.push_back(newControlPoint);
-		currPosition = currMesh->GetControlPointAt(controlPoint);
 		newControlPoint.m_Position[0] = (float)currPosition.mData[0];
 		newControlPoint.m_Position[1] = (float)currPosition.mData[1];
 		newControlPoint.m_Position[2] = (float)currPosition.mData[2];
@@ -537,7 +549,7 @@ void FBXLoaderManager::HandleDeformers(fbxsdk::FbxNode* _node)
 		_node->GetGeometricRotation(FbxNode::eSourcePivot),
 		_node->GetGeometricScaling(FbxNode::eSourcePivot));
 
-	
+
 
 	for (unsigned int deformer = 0; deformer < numDeformers; deformer++)
 	{
@@ -561,12 +573,13 @@ void FBXLoaderManager::HandleDeformers(fbxsdk::FbxNode* _node)
 			}
 
 			FbxAMatrix transform;
-			FbxAMatrix transformLink;
+			FbxAMatrix BoneBindPoseMatrix;
 			FbxAMatrix globalBindPoseInverse;
 
 			currCluster->GetTransformMatrix(transform);
-			currCluster->GetTransformLinkMatrix(transformLink);
-			globalBindPoseInverse = transformLink.Inverse() * transform * meshTransform;
+			currCluster->GetTransformLinkMatrix(BoneBindPoseMatrix);
+			//globalBindPoseInverse = transformLink.Inverse() * transform * meshTransform;
+			globalBindPoseInverse = mp_FbxRootNode->EvaluateGlobalTransform().Inverse();
 			mv_Joints[jointIndex].m_Node = currCluster->GetLink();
 			mv_Joints[jointIndex].m_GlobalBindPoseInverse = globalBindPoseInverse;
 			unsigned int numCPIndicies = currCluster->GetControlPointIndicesCount();
@@ -583,7 +596,7 @@ void FBXLoaderManager::HandleDeformers(fbxsdk::FbxNode* _node)
 			FbxTakeInfo* currTakeInfo = mp_FbxScene->GetTakeInfo(currAniName);
 			FbxTime aniStartTime = currTakeInfo->mLocalTimeSpan.GetStart();
 			FbxTime aniEndTime = currTakeInfo->mLocalTimeSpan.GetStop();
-			long long numAniFrames = aniEndTime.GetFrameCount(FbxTime::eFrames24) - aniStartTime.GetFrameCount(FbxTime::eFrames24) + 1;
+			long long numAniFrames = aniEndTime.GetFrameCount(FbxTime::eFrames60) - aniStartTime.GetFrameCount(FbxTime::eFrames60) + 1;
 			FbxLongLong aniLength = aniEndTime.GetMilliSeconds();
 
 #pragma region Build Animation Shell If not already done
@@ -607,14 +620,19 @@ void FBXLoaderManager::HandleDeformers(fbxsdk::FbxNode* _node)
 
 #pragma endregion
 
+			FbxTime theTime;
 			int currKeyFrame = 0;
 			for (float timeStamp = 0; true; timeStamp += MILLAT60FPS)
 			{
 				if (timeStamp > aniLength)
-					timeStamp =(float)aniLength;
+					timeStamp = (float)aniLength;
 				Bone newBone;
-				FbxAMatrix transformOffset = _node->EvaluateGlobalTransform((FbxLongLong)timeStamp) * meshTransform;
-				FbxAMatrix globalTransform = transformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform((FbxLongLong)timeStamp);
+				//FbxAMatrix transformOffset = _node->EvaluateGlobalTransform((FbxLongLong)timeStamp);
+				//FbxAMatrix globalTransform = transformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform((FbxLongLong)timeStamp);
+				//auto eva = currCluster->GetLink()->EvaluateGlobalTransform((FbxLongLong)timeStamp)* meshTransform;
+				theTime.SetMilliSeconds(timeStamp);
+				globalBindPoseInverse = currCluster->GetLink()->EvaluateLocalTransform().Inverse();
+				FbxAMatrix globalTransform = currCluster->GetLink()->EvaluateGlobalTransform(theTime)*globalBindPoseInverse;
 
 				FbxDouble* currVec = globalTransform.GetQ().Buffer();
 				newBone.m_QuaternionRot[0] = (float)currVec[0];

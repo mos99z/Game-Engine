@@ -240,6 +240,15 @@ namespace RendererD3D
 
 
 
+
+
+		
+
+
+
+
+
+
 		//Set sampler
 		D3D11_SAMPLER_DESC desc;
 		ZeroMemory(&desc, sizeof(desc));
@@ -310,6 +319,10 @@ namespace RendererD3D
 		//Load textures
 		GBufferPackingMaterialPtr->AddMaterial(L"Teddy_D.dds");
 
+
+
+
+		
 
 
 
@@ -389,8 +402,7 @@ namespace RendererD3D
 		thePerCameraData.gCameraPos = camera.GetPosition();
 		float4x4 proj, viewInv;
 		DirectX::XMStoreFloat4x4(&proj, camera.GetProj());
-		DirectX::XMStoreFloat4x4(&proj, camera.GetView());
-		DirectX::XMStoreFloat4x4(&viewInv, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&viewInv)));
+		DirectX::XMStoreFloat4x4(&viewInv, DirectX::XMMatrixInverse(nullptr, camera.GetView()));
 		thePerCameraData.PerspectiveValues.x = 1.0f / proj._11;
 		thePerCameraData.PerspectiveValues.y = 1.0f / proj._22;
 		thePerCameraData.PerspectiveValues.z = proj._43;
@@ -400,36 +412,34 @@ namespace RendererD3D
 		theContextPtr->Map(thePerCameraCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &cameraDataMap);
 		memcpy(cameraDataMap.pData, &thePerCameraData, sizeof(cbPerCamera));
 		theContextPtr->Unmap(thePerCameraCBuffer, 0);
-		theContextPtr->VSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
+
+		
 		theContextPtr->PSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
 
 
-		static int indexKey = 0;
-
-		if (GetAsyncKeyState(VK_UP))
+		//Animation Cbuffer
+		static unsigned int indexKey = 1;
+		if (GetAsyncKeyState('L') & 0x1)
 		{
 			indexKey++;
 		}
-		if (indexKey > 150)
+		if (indexKey >= clip->numOfkeyframes)
 		{
 			indexKey = 0;
 		}
 		D3D11_MAPPED_SUBRESOURCE bonesDataMap;
-		float4x4 mats[37];
-		for (size_t i = 0; i < 37; i++)
+		cbBones mats;
+		for (size_t i = 0; i < clip->keyframes->NumberOfBones(); i++)
 		{
 			auto s = clip->keyframes[indexKey].Bones()[i].Scale();
 			auto r = clip->keyframes[indexKey].Bones()[i].RotationQuat();
 			auto t = clip->keyframes[indexKey].Bones()[i].Translation();
 			auto mat = DirectX::XMMatrixAffineTransformation(DirectX::XMLoadFloat3(&s), DirectX::XMVectorZero(), DirectX::XMLoadFloat4(&r), DirectX::XMLoadFloat3(&t));
-			//mat = DirectX::XMMatrixTranspose(mat);
-			DirectX::XMStoreFloat4x4(&mats[i], mat);
+			DirectX::XMStoreFloat4x4(&mats.gBones[i], mat);
 		}
 		theContextPtr->Map(theBonesCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &bonesDataMap);
-		memcpy(bonesDataMap.pData, mats, sizeof(float4x4)*37 );
+		memcpy(bonesDataMap.pData, mats.gBones, sizeof(cbBones));
 		theContextPtr->Unmap(theBonesCBuffer, 0);
-
-		theContextPtr->VSSetConstantBuffers(cbBones::REGISTER_SLOT, 1, &theBonesCBuffer);
 		
 
 
@@ -515,7 +525,9 @@ namespace RendererD3D
 		memcpy(edit.pData, &thePerObjectData, sizeof(thePerObjectData));
 		theContextPtr->Unmap(thePerObjectCBuffer, 0);
 
-		theContextPtr->VSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
+		ID3D11Buffer* cbuffers[4]{ thePerObjectCBuffer,thePerCameraCBuffer,thePerDirLightCBuffer,theBonesCBuffer };
+
+		theContextPtr->VSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 4, cbuffers);
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 

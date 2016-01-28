@@ -180,9 +180,6 @@ namespace RendererD3D
 	
 
 
-		int i = sizeof(ABone);
-		i = sizeof(AKeyframe);
-		i = sizeof(AnimationClip);
 
 
 		nodeMesh.SetNumberOfVertices(numofVertices);
