@@ -13,6 +13,8 @@ class GameEngine
 	unsigned int mainGameWindowHeight = 1024;
 	float deltaTime = 1.0f/60.0f;
 	FLOAT clearColor[4]{ 0.0f,0.0f,0.0f,1.0f };
+
+	static void MessageProc(Messages mess);
 public:
 	inline bool IsOver() { return GameEnd; }
 	inline void GameOver() { GameEnd = true; }
@@ -23,6 +25,5 @@ public:
 	void ShutDown();
 	void Update();
 	void Render();
-
 };
 

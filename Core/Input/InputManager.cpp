@@ -76,59 +76,59 @@ namespace Input
 		}
 	}
 
-	void InputManager::SetKeyPressed(int keycode, void(*function)())
+	void InputManager::SetKeyPressed(int keycode, Messages mess)//void(*function)())
 	{
 		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
 
 		if (key != keyboard.end())
-			keyboard[keycode]->KeyPressed = function;
+			keyboard[keycode]->KeyPressed = mess;//function;
 
 		else
 		{
 			Key* temp = new Key();
 			temp->prevState = DISABLED;
 			temp->currState = DISABLED;
-			temp->KeyPressed = function;
-			temp->KeyHeld = nullptr;
-			temp->KeyReleased = nullptr;
+			temp->KeyPressed = mess;//function;
+			temp->KeyHeld = NO_MESSAGE;// nullptr;
+			temp->KeyReleased = NO_MESSAGE;// nullptr;
 			keyboard[keycode] = temp;
 		}
 	}
 
-	void InputManager::SetKeyHeld(int keycode, void(*function)())
+	void InputManager::SetKeyHeld(int keycode, Messages mess)//void(*function)())
 	{
 		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
 
 		if (key != keyboard.end())
-			keyboard[keycode]->KeyHeld = function;
+			keyboard[keycode]->KeyHeld = mess;//function;
 
 		else
 		{
 			Key* temp = new Key();
 			temp->prevState = DISABLED;
 			temp->currState = DISABLED;
-			temp->KeyPressed = nullptr;
-			temp->KeyHeld = function;
-			temp->KeyReleased = nullptr;
+			temp->KeyPressed = NO_MESSAGE;// nullptr;
+			temp->KeyHeld = mess;//function;
+			temp->KeyReleased = NO_MESSAGE;// nullptr;
 			keyboard[keycode] = temp;
 		}
 	}
 
-	void InputManager::SetKeyReleased(int keycode, void(*function)())
+	void InputManager::SetKeyReleased(int keycode, Messages mess)//void(*function)())
 	{
 		std::unordered_map<int, Key*>::iterator key = keyboard.find(keycode);
 
 		if (key != keyboard.end())
-			keyboard[keycode]->KeyReleased = function;
+			keyboard[keycode]->KeyReleased = mess;//function;
 
 		else
 		{
 			Key* temp = new Key();
 			temp->prevState = DISABLED;
 			temp->currState = DISABLED;
-			temp->KeyPressed = nullptr;
-			temp->KeyHeld = nullptr;
-			temp->KeyReleased = function;
+			temp->KeyPressed = NO_MESSAGE;// nullptr;
+			temp->KeyHeld = NO_MESSAGE;// nullptr;
+			temp->KeyReleased = mess;//function;
 			keyboard[keycode] = temp;
 		}
 	}
@@ -152,16 +152,16 @@ namespace Input
 			switch (key->second->currState)
 			{
 			case PRESSED:
-				if (key->second->KeyPressed != nullptr)
-					key->second->KeyPressed();
+				//if (key->second->KeyPressed != nullptr)
+					MessageManager::GetInstance()->AddMessage(key->second->KeyPressed);
 				break;
 			case HELD:
-				if (key->second->KeyHeld != nullptr)
-					key->second->KeyHeld();
+				//if (key->second->KeyHeld != nullptr)
+				MessageManager::GetInstance()->AddMessage(key->second->KeyHeld);
 				break;
 			case RELEASED:
-				if (key->second->KeyReleased != nullptr)
-					key->second->KeyReleased();
+				//if (key->second->KeyReleased != nullptr)
+				MessageManager::GetInstance()->AddMessage(key->second->KeyReleased);
 				break;
 			default:
 				break;
@@ -174,9 +174,9 @@ namespace Input
 		std::unordered_map<int, Key*>::iterator key = keyboard.begin();
 		for (; key != keyboard.end(); key++)
 		{
-			key->second->KeyPressed = nullptr;
-			key->second->KeyHeld = nullptr;
-			key->second->KeyReleased = nullptr;
+			key->second->KeyPressed = NO_MESSAGE;// nullptr;
+			key->second->KeyHeld = NO_MESSAGE;// nullptr;
+			key->second->KeyReleased = NO_MESSAGE;// nullptr;
 		}
 	}
 }
