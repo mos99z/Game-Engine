@@ -167,7 +167,7 @@ namespace RendererD3D
 		unsigned int numofVertices = 0;
 		unsigned int numofIndices = 0;
 
-		loaderTest.LoadAWBXCombinedMesh(("..\\..\\Assets\\FBXs\\" + _filename).c_str(), numofVertices, (void**)&RawGBufferPtr, (void**)&RawTBufferPtr, numofIndices, &indices);
+		loaderTest.LoadAWBXCombinedMesh(("..\\..\\Assets\\FBXs\\" + _filename).c_str(), numofVertices, (void**)&RawGBufferPtr, (void**)&RawTBufferPtr, (void*&)RawABufferPtr, numofIndices, &indices, );
 
 		UINT startVertex = AddGstream(RawGBufferPtr, numofVertices);
 		AddTstream(RawTBufferPtr, numofVertices);

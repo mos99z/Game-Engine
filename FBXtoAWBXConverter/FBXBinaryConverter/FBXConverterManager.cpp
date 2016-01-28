@@ -613,8 +613,9 @@ void FBXLoaderManager::HandleDeformers(fbxsdk::FbxNode* _node)
 				if (timeStamp > aniLength)
 					timeStamp =(float)aniLength;
 				Bone newBone;
-				FbxAMatrix transformOffset = _node->EvaluateGlobalTransform((FbxLongLong)timeStamp) * meshTransform;
-				FbxAMatrix globalTransform = transformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform((FbxLongLong)timeStamp);
+				//FbxAMatrix transformOffset = _node->EvaluateGlobalTransform((FbxLongLong)timeStamp) * meshTransform;
+				//FbxAMatrix globalTransform = transformOffset.Inverse() * currCluster->GetLink()->EvaluateGlobalTransform((FbxLongLong)timeStamp);
+				FbxAMatrix globalTransform = currCluster->GetLink()->EvaluateGlobalTransform((FbxLongLong)timeStamp) * globalBindPoseInverse;
 
 				FbxDouble* currVec = globalTransform.GetQ().Buffer();
 				newBone.m_QuaternionRot[0] = (float)currVec[0];
