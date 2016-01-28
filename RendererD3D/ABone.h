@@ -5,9 +5,9 @@ namespace RendererD3D
 
 	class ABone
 	{
-		float3 translation;
-		float4 rotationQuat;
 		float3 scale;
+		float4 rotationQuat;
+		float3 translation;
 
 
 	public:

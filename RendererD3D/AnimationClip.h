@@ -5,9 +5,9 @@ namespace RendererD3D
 	class AKeyframe;
 	class AnimationClip
 	{
+	public:
 		unsigned int numOfkeyframes;
 		AKeyframe* keyframes = nullptr;
-	public:
 		AnimationClip();
 		~AnimationClip();
 		unsigned int FindKeyframeIndex(float _time);

@@ -1,9 +1,13 @@
 #include "stdafx.h"
 #include "StreamManager.h"
+#include "Renderer.h"
 #include "RenderShape.h"
 #include "RenderMesh.h"
 #include "IndexBufferManager.h"
 #include <AWBXLoader.h>
+#include "AnimationClip.h"
+#include "AKeyframe.h"
+#include"ABone.h"
 namespace RendererD3D
 {
 	StreamManager*  StreamManager::instancePtr = nullptr;
@@ -167,10 +171,19 @@ namespace RendererD3D
 		unsigned int numofVertices = 0;
 		unsigned int numofIndices = 0;
 
-		loaderTest.LoadAWBXCombinedMesh(("..\\..\\Assets\\FBXs\\" + _filename).c_str(), numofVertices, (void**)&RawGBufferPtr, (void**)&RawTBufferPtr, numofIndices, &indices);
+		loaderTest.LoadAWBXCombinedMesh(("..\\..\\Assets\\FBXs\\" + _filename).c_str(), numofVertices, (void**)&RawGBufferPtr, (void**)&RawTBufferPtr, (void*&)RawABufferPtr,numofIndices, &indices,(void*&)Renderer::clip);
 
 		UINT startVertex = AddGstream(RawGBufferPtr, numofVertices);
 		AddTstream(RawTBufferPtr, numofVertices);
+		AddAstream(RawABufferPtr, numofVertices);
+
+	
+
+
+		int i = sizeof(ABone);
+		i = sizeof(AKeyframe);
+		i = sizeof(AnimationClip);
+
 
 		nodeMesh.SetNumberOfVertices(numofVertices);
 		nodeMesh.SetNumberOfIndices(numofIndices);

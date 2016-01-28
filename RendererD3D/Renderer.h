@@ -23,6 +23,7 @@ namespace RendererD3D
 	class InputLayoutManager;
 	class ShaderManager;
 	class StreamManager;
+	class AnimationClip;
 
 
 	/*!
@@ -53,8 +54,9 @@ namespace RendererD3D
 		static ID3D11Buffer *thePerCameraCBuffer;
 		static ID3D11Buffer *thePerObjectCBuffer;
 		static ID3D11Buffer *thePerDirLightCBuffer;
+		static ID3D11Buffer *theBonesCBuffer;
 	
-
+		static AnimationClip* clip;
 
 		//! Camera
 		RENDERERDLL_API static Camera camera;

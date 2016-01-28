@@ -27,10 +27,10 @@ namespace RendererD3D
 		RenderContext& nodeContext = (RenderContext&)node;
 		Renderer::theContextPtr->OMSetRenderTargets(1, &Renderer::theRenderTargetViewPtr, Renderer::theDepthStencilViewPtr);
 		//Set VertexBuffer
-		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
-		UINT offset[2] = { 0,0 };
-		ID3D11Buffer* buffers[2] = { StreamManager::GetRef().GstreamBufferPtr ,StreamManager::GetRef().TstreamBufferPtr };
-		Renderer::theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
+		UINT stripe[3] = { sizeof(Gstream),sizeof(Tstream),sizeof(Astream) };
+		UINT offset[3] = { 0,0,0 };
+		ID3D11Buffer* buffers[3] = { StreamManager::GetRef().GstreamBufferPtr ,StreamManager::GetRef().TstreamBufferPtr,StreamManager::GetRef().AstreamBufferPtr };
+		Renderer::theContextPtr->IASetVertexBuffers(0, 3, buffers, stripe, offset);
 		//Set IndexBuffer 
 		Renderer::theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
 		//Set InputLayout
@@ -58,15 +58,15 @@ namespace RendererD3D
 		ID3D11RenderTargetView* RTVs[3] = { Renderer::diffuseRTVPtr ,Renderer::normalRTVPtr,Renderer::specRTVPtr };
 		Renderer::theContextPtr->OMSetRenderTargets(3, RTVs, Renderer::theDepthStencilViewPtr);
 		//Set VertexBuffer
-		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
-		UINT offset[2] = { 0,0 };
-		ID3D11Buffer* buffers[2] = { StreamManager::GetRef().GstreamBufferPtr ,StreamManager::GetRef().TstreamBufferPtr };
-		Renderer::theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
+		UINT stripe[3] = { sizeof(Gstream),sizeof(Tstream),sizeof(Astream) };
+		UINT offset[3] = { 0,0,0 };
+		ID3D11Buffer* buffers[3] = { StreamManager::GetRef().GstreamBufferPtr ,StreamManager::GetRef().TstreamBufferPtr,StreamManager::GetRef().AstreamBufferPtr };
+		Renderer::theContextPtr->IASetVertexBuffers(0, 3, buffers, stripe, offset);
 		//Set IndexBuffer 
 		Renderer::theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
 		//Set InputLayout
-		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_PosNorDiffUVTan]);
-		Renderer::theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[ShaderManager::GBUFFERPACKING_VS], 0, 0);
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_PosNorDiffUVTanBoneWeight]);
+		Renderer::theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[ShaderManager::GBUFFERPACKINGANIMATION_VS], 0, 0);
 		Renderer::theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[ShaderManager::GBUFFERPACKING_PS], 0, 0);
 		Renderer::theContextPtr->OMSetDepthStencilState(DepthStencilStateManager::GetRef().dsStates[DepthStencilStateManager::DSS_Default], 0);
 		if (wireFrame)

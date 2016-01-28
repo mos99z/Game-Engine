@@ -12,6 +12,9 @@
 #include "IndexBufferManager.h"
 #include <DDSTextureLoader.h>
 #include "StreamManager.h"
+#include "AnimationClip.h"
+#include "AKeyframe.h"
+#include "ABone.h"
 namespace RendererD3D
 {
 
@@ -31,7 +34,7 @@ namespace RendererD3D
 	ID3D11ShaderResourceView* Renderer::specSRVPtr = nullptr;
 
 
-
+	AnimationClip* Renderer::clip = nullptr;
 
 	ID3D11Texture2D* Renderer::theBackBufferPtr = nullptr;
 	ID3D11Texture2D* Renderer::theDepthStencilBufferPtr = nullptr;
@@ -45,6 +48,7 @@ namespace RendererD3D
 	ID3D11Buffer* Renderer::thePerObjectCBuffer = nullptr;
 	ID3D11Buffer* Renderer::thePerCameraCBuffer = nullptr;
 	ID3D11Buffer* Renderer::thePerDirLightCBuffer = nullptr;
+	ID3D11Buffer* Renderer::theBonesCBuffer = nullptr;
 
 	ID3D11Buffer* Renderer::vertexBuffer = nullptr;
 
@@ -218,6 +222,9 @@ namespace RendererD3D
 		//Build Light Constant Buffer
 		bd.ByteWidth = sizeof(cbDirLight);
 		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerDirLightCBuffer);
+
+		bd.ByteWidth = sizeof(cbBones);
+		theDevicePtr->CreateBuffer(&bd, nullptr, &theBonesCBuffer);
 
 
 		/*cbDirLight DirLight;
@@ -397,11 +404,38 @@ namespace RendererD3D
 		theContextPtr->PSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
 
 
+		static int indexKey = 0;
+
+		if (GetAsyncKeyState(VK_UP))
+		{
+			indexKey++;
+		}
+		if (indexKey > 150)
+		{
+			indexKey = 0;
+		}
+		D3D11_MAPPED_SUBRESOURCE bonesDataMap;
+		float4x4 mats[37];
+		for (size_t i = 0; i < 37; i++)
+		{
+			auto s = clip->keyframes[indexKey].Bones()[i].Scale();
+			auto r = clip->keyframes[indexKey].Bones()[i].RotationQuat();
+			auto t = clip->keyframes[indexKey].Bones()[i].Translation();
+			auto mat = DirectX::XMMatrixAffineTransformation(DirectX::XMLoadFloat3(&s), DirectX::XMVectorZero(), DirectX::XMLoadFloat4(&r), DirectX::XMLoadFloat3(&t));
+			//mat = DirectX::XMMatrixTranspose(mat);
+			DirectX::XMStoreFloat4x4(&mats[i], mat);
+		}
+		theContextPtr->Map(theBonesCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &bonesDataMap);
+		memcpy(bonesDataMap.pData, mats, sizeof(float4x4)*37 );
+		theContextPtr->Unmap(theBonesCBuffer, 0);
+
+		theContextPtr->VSSetConstantBuffers(cbBones::REGISTER_SLOT, 1, &theBonesCBuffer);
+		
 
 
 
 		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixRotationY(rotSpeed));
+		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixRotationY(0));
 		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
