@@ -23,7 +23,7 @@ struct _regAlign VERIN_PosNorDiffUVTanBoneWeight
 	float3 normal SEMANTIC(NORMAL0);
 	float4 diffuse SEMANTIC(COLOR0);
 	float2 texcoord SEMANTIC(TEXCOORD0);
-	float3 tangent SEMANTIC(TANGENT0);
+	float4 tangent SEMANTIC(TANGENT0);
 	int4   bone     SEMANTIC(BONEIDS0);
 	float4 weights  SEMANTIC(BONEWEIGHTS0);
 };
@@ -51,12 +51,34 @@ struct _regAlign Material
 	float specIntensity;
 };
 
+
+/*
+SV_TARGET0 : depth,
+SV_TARGET1 : diffuse
+SV_TARGET2 : normal
+SV_TARGET3 : spec
+SV_TARGET4 : backBuffer
+*/
 struct _regAlign PS_GBUFFER_OUT
 {
-	float4 ColorSpecInt SEMANTIC(SV_TARGET1);
-	float4 Normal		SEMANTIC(SV_TARGET4);
-	float4 SpecPow		SEMANTIC(SV_TARGET3);
+	float4 ColorSpecInt SEMANTIC(SV_TARGET0);
+	float4 Normal		SEMANTIC(SV_TARGET1);
+	float4 SpecPow		SEMANTIC(SV_TARGET2);
 };
 
+struct _regAlign VEROUT_PosUV
+{
+	float4 Position   : SV_Position;
+	float2 UV      : TEXCOORD0;
+};
+
+struct _regAlign SURFACE_DATA
+{
+	float LinearDepth;
+	float3 Color;
+	float3 Normal;
+	float SpecInt;
+	float SpecPow;
+};
 
 #endif //INPUTLAYOUT_HLSLI

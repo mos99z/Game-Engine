@@ -2,18 +2,21 @@
 #include "stdafx.h"
 
 #ifdef INPUTMANAGERDLL_EXPORTS
-#define INPUTMANAGERDLL// __declspec(dllexport) 
+#define INPUTMANAGERDLL  __declspec(dllexport) 
 #else
-#define INPUTMANAGERDLL //__declspec(dllimport) 
+#define INPUTMANAGERDLL  __declspec(dllimport) 
 #endif
 
 
 #include <unordered_map>
+#include "MessageManager.h"
 //#define SLOW_TIMER_WAIT 500
 
 namespace Input 
 {
-	 enum Keys
+	enum States {DISABLED, PRESSED, HELD, RELEASED};
+
+	enum Keys
 	{
 		IM_0 = 0x30,
 		IM_1,
@@ -64,23 +67,27 @@ namespace Input
 		IM_QUOTE,
 	};
 
-	 enum KeyStates {HELD = 1, RELEASED, PRESSED};
-
 	struct Key
 	{
-		KeyStates currState;
-		KeyStates prevState;
-		void (*KeyPressed) ();
-		void (*KeyHeld) ();
-		void (*KeyReleased) ();
+		int prevState;
+		int currState;
+		//void (*KeyPressed) ();
+		//void (*KeyHeld) ();
+		//void (*KeyReleased) ();
+		Messages KeyPressed;
+		Messages KeyHeld;
+		Messages KeyReleased;
 	};
 
 	struct RawKey
 	{
 		int keyCode;
-		void(*KeyPressed) ();
-		void(*KeyHeld) ();
-		void(*KeyReleased) ();
+		//void (*KeyPressed) ();
+		//void (*KeyHeld) ();
+		//void (*KeyReleased) ();
+		Messages KeyPressed;
+		Messages KeyHeld;
+		Messages KeyReleased;
 	};
 
 	class InputManager
@@ -93,26 +100,20 @@ namespace Input
 
 			INPUTMANAGERDLL void Update();
 
-			INPUTMANAGERDLL void SetKeyPressed(int keycode, void(*function)());
-			INPUTMANAGERDLL void SetKeyHeld(int keycode, void(*function)());
-			INPUTMANAGERDLL void SetKeyReleased(int keycode, void(*function)());
+			INPUTMANAGERDLL void SetKeyPressed(int keycode, Messages mess);//void(*function)());
+			INPUTMANAGERDLL void SetKeyHeld(int keycode, Messages mess);//void(*function)());
+			INPUTMANAGERDLL void SetKeyReleased(int keycode, Messages mess);//void(*function)());
 			INPUTMANAGERDLL void RemoveKey(int keycode);
-			//INPUTMANAGERDLL void SlowUpdate();
 
 		private:
 			std::unordered_map<int, Key*> keyboard;
 			//int timer = TIMER_WAIT;
 
-			void ReleaseAll();
+			void DisableAll();
 			void NullAllFunctionPointers();
 			void UpdateKeyboard();
-			//void SlowUpdateKeyboard();
 			void KeyUpdates();
-			void PressKey(int keycode);
-			void ReleaseKey(int keycode);
 			void Clear();
-			KeyStates GetKeyState(int keycode);
-			KeyStates GetPreviousKeyState(int keycode);
 	};
 }
 

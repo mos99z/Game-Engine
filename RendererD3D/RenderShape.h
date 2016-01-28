@@ -7,9 +7,9 @@
 #endif
 
 #include "RenderNode.h"
+#include "RenderMesh.h"
 namespace  RendererD3D
 {
-	class RenderMesh;
 
 	class RenderShape :
 		public RenderNode
@@ -17,15 +17,12 @@ namespace  RendererD3D
 		
 	public:
 		float4x4 worldMatrix;
-		RenderMesh* mesh;
-		UINT numofVertices = 0;
-		UINT startVertex = 0;
-		UINT startIndex = 0;
-		UINT numofIndices = 0;
+		RenderMesh renderMesh;
 		RENDERSHAPEDLL RenderShape();
 		RENDERSHAPEDLL ~RenderShape();
 	
-		static void Draw(RenderNode &node);
+		static void DrawIndexed(RenderNode &node);
+		static void GBufferUnpacking(RenderNode &node);
 	};
 
 }

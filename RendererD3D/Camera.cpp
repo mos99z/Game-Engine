@@ -4,15 +4,11 @@
 namespace RendererD3D
 {
 
-	XMFLOAT3 Camera::up(0.0f, 1.0f, 0.0f);
-	XMFLOAT3 Camera::side(1.0f, 0.0f, 0.0f);
-	XMFLOAT3 Camera::forward(0.0f, 0.0f, -1.0f);
-	XMFLOAT3 Camera::position(0.0f, 25.0f, 100.0f);
-	XMMATRIX Camera::view;
-	XMMATRIX Camera::proj;
 
-	Camera::Camera() 
+
+	Camera::Camera() :up(0.0f, 1.0f, 0.0f), side(1.0f, 0.0f, 0.0f), forward(0.0f, 0.0f, -1.0f), position(0.0f, 25.0f, 100.0f)
 	{
+
 		XMFLOAT3 focus{ 0.0f, 0.0f,-1.0f };
 		view = XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&forward), XMLoadFloat3(&up));
 		proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 16.0f/9.0f, 0.1f, 1000.0f);
@@ -78,4 +74,30 @@ namespace RendererD3D
 		XMStoreFloat3(&forward, XMVector3TransformNormal(nForward, rot));
 		UpdateView();
 	}
+
+	void Camera::WalkForward()
+	{
+		XMVECTOR nForward = XMVector3Normalize(XMLoadFloat3(&forward));
+		XMStoreFloat3(&position, XMVectorMultiplyAdd(XMVectorReplicate(mSpeed * deltaTime), nForward, XMLoadFloat3(&position)));
+		UpdateView();
+	}
+	void Camera::WalkBackward()
+	{
+		XMVECTOR nForward = XMVector3Normalize(XMLoadFloat3(&forward));
+		XMStoreFloat3(&position, XMVectorMultiplyAdd(XMVectorReplicate(-mSpeed * deltaTime), nForward, XMLoadFloat3(&position)));
+		UpdateView();
+	}
+	void Camera::StafeLeft()
+	{
+		XMVECTOR nSide = XMVector3Normalize(XMLoadFloat3(&side));
+		XMStoreFloat3(&position, XMVectorMultiplyAdd(XMVectorReplicate(mSpeed * deltaTime), nSide, XMLoadFloat3(&position)));
+		UpdateView();
+	}
+	void Camera::StafeRight()
+	{
+		XMVECTOR nSide = XMVector3Normalize(XMLoadFloat3(&side));
+		XMStoreFloat3(&position, XMVectorMultiplyAdd(XMVectorReplicate(-mSpeed * deltaTime), nSide, XMLoadFloat3(&position)));
+		UpdateView();
+	}
+
 }

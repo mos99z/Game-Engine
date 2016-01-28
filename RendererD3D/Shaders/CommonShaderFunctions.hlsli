@@ -1,5 +1,6 @@
-#include "../SharedDefines.h"
+#include "../ConstantBuffer.h"
 #include "InputLayout.hlsli"
+#include "Samplers.hlsli"
 
 float3 HemisphericAmbient(float3 ambientDown, float3 ambientRange, float3 normal, float4 lightColor)
 {
@@ -10,11 +11,12 @@ float3 HemisphericAmbient(float3 ambientDown, float3 ambientRange, float3 normal
 	return Ambient * lightColor.rgb;
 }
 
-float3 CalcDirColor(float3 pos, float3 lightPos,float4 DLightColor,float3 cameraPos, Material material)
+float3 CalcDirColor(float3 pos, float3 lightDir,float4 DLightColor,float3 cameraPos, Material material)
 {
 	// Diffuse
 	material.normal = normalize(material.normal);
-	float3 DirToLight = normalize(lightPos - pos);
+
+	float3 DirToLight = normalize(lightDir);
 	float NDotL = dot(DirToLight, material.normal);
 	float3 finalColor = DLightColor.rgb * saturate(NDotL);
 
@@ -50,3 +52,7 @@ float3 CalcPointColor(float3 pos, float3 PLightPos, float PointLightRangeRcp, fl
 	
 	return finalColor * material.diffuseColor.rgb * Attenuation;
 }
+
+
+
+

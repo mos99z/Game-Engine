@@ -24,43 +24,57 @@ namespace RendererD3D
 	class InputLayoutManager;
 	class ShaderManager;
 	class StreamManager;
+	 
+
+	/*!
+	Renderer Class is the core of the rendering system.
+	It is responsible for initialize DirectX 11.0 cores and pass the rendering data along the pipeline.
+	*/
 	class Renderer
 	{
 		Renderer(void) {};
 	public:
 		RENDERERDLL_API static Camera camera;
-		RENDERERDLL_API static ID3D11Device * theDevicePtr;
-		RENDERERDLL_API static ID3D11DeviceContext* theContextPtr;
-		RENDERERDLL_API static IDXGISwapChain* theSwapChainPtr;
-		RENDERERDLL_API static ID3D11RenderTargetView* theRenderTargetViewPtr;
-		RENDERERDLL_API static ID3D11Texture2D* theBackBufferPtr;
-		RENDERERDLL_API static ID3D11Texture2D* theDepthStencilBufferPtr;
-		RENDERERDLL_API static ID3D11DepthStencilView* theDepthStencilViewPtr;
-		RENDERERDLL_API static D3D11_VIEWPORT theScreenViewport;
+		static ID3D11Device * theDevicePtr;
+		static ID3D11DeviceContext* theContextPtr;
+		static IDXGISwapChain* theSwapChainPtr;
+		static ID3D11RenderTargetView* theRenderTargetViewPtr;
+		static ID3D11Texture2D* theBackBufferPtr;
+		static ID3D11Texture2D* theDepthStencilBufferPtr;
+		static ID3D11DepthStencilView* theDepthStencilViewPtr;
+		static D3D11_VIEWPORT theScreenViewport;
 		static ID3D11Buffer* vertexBuffer;
 		static cbPerObject thePerObjectData;
+		static cbPerCamera thePerCameraData;
+		static ID3D11Buffer *thePerCameraCBuffer;
 		static ID3D11Buffer *thePerObjectCBuffer;
+		static ID3D11Buffer *thePerDirLightCBuffer;
+
+
+		//Samplers
+		static ID3D11SamplerState* pointSampler;
+		static ID3D11SamplerState* anisoClampSampler;
 		static ID3D11SamplerState* anisoWrapSampler;
 
 		//Gbuffer
-		RENDERERDLL_API static ID3D11RenderTargetView* depthRTVPtr;
-		RENDERERDLL_API static ID3D11RenderTargetView* diffuseRTVPtr;
-		RENDERERDLL_API static ID3D11RenderTargetView* normalRTVPtr;
-		RENDERERDLL_API static ID3D11RenderTargetView* specRTVPtr;
-		RENDERERDLL_API static  ID3D11ShaderResourceView* depthSRVPtr;
-		RENDERERDLL_API static  ID3D11ShaderResourceView* diffuseSRVPtr;
-		RENDERERDLL_API static  ID3D11ShaderResourceView* normalSRVPtr;
-		RENDERERDLL_API static  ID3D11ShaderResourceView* specSRVPtr;
-		RENDERERDLL_API static ID3D11Texture2D* depthResourcePtr;
-		RENDERERDLL_API static ID3D11Texture2D* diffuseResourcePtr;
-		RENDERERDLL_API static ID3D11Texture2D* normalResourcePtr;
-		RENDERERDLL_API static ID3D11Texture2D* specResourcePtr;
+		 static ID3D11RenderTargetView* depthRTVPtr;
+		 static ID3D11RenderTargetView* diffuseRTVPtr;
+		 static ID3D11RenderTargetView* normalRTVPtr;
+		 static ID3D11RenderTargetView* specRTVPtr;
+		 static  ID3D11ShaderResourceView* depthSRVPtr;
+		 static  ID3D11ShaderResourceView* diffuseSRVPtr;
+		 static  ID3D11ShaderResourceView* normalSRVPtr;
+		 static  ID3D11ShaderResourceView* specSRVPtr;
+		 static ID3D11Texture2D* depthResourcePtr;
+		 static ID3D11Texture2D* diffuseResourcePtr;
+		 static ID3D11Texture2D* normalResourcePtr;
+		 static ID3D11Texture2D* specResourcePtr;
 
 		RENDERERDLL_API static Renderer& GetRef();
 
 		RENDERERDLL_API inline static  UINT GetRenderNumber(void) { return theRenderCounter; }
 		RENDERERDLL_API inline static  void IncrementRenderCounter(void) { ++theRenderCounter; }
-		inline static  void ClearRenderTarget(const FLOAT clearColor[4])
+		RENDERERDLL_API inline static  void ClearRenderTarget(const FLOAT clearColor[4])
 		{
 			theContextPtr->ClearRenderTargetView(theRenderTargetViewPtr, clearColor);
 			theContextPtr->ClearRenderTargetView(depthRTVPtr, clearColor);
@@ -93,24 +107,26 @@ namespace RendererD3D
 		static void SetPerObjectData(float4x4& _world);
 
 
-		static RenderContext*		cubeContextPtr;
-		static RenderShape*		cubeShapePtr;
-		static RenderMaterial*	cubeMaterialPtr;
+		static RenderContext*	GBufferPackingContextPtr;
+		static RenderMaterial*	GBufferPackingMaterialPtr;
+
+		static RenderContext*	GBufferUnPackingContextPtr;
+		static RenderShape*		GBufferUnPackingShapePtr;
+		static RenderMaterial*	GBufferUnPackingMaterialPtr;
 		static RenderSet* rSetPtr;
 		RENDERERDLL_API  RenderSet& GetSet();
-		RENDERERDLL_API static void SwitchTo0();
-		RENDERERDLL_API static void SwitchTo1();
-		RENDERERDLL_API static void SwitchTo2();
+		RENDERERDLL_API static void WalkForward();
+		RENDERERDLL_API static void WalkBackward();
+		RENDERERDLL_API static void StafeLeft();
+		RENDERERDLL_API static void StafeRight();
 
 	private:
-		static DirectX::XMMATRIX viewMatrix;
-		static DirectX::XMMATRIX proj;
+
 		static UINT theRenderCounter;
 		static UINT resolutionWidth;
 		static UINT resolutionHeight;
 		static ID3D11ShaderResourceView *theDepthStencilSRVPtr;
 		static ShaderManager* shaderManagerPtr;
-		static ID3D11ShaderResourceView* cubeSRV;
 		static StreamManager* streamManagerPtr;
 		static std::vector<RenderShape> renderShapes;
 

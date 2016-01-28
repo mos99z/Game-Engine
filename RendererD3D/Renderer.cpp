@@ -45,21 +45,34 @@ namespace RendererD3D
 	UINT Renderer::resolutionHeight = 0;
 	UINT Renderer::theRenderCounter = 1;
 	cbPerObject Renderer::thePerObjectData;
-	ID3D11Buffer* Renderer::thePerObjectCBuffer;
-	DirectX::XMMATRIX Renderer::viewMatrix;
-	DirectX::XMMATRIX Renderer::proj;
+	cbPerCamera Renderer::thePerCameraData;
+	ID3D11Buffer* Renderer::thePerObjectCBuffer = nullptr;
+	ID3D11Buffer* Renderer::thePerCameraCBuffer = nullptr;
+	ID3D11Buffer* Renderer::thePerDirLightCBuffer = nullptr;
+
 	ID3D11Buffer* Renderer::vertexBuffer = nullptr;
 
-	RenderContext*		Renderer::cubeContextPtr = nullptr;
-	RenderShape*		Renderer::cubeShapePtr = nullptr;
-	RenderMaterial*	Renderer::cubeMaterialPtr = nullptr;
+	RenderContext*		Renderer::GBufferPackingContextPtr = nullptr;
+	RenderMaterial*	Renderer::GBufferPackingMaterialPtr = nullptr;
+	RenderContext*	Renderer::GBufferUnPackingContextPtr = nullptr;
+	RenderShape* Renderer::GBufferUnPackingShapePtr = nullptr;
+	RenderMaterial*Renderer::GBufferUnPackingMaterialPtr = nullptr;
+
 	RenderSet* Renderer::rSetPtr = new RenderSet;
 	ShaderManager* Renderer::shaderManagerPtr = nullptr;
+
+	//Samplers
+	ID3D11SamplerState* Renderer::pointSampler = nullptr;
+	ID3D11SamplerState* Renderer::anisoClampSampler = nullptr;
 	ID3D11SamplerState* Renderer::anisoWrapSampler = nullptr;
-	ID3D11ShaderResourceView* Renderer::cubeSRV = nullptr;
+
+
+
 	StreamManager* Renderer::streamManagerPtr = nullptr;
 	std::vector<RenderShape>  Renderer::renderShapes;
 	Camera Renderer::camera;
+
+
 	Renderer& Renderer::GetRef()
 	{
 		static Renderer renderer;
@@ -135,7 +148,7 @@ namespace RendererD3D
 		GBufferDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		GBufferDesc.Texture2D.MipLevels = 1;
 		theDevicePtr->CreateShaderResourceView(theDepthStencilBufferPtr, &GBufferDesc, &depthSRVPtr);
-		
+
 		//DiffuseSRV
 		D3D11_TEXTURE2D_DESC BufferDesc;
 		ZeroMemory(&BufferDesc, sizeof(BufferDesc));
@@ -147,7 +160,7 @@ namespace RendererD3D
 		BufferDesc.SampleDesc.Quality = swapchain_DESC.SampleDesc.Quality;
 		BufferDesc.Format = DXGI_FORMAT_R32_FLOAT;
 		BufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		BufferDesc.BindFlags =  D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		BufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 		BufferDesc.CPUAccessFlags = 0;
 		BufferDesc.MiscFlags = 0;
 
@@ -175,9 +188,9 @@ namespace RendererD3D
 
 
 
-		
-		ID3D11RenderTargetView* RTVs[5] = { depthRTVPtr ,diffuseRTVPtr ,normalRTVPtr,specRTVPtr,theRenderTargetViewPtr };
-		theContextPtr->OMSetRenderTargets(5, RTVs, theDepthStencilViewPtr);
+
+
+
 		ZeroMemory(&theScreenViewport, sizeof(theScreenViewport));
 		theScreenViewport.MaxDepth = 1.0f;
 		theScreenViewport.MinDepth = 0.0f;
@@ -186,7 +199,7 @@ namespace RendererD3D
 		theScreenViewport.Width = (float)resolutionWidth;
 		theScreenViewport.Height = (float)resolutionHeight;
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
-		
+
 		//Load Shaders
 		shaderManagerPtr = &ShaderManager::GetRef();
 		//Build Constant Buffer
@@ -198,9 +211,31 @@ namespace RendererD3D
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerObjectCBuffer);
 
-		//Set sampler
 
+		bd.ByteWidth = sizeof(cbPerCamera);
+		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerCameraCBuffer);
+
+		//Build Light Constant Buffer
+		bd.ByteWidth = sizeof(cbDirLight);
+		theDevicePtr->CreateBuffer(&bd, nullptr, &thePerDirLightCBuffer);
+
+
+		cbDirLight DirLight;
+		DirLight.DLightColor = float4{ 1.0f,0.0f,0.0f,1.0f };
+		DirLight.lightPos = float4{ 0.0f, 100.0f,0.0f,1.0f };
+		D3D11_MAPPED_SUBRESOURCE lightDataMap;
+		theContextPtr->Map(thePerDirLightCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &lightDataMap);
+		memcpy(lightDataMap.pData, &DirLight, sizeof(cbDirLight));
+		theContextPtr->Unmap(thePerDirLightCBuffer, 0);
+
+		theContextPtr->VSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);
+		theContextPtr->PSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);
+
+
+
+		//Set sampler
 		D3D11_SAMPLER_DESC desc;
+		ZeroMemory(&desc, sizeof(desc));
 		//anisoWrapSampler
 		desc.Filter = D3D11_FILTER_ANISOTROPIC;
 		desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -213,13 +248,30 @@ namespace RendererD3D
 		desc.MinLOD = -FLT_MAX;
 		desc.MaxLOD = FLT_MAX;
 		theDevicePtr->CreateSamplerState(&desc, &anisoWrapSampler);
-		theContextPtr->PSSetSamplers(0, 1, &anisoWrapSampler);
+		theContextPtr->PSSetSamplers(1, 1, &anisoWrapSampler);
+
+		desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		theDevicePtr->CreateSamplerState(&desc, &anisoClampSampler);
+		theContextPtr->PSSetSamplers(2, 1, &anisoClampSampler);
+
+		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		theDevicePtr->CreateSamplerState(&desc, &pointSampler);
+		theContextPtr->PSSetSamplers(0, 1, &pointSampler);
+
+		GBufferPackingContextPtr = new RenderContext;
+		GBufferPackingContextPtr->RenderFunc = RenderContext::GBufferPacking;
+		GBufferPackingMaterialPtr = new RenderMaterial;
 
 
+		GBufferUnPackingContextPtr = new RenderContext;
+		GBufferUnPackingContextPtr->RenderFunc = RenderContext::GBufferUnpacking;
+		GBufferUnPackingShapePtr = new RenderShape;
+		GBufferUnPackingMaterialPtr = new RenderMaterial;
+		GBufferUnPackingMaterialPtr->RenderFunc = RenderMaterial::GBufferUnpacking;
+		GBufferUnPackingShapePtr->RenderFunc = RenderShape::GBufferUnpacking;
 
-
-		cubeContextPtr = new RenderContext;
-		cubeMaterialPtr = new RenderMaterial;
 		renderShapes.push_back(RenderShape());
 		renderShapes.push_back(RenderShape());
 		renderShapes.push_back(RenderShape());
@@ -233,42 +285,26 @@ namespace RendererD3D
 
 		//Get stream manager class
 		streamManagerPtr = &StreamManager::GetRef();
-		//Set Vertex buffer
-
-
-		//streamManagerPtr->AddGStream(std::string("Leopard_2A6.AWBX"), renderShapes[0]);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[0]);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[1]);
-		streamManagerPtr->AddGStream(std::string("Teddy_Idle.AWBX"), renderShapes[2]);
-		//streamManagerPtr->AddGStream(std::string("Jump.AWBX"), renderShapes[2]);
-
-
-		//Set VertexBuffer
-		UINT stripe[2] = { sizeof(Gstream),sizeof(Tstream) };
-		UINT offset[2] = {0,0};
-		ID3D11Buffer* buffers[2] = { streamManagerPtr->GstreamBufferPtr ,streamManagerPtr->TstreamBufferPtr };
-		theContextPtr->IASetVertexBuffers(0, 2, buffers, stripe, offset);
-
-		//Set IndexBuffer 
-		theContextPtr->IASetIndexBuffer(IndexBufferManager::GetRef().indexBufferPtr, DXGI_FORMAT_R32_UINT, 0);
-
-		//Set InputLayout
-		theContextPtr->IASetInputLayout(InputLayoutManager::GetRef().inputLayouts[InputLayoutManager::eVertex_PosNorDiffUVTan]);
-
-
-
-		rSetPtr->AddNode(cubeContextPtr);
-		cubeContextPtr->renderSet.AddNode(cubeMaterialPtr);
-
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[0].renderMesh);
+		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[1].renderMesh);
+		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[2].renderMesh);
 
 
 
 
-		//Load texture for cube 
+		rSetPtr->AddNode(GBufferUnPackingContextPtr);
+		GBufferUnPackingContextPtr->renderSet.AddNode(GBufferUnPackingMaterialPtr);
+		GBufferUnPackingMaterialPtr->renderSet.AddNode(GBufferUnPackingShapePtr);
 
-		DirectX::CreateDDSTextureFromFile(theDevicePtr, L"Teddy_D.dds", nullptr, &cubeSRV);
-		theContextPtr->PSSetShaderResources(0, 1, &cubeSRV);
+		rSetPtr->AddNode(GBufferPackingContextPtr);
+	
+		GBufferPackingContextPtr->renderSet.AddNode(GBufferPackingMaterialPtr);
+		GBufferPackingMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+		GBufferPackingMaterialPtr->AddMaterial(L"Teddy_D.dds");
+
+		
+
+
 
 	}
 
@@ -291,20 +327,22 @@ namespace RendererD3D
 		RasterizerStateManager::DeleteInstance();
 		DepthStencilStateManager::DeleteInstance();
 		BlendStateManager::DeleteInstance();
-		cubeContextPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.ClearSet();
+		GBufferPackingContextPtr->renderSet.ClearSet();
+		GBufferPackingMaterialPtr->renderSet.ClearSet();
 		rSetPtr->ClearSet();
-		delete cubeContextPtr;
-		delete cubeShapePtr;
-		delete cubeMaterialPtr;
+		delete GBufferPackingContextPtr;
+		delete GBufferPackingMaterialPtr;
 		delete rSetPtr;
 		streamManagerPtr->DeleteInstance();
 		shaderManagerPtr->DeleteInstance();
 		IndexBufferManager::DeleteInstance();
-		ReleaseCOM(cubeSRV);
+		ReleaseCOM(pointSampler);
 		ReleaseCOM(anisoWrapSampler);
+		ReleaseCOM(anisoClampSampler);
 		ReleaseCOM(vertexBuffer);
 		ReleaseCOM(thePerObjectCBuffer);
+		ReleaseCOM(thePerCameraCBuffer);
+		ReleaseCOM(thePerDirLightCBuffer);
 		ReleaseCOM(theSwapChainPtr);
 		ReleaseCOM(theRenderTargetViewPtr);
 		ReleaseCOM(theDepthStencilViewPtr);
@@ -342,12 +380,33 @@ namespace RendererD3D
 	}
 	void  Renderer::Render(RenderSet &set)
 	{
+
 		camera.UpdateView();
-		viewMatrix = camera.GetView();
+		//Build Camera Constant Buffer
+		thePerCameraData.gCameraDir = camera.GetForward();
+		thePerCameraData.gCameraPos = camera.GetPosition();
+		float4x4 proj, viewInv;
+		DirectX::XMStoreFloat4x4(&proj, camera.GetProj());
+		DirectX::XMStoreFloat4x4(&proj, camera.GetView());
+		DirectX::XMStoreFloat4x4(&viewInv, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&viewInv)));
+		thePerCameraData.PerspectiveValues.x = 1.0f / proj._11;
+		thePerCameraData.PerspectiveValues.y = 1.0f / proj._22;
+		thePerCameraData.PerspectiveValues.z = proj._43;
+		thePerCameraData.PerspectiveValues.w = proj._33;
+		thePerCameraData.ViewInv = viewInv;
+		D3D11_MAPPED_SUBRESOURCE cameraDataMap;
+		theContextPtr->Map(thePerCameraCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &cameraDataMap);
+		memcpy(cameraDataMap.pData, &thePerCameraData, sizeof(cbPerCamera));
+		theContextPtr->Unmap(thePerCameraCBuffer, 0);
+		theContextPtr->VSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
+		theContextPtr->PSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
+
+
+
+
+
 		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f)* DirectX::XMMatrixRotationY(rotSpeed));
-		DirectX::XMStoreFloat4x4(&renderShapes[1].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationY(rotSpeed));
-		DirectX::XMStoreFloat4x4(&renderShapes[2].worldMatrix, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f)*DirectX::XMMatrixRotationX(-90) * DirectX::XMMatrixRotationY(rotSpeed));
+		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixRotationY(rotSpeed));
 		rotSpeed += 0.0001f;
 		RenderNode* item = set.GetHead();
 		while (item)
@@ -356,11 +415,10 @@ namespace RendererD3D
 			item = item->GetNext();
 		}
 
-		//theContextPtr->IASetVertexBuffers(0, 0, NULL, NULL,NULL);
-		//theContextPtr->IASetInputLayout(NULL);
-		//theContextPtr->VSSetShader(ShaderManager::GetVertexShaders()[1], 0, 0);
-		//theContextPtr->PSSetShader(ShaderManager::GetPixelShaders()[1], 0, 0);
-		//theContextPtr->Draw(3, 0);
+
+
+
+		theRenderCounter++;
 	}
 
 	RenderSet& Renderer::GetSet()
@@ -371,6 +429,7 @@ namespace RendererD3D
 
 	void Renderer::Render(RenderSet &set, RenderFunc renderFuncOverride)
 	{
+		theRenderCounter++;
 	}
 
 	void  Renderer::ResizeBuffers()
@@ -431,21 +490,24 @@ namespace RendererD3D
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 
-	void Renderer::SwitchTo0()
+
+	void Renderer::WalkForward()
 	{
-		cubeMaterialPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[0]);
+		camera.WalkForward();
 	}
-	void Renderer::SwitchTo1()
+	void Renderer::WalkBackward()
 	{
-		cubeMaterialPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[1]);
+		camera.WalkBackward();
 	}
-	void Renderer::SwitchTo2()
+	void Renderer::StafeLeft()
 	{
-		cubeMaterialPtr->renderSet.ClearSet();
-		cubeMaterialPtr->renderSet.AddNode(&renderShapes[2]);
+		camera.StafeLeft();
 	}
+	void Renderer::StafeRight()
+	{
+		camera.StafeRight();
+	}
+
 
 }
 

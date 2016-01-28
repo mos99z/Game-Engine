@@ -18,6 +18,8 @@ namespace RendererD3D
 		RENDERCONTEXTDLL inline RenderSet& GetSet() { return renderSet; }
 
 		static void Draw(RenderNode &node);
+		static void GBufferPacking(RenderNode &node);
+		static void GBufferUnpacking(RenderNode &node);
 		RENDERCONTEXTDLL static void ToggleWireFrame();
 	};
 
