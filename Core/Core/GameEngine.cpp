@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "GameEngine.h"
-#include <chrono>
+
 #include <Camera.h>
 
 GameEngine::GameEngine()
@@ -28,10 +28,11 @@ void  GameEngine::Initialize(HWND _windowHWND)
 	ShowCursor(false);
 }
 
-void GameEngine::Update()
+void GameEngine::Update(float _deltaTime)
 {
-	using namespace std::chrono;
-	auto beginTick = high_resolution_clock::now();
+	deltaTime = _deltaTime;
+	
+	renderer.camera.SetDeltaTime(_deltaTime);
 	inputManager.Update();
 	MessageManager::GetInstance()->Update();
 
@@ -50,11 +51,9 @@ void GameEngine::Update()
 		SetCursorPos(center.x, center.y);
 	}
 
+	renderer.Update();
 
-	renderer.camera.UpdateView();
-	renderer.camera.SetDeltaTime(deltaTime);
-	auto endTick = high_resolution_clock::now();
-	deltaTime = duration_cast<duration<float>>(endTick - beginTick).count();
+	
 }
 
 

@@ -23,7 +23,7 @@ public:
 	void SetResolution(unsigned int _width,unsigned int _height);
 	void Initialize(HWND _windowHWND);
 	void ShutDown();
-	void Update();
+	void Update(float _deltaTime);
 	void Render();
 };
 

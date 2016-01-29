@@ -25,13 +25,6 @@ namespace RendererD3D
 		RenderMesh& nodeMesh = nodeShape.renderMesh;
 		Renderer::SetPerObjectData(nodeShape.worldMatrix);
 		Renderer::theContextPtr->DrawIndexed(nodeMesh.NumberOfIndices(), nodeMesh.StartIndex(), nodeMesh.StartVertex());
-	
-		
-		
-
-
-
-
 
 	}
 	void  RenderShape::GBufferUnpacking(RenderNode &node)
@@ -50,7 +43,7 @@ namespace RendererD3D
 		memcpy(lightDataMap.pData, &DirLight, sizeof(cbDirLight));
 		Renderer::theContextPtr->Unmap(Renderer::thePerDirLightCBuffer, 0);
 
-		//Renderer::theContextPtr->VSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &Renderer::thePerDirLightCBuffer);
+		Renderer::theContextPtr->VSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &Renderer::thePerDirLightCBuffer);
 		Renderer::theContextPtr->PSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &Renderer::thePerDirLightCBuffer);
 
 

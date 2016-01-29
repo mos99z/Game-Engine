@@ -17,7 +17,7 @@ namespace RendererD3D
 	{
 		if (_time <= keyframes[0].TimeStamp())
 		{
-			return 0;
+			return 4;
 		}
 
 
@@ -26,7 +26,7 @@ namespace RendererD3D
 			return numOfkeyframes - 1;
 		}
 
-		UINT keyframeIndex = 1;
+		UINT keyframeIndex = 4;
 		for (; keyframeIndex < numOfkeyframes - 1 && _time >= keyframes[keyframeIndex].TimeStamp(); keyframeIndex++);
 		return keyframeIndex - 1;
 	}

@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "Core.h"
 #include "GameEngine.h"
-
+#include "Timer.h"
 
 HWND ghd;
 
@@ -50,25 +50,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	MSG msg;
 
-
+	Timer timer;
+	timer.Reset();
 	//Init Game Engine 
 	gameEngine.Initialize(ghd);
-
+	 long long deltaTime = 0;
 	// Main message loop:
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) || !gameEngine.IsOver())
 	{
+		
 
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		/*if (GetAsyncKeyState(87))
-		{
-			render.camera.Walk(0.1f);
-			render.camera.UpdateView();
-		}*/
-		gameEngine.Update();
+
+		double deltaTime = timer.GetDeltaTime();
+		gameEngine.Update(deltaTime*1000);
 		gameEngine.Render();
 
 	}

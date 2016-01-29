@@ -227,22 +227,11 @@ namespace RendererD3D
 		theDevicePtr->CreateBuffer(&bd, nullptr, &theBonesCBuffer);
 
 
-		/*cbDirLight DirLight;
-		DirLight.DLightColor = float4{ 1.0f,0.0f,0.0f,1.0f };
-		DirLight.lightPos = float4{ 0.0f, 100.0f,0.0f,1.0f };
-		D3D11_MAPPED_SUBRESOURCE lightDataMap;
-		theContextPtr->Map(thePerDirLightCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &lightDataMap);
-		memcpy(lightDataMap.pData, &DirLight, sizeof(cbDirLight));
-		theContextPtr->Unmap(thePerDirLightCBuffer, 0);
-
-		theContextPtr->VSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);
-		theContextPtr->PSSetConstantBuffers(cbDirLight::REGISTER_SLOT, 1, &thePerDirLightCBuffer);*/
 
 
 
 
 
-		
 
 
 
@@ -302,8 +291,7 @@ namespace RendererD3D
 		//Load models
 		streamManagerPtr = &StreamManager::GetRef();
 		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[0].renderMesh);
-		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[1].renderMesh);
-		streamManagerPtr->AddStream(std::string("Teddy_Idle.AWBX"), renderShapes[2].renderMesh);
+
 
 
 
@@ -318,11 +306,13 @@ namespace RendererD3D
 		GBufferPackingMaterialPtr->renderSet.AddNode(&renderShapes[0]);
 		//Load textures
 		GBufferPackingMaterialPtr->AddMaterial(L"Teddy_D.dds");
+		//GBufferPackingMaterialPtr->AddMaterial(L"TestCube.dds");
 
 
 
 
-		
+
+
 
 
 
@@ -364,6 +354,7 @@ namespace RendererD3D
 		ReleaseCOM(thePerObjectCBuffer);
 		ReleaseCOM(thePerCameraCBuffer);
 		ReleaseCOM(thePerDirLightCBuffer);
+		ReleaseCOM(theBonesCBuffer);
 		ReleaseCOM(theRenderTargetViewPtr);
 		ReleaseCOM(theDepthStencilViewPtr);
 		ReleaseCOM(theDepthStencilBufferPtr);
@@ -396,57 +387,13 @@ namespace RendererD3D
 	void  Renderer::Render(RenderSet &set)
 	{
 
-		camera.UpdateView();
-		//Build Camera Constant Buffer
-		thePerCameraData.gCameraDir = camera.GetForward();
-		thePerCameraData.gCameraPos = camera.GetPosition();
-		float4x4 proj, viewInv;
-		DirectX::XMStoreFloat4x4(&proj, camera.GetProj());
-		DirectX::XMStoreFloat4x4(&viewInv, DirectX::XMMatrixInverse(nullptr, camera.GetView()));
-		thePerCameraData.PerspectiveValues.x = 1.0f / proj._11;
-		thePerCameraData.PerspectiveValues.y = 1.0f / proj._22;
-		thePerCameraData.PerspectiveValues.z = proj._43;
-		thePerCameraData.PerspectiveValues.w = proj._33;
-		thePerCameraData.ViewInv = viewInv;
-		D3D11_MAPPED_SUBRESOURCE cameraDataMap;
-		theContextPtr->Map(thePerCameraCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &cameraDataMap);
-		memcpy(cameraDataMap.pData, &thePerCameraData, sizeof(cbPerCamera));
-		theContextPtr->Unmap(thePerCameraCBuffer, 0);
-
-		
-		theContextPtr->PSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
-
-
-		//Animation Cbuffer
-		static unsigned int indexKey = 1;
-		if (GetAsyncKeyState('L') & 0x1)
-		{
-			indexKey++;
-		}
-		if (indexKey >= clip->numOfkeyframes)
-		{
-			indexKey = 0;
-		}
-		D3D11_MAPPED_SUBRESOURCE bonesDataMap;
-		cbBones mats;
-		for (size_t i = 0; i < clip->keyframes->NumberOfBones(); i++)
-		{
-			auto s = clip->keyframes[indexKey].Bones()[i].Scale();
-			auto r = clip->keyframes[indexKey].Bones()[i].RotationQuat();
-			auto t = clip->keyframes[indexKey].Bones()[i].Translation();
-			auto mat = DirectX::XMMatrixAffineTransformation(DirectX::XMLoadFloat3(&s), DirectX::XMVectorZero(), DirectX::XMLoadFloat4(&r), DirectX::XMLoadFloat3(&t));
-			DirectX::XMStoreFloat4x4(&mats.gBones[i], mat);
-		}
-		theContextPtr->Map(theBonesCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &bonesDataMap);
-		memcpy(bonesDataMap.pData, mats.gBones, sizeof(cbBones));
-		theContextPtr->Unmap(theBonesCBuffer, 0);
-		
 
 
 
-		static float rotSpeed = 0.001f;
-		DirectX::XMStoreFloat4x4(&renderShapes[0].worldMatrix, DirectX::XMMatrixRotationY(0));
-		rotSpeed += 0.0001f;
+
+
+
+
 		RenderNode* item = set.GetHead();
 		while (item)
 		{
@@ -510,6 +457,49 @@ namespace RendererD3D
 		theContextPtr->RSSetViewports(1, &theScreenViewport);
 
 	}
+
+	void Renderer::Update()
+	{
+		camera.UpdateView();
+		//Build Camera Constant Buffer
+		thePerCameraData.gCameraDir = camera.GetForward();
+		thePerCameraData.gCameraPos = camera.GetPosition();
+		float4x4 proj;
+		DirectX::XMStoreFloat4x4(&proj, camera.GetProj());
+		DirectX::XMStoreFloat4x4(&thePerCameraData.ViewInv, DirectX::XMMatrixInverse(nullptr, camera.GetView()));
+		thePerCameraData.PerspectiveValues.x = 1.0f / proj._11;
+		thePerCameraData.PerspectiveValues.y = 1.0f / proj._22;
+		thePerCameraData.PerspectiveValues.z = proj._43;
+		thePerCameraData.PerspectiveValues.w = proj._33;
+		D3D11_MAPPED_SUBRESOURCE cameraDataMap;
+		theContextPtr->Map(thePerCameraCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &cameraDataMap);
+		memcpy(cameraDataMap.pData, &thePerCameraData, sizeof(cbPerCamera));
+		theContextPtr->Unmap(thePerCameraCBuffer, 0);
+
+		theContextPtr->PSSetConstantBuffers(cbPerCamera::REGISTER_SLOT, 1, &thePerCameraCBuffer);
+
+		//Timer
+		static float timer = 0.0f;
+		timer += camera.deltaTime;
+		if (timer >= clip->keyframes[clip->numOfkeyframes - 1].TimeStamp())
+		{
+			timer = 0.0f;
+		}
+		//Animation Cbuffer
+		D3D11_MAPPED_SUBRESOURCE bonesDataMap;
+		cbBones bonesCBdata;
+		for (unsigned int i = 0; i < clip->keyframes->NumberOfBones(); i++)
+		{
+			bonesCBdata.gBones[i] = clip->GetTransform(i, timer);
+		}
+		theContextPtr->Map(theBonesCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &bonesDataMap);
+		memcpy(bonesDataMap.pData, bonesCBdata.gBones, sizeof(cbBones));
+		theContextPtr->Unmap(theBonesCBuffer, 0);
+
+		theContextPtr->VSSetConstantBuffers(cbBones::REGISTER_SLOT, 1, &theBonesCBuffer);
+	}
+
+
 	ID3D11ShaderResourceView * Renderer::GetDepthSRV()
 	{
 		return nullptr;
@@ -525,9 +515,8 @@ namespace RendererD3D
 		memcpy(edit.pData, &thePerObjectData, sizeof(thePerObjectData));
 		theContextPtr->Unmap(thePerObjectCBuffer, 0);
 
-		ID3D11Buffer* cbuffers[4]{ thePerObjectCBuffer,thePerCameraCBuffer,thePerDirLightCBuffer,theBonesCBuffer };
 
-		theContextPtr->VSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 4, cbuffers);
+		theContextPtr->VSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 		theContextPtr->PSSetConstantBuffers(cbPerObject::REGISTER_SLOT, 1, &thePerObjectCBuffer);
 	}
 

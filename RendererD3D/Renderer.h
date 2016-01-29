@@ -140,6 +140,8 @@ namespace RendererD3D
 		RENDERERDLL_API static  void Render(RenderSet &set, RenderFunc renderFuncOverride);
 
 		
+		RENDERERDLL_API static  void Update();
+
 		RENDERERDLL_API static  ID3D11ShaderResourceView *GetDepthSRV();
 		RENDERERDLL_API inline static  UINT GetResolutionWidth() { return resolutionWidth; }
 		RENDERERDLL_API inline static  UINT GetResolutionHeight() { return resolutionHeight; }
