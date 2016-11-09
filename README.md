@@ -1,2 +1,2 @@
 # Game-Engine
-Life is to short to write an engine for each game 
+Life is too short to write an engine for each game 
